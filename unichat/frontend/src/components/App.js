@@ -3,6 +3,7 @@ import { Switch, Route, Link } from "react-router-dom";
 import Login from "./login";
 import Signup from "./signup";
 import Hello from "./hello";
+import Logout from "./logout";
 
 class App extends Component {
     render() {
@@ -13,6 +14,8 @@ class App extends Component {
                     <Link className={"nav-link"} to={"/login/"}>Login</Link>
                     <Link className={"nav-link"} to={"/signup/"}>Signup</Link>
 					<Link className={"nav-link"} to={"/hello/"}>Hello</Link>
+					<Link className={"nav-link"} to={"/logout/"}>Logout</Link>
+
 
                 </nav>
                 <main>
@@ -22,6 +25,7 @@ class App extends Component {
                         <Route exact path={"/login/"} component={Login}/>
                         <Route exact path={"/signup/"} component={Signup}/>
                         <Route exact path={"/hello/"} component={Hello}/>
+                        <Route exact path={"/logout/"} component={Logout}/>
                         <Route path={"/"} render={() => <div>Home again</div>}/>
                     </Switch>
                 </main>
