@@ -2,6 +2,8 @@
 
 import React, { Component } from "react";
 import axiosInstance from "../axiosApi";
+import { Link } from "react-router-dom";
+
 
 class Login extends Component {
     constructor(props) {
@@ -38,6 +40,9 @@ class Login extends Component {
     render() {
         return (
             <div>
+            <nav>
+                <Link className={"nav-link"} to={"/signup/"}>Signup</Link>
+            </nav>
                 Login
                 <form onSubmit={this.handleSubmit}>
                     <label>

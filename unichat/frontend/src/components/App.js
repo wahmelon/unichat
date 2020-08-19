@@ -4,7 +4,6 @@ import Login from "./login";
 import Signup from "./signup";
 import Hello from "./hello";
 import Logout from "./logout";
-import Authentication from "./authentication";
 import Feed from "./feed";
 
 class App extends Component {
@@ -26,23 +25,11 @@ class App extends Component {
         return (
             <div className="site">
             <h1> Authentication state: {this.state.isAuthenticated ? " logged in." : " not logged in."}</h1>
-                <nav>
-                    <Link className={"nav-link"} to={"/feed/"}>Feed</Link>
-                    <Link className={"nav-link"} to={"/login/"}>Login</Link>
-                    <Link className={"nav-link"} to={"/signup/"}>Signup</Link>
-					<Link className={"nav-link"} to={"/hello/"}>Hello</Link>
-					<Link className={"nav-link"} to={"/logout/"}>Logout</Link>
-
-
-
-                </nav>
                 <main>
                     <Switch>
-                        <Route exact path={"/login/"} component={Login}/>
+                        <Route exact path={"/authentication/"} component={this.state.isAuthenticated ? Logout : Login}/>
                         <Route exact path={"/signup/"} component={Signup}/>
                         <Route exact path={"/hello/"} component={Hello}/>
-                        <Route exact path={"/logout/"} component={Logout}/>
-                        <Route exact path={"/feed/"} component={Feed}/>
                         <Route exact path={"/"} component={this.state.isAuthenticated ? Feed : Login}/> 
                     </Switch>
                 </main>

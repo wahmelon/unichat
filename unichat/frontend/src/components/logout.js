@@ -1,6 +1,8 @@
 
 import React, { Component } from "react";
 import axiosInstance from "../axiosApi";
+import { Link } from "react-router-dom";
+
 
 class Logout extends Component {
     constructor(props) {
@@ -30,6 +32,9 @@ class Logout extends Component {
     render() {
         return (
             <div>
+                <nav>
+                    <Link className={"nav-link"} to={"/"}>Feed</Link>
+                </nav>
                 Logout
                 <button onClick={this.handleLogout}>
                   Click me!

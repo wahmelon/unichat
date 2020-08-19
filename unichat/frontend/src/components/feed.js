@@ -1,6 +1,8 @@
 // djsr/frontend/src/components/login.js
 
 import React, { Component } from "react";
+import { Link } from "react-router-dom";
+
 
 class Feed extends Component {
     constructor(props) {
@@ -13,6 +15,9 @@ class Feed extends Component {
     render() {
         return (
             <div>
+                <nav>
+                    <Link className={"nav-link"} to={"/authentication/"}>Logout</Link>
+                </nav>
             Feed
             </div>
         )

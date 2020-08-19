@@ -1,6 +1,8 @@
 // djsr/frontend/src/components/signup.js
 import React, { Component } from "react";
 import axiosInstance from "../axiosApi";
+import { Link } from "react-router-dom";
+
 
 
 class Signup extends Component{
@@ -28,7 +30,9 @@ class Signup extends Component{
                 password: this.state.password
             }).then(
                 result => {
-                   return result;
+                    window.location.href = "/";
+                    console.log(result);
+                    return result;
                 }
         ).catch (error => {
             console.log(error.stack);
@@ -44,6 +48,9 @@ class Signup extends Component{
 render() {
     return (
         <div>
+            <nav>
+                <Link className={"nav-link"} to={"/authentication/"}>Login</Link>
+            </nav>
             Signup
             <form onSubmit={this.handleSubmit}>
                 <label>
