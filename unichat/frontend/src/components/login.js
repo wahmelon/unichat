@@ -26,6 +26,7 @@ class Login extends Component {
                     axiosInstance.defaults.headers['Authorization'] = "JWT " + result.data.access;
                     localStorage.setItem('access_token', result.data.access);
                     localStorage.setItem('refresh_token', result.data.refresh);
+                    window.location.href = "/"; //should redirect to feed
                 }
         ).catch (error => {
             throw error;
