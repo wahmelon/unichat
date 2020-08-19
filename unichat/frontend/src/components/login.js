@@ -20,7 +20,7 @@ class Login extends Component {
 
     handleSubmit(event){
         event.preventDefault();
-        attemptlogin(this.state.username, this.state.password);
+        attemptLogin(this.state.username, this.state.password);
 
     } //.then is used as otherwise react will assign undefined to headers (hasn't received yet)
     //489 Bad Event - The server did not understand an event package specified in an Event header field.

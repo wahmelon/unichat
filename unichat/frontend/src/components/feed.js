@@ -2,13 +2,31 @@
 
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
+import axiosInstance from "../axiosApi";
+ 
 
 
 class Feed extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {};
 
+    state = {
+
+        groupArray : [] //university, faculty, enrolled units
+    }
+
+    componentDidMount(){
+        console.log("running componentDidMount")
+        if (localStorage.getItem('access_token')){
+            this.setState({isAuthenticated: true})
+        }
+    }
+
+    getMessage(){
+        axiosInstance.get('/hello/')
+        .then(
+            result => {
+                console.log(result)
+            }
+        ).catch(error => {throw error;})
     }
 
 
@@ -19,6 +37,9 @@ class Feed extends Component {
                     <Link className={"nav-link"} to={"/authentication/"}>Logout</Link>
                 </nav>
             Feed
+                <button onClick={this.getMessage}>
+                  Click me!
+                </button>
             </div>
         )
     }

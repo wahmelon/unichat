@@ -5,6 +5,8 @@ from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import MyTokenObtainPairSerializer, StudentUserSerializer
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from .models import StudentUser
 
 class ObtainTokenPairWithCurrentUnitsView(TokenObtainPairView):
     #permission_classes = (permissions.AllowAny,)
@@ -26,6 +28,18 @@ class StudentUserCreate(APIView):
 class HelloWorldView(APIView):
 
 	def get(self, request):
+		jwt_object = JWTAuthentication()
+		header = jwt_object.get_header(request)
+		raw_token = jwt_object.get_raw_token(header)
+		validated_token = jwt_object.get_validated_token(raw_token)
+		user = jwt_object.get_user(validated_token)
+		django_user = StudentUser.objects.get(username=user)
+		print(django_user.id)
+		return Response(data={"username":user}, status=status.HTTP_200_OK)
+
+class GetUserGroups(APIView):
+	def get(self, request):
+
 		return Response(data={"hello":"world"}, status=status.HTTP_200_OK)
 
 class LogoutAndBlacklistRefreshTokenForUserView(APIView):
