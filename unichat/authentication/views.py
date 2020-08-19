@@ -25,8 +25,7 @@ class StudentUserCreate(APIView):
 				return Response(json, status=status.HTTP_201_CREATED)
 		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class HelloWorldView(APIView):
-
+class GetUserGroups(APIView):
 	def get(self, request):
 		jwt_object = JWTAuthentication()
 		header = jwt_object.get_header(request)
@@ -34,13 +33,10 @@ class HelloWorldView(APIView):
 		validated_token = jwt_object.get_validated_token(raw_token)
 		user = jwt_object.get_user(validated_token)
 		django_user = StudentUser.objects.get(username=user)
+		username = django_user.username
 		print(django_user.id)
-		return Response(data={"username":user}, status=status.HTTP_200_OK)
+		return Response(data={"username":username}, status=status.HTTP_200_OK)
 
-class GetUserGroups(APIView):
-	def get(self, request):
-
-		return Response(data={"hello":"world"}, status=status.HTTP_200_OK)
 
 class LogoutAndBlacklistRefreshTokenForUserView(APIView):
     permission_classes = (permissions.AllowAny,)

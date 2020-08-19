@@ -3,31 +3,30 @@
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
 import axiosInstance from "../axiosApi";
- 
+
 
 
 class Feed extends Component {
 
     state = {
 
-        groupArray : [] //university, faculty, enrolled units
+        groupArray : [], //university, faculty, enrolled units
+        username: ""
     }
 
     componentDidMount(){
-        console.log("running componentDidMount")
-        if (localStorage.getItem('access_token')){
-            this.setState({isAuthenticated: true})
-        }
-    }
-
-    getMessage(){
-        axiosInstance.get('/hello/')
+                axiosInstance.get('/getusergroups/')
         .then(
             result => {
-                console.log(result)
+                this.setState({username:result.data.username})
             }
         ).catch(error => {throw error;})
+
     }
+
+
+
+
 
 
     render() {
@@ -36,7 +35,7 @@ class Feed extends Component {
                 <nav>
                     <Link className={"nav-link"} to={"/authentication/"}>Logout</Link>
                 </nav>
-            Feed
+            Feed of: {this.state.username}.
                 <button onClick={this.getMessage}>
                   Click me!
                 </button>
