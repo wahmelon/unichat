@@ -2,6 +2,8 @@
 import React, { Component } from "react";
 import axiosInstance from "../axiosApi";
 import { Link } from "react-router-dom";
+import { attemptLogin } from "./attemptlogin";
+
 
 
 
@@ -30,9 +32,9 @@ class Signup extends Component{
                 password: this.state.password
             }).then(
                 result => {
-                    window.location.href = "/";
-                    console.log(result);
-                    return result;
+                    if (result.status == 201) {
+                        attemptLogin(this.state.username, this.state.password)
+                    }
                 }
         ).catch (error => {
             console.log(error.stack);

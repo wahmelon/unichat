@@ -1,8 +1,8 @@
 // djsr/frontend/src/components/login.js
 
 import React, { Component } from "react";
-import axiosInstance from "../axiosApi";
 import { Link } from "react-router-dom";
+import { attemptLogin } from "./attemptlogin";
 
 
 class Login extends Component {
@@ -20,19 +20,7 @@ class Login extends Component {
 
     handleSubmit(event){
         event.preventDefault();
-        axiosInstance.post('/token/obtain/', {
-                username: this.state.username,
-                password: this.state.password
-            }).then(
-                result => {
-                    axiosInstance.defaults.headers['Authorization'] = "JWT " + result.data.access;
-                    localStorage.setItem('access_token', result.data.access);
-                    localStorage.setItem('refresh_token', result.data.refresh);
-                    window.location.href = "/"; //should redirect to feed
-                }
-        ).catch (error => {
-            throw error;
-        })
+        attemptlogin(this.state.username, this.state.password);
 
     } //.then is used as otherwise react will assign undefined to headers (hasn't received yet)
     //489 Bad Event - The server did not understand an event package specified in an Event header field.

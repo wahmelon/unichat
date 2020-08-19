@@ -1,7 +1,6 @@
 import axiosInstance from "../axiosApi";
 
-export function GetAndSetToken(event, username, password){
-    event.preventDefault();
+export function attemptLogin(username, password){
     axiosInstance.post('/token/obtain/', {
             username: username,
             password: password
