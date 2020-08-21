@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'frontend',
     'rest_framework_simplejwt.token_blacklist',
+    'chathandler',
+    'channels'
 
 ]
 
@@ -74,6 +76,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'unichat.wsgi.application'
+
 
 
 # Database
@@ -151,3 +154,14 @@ SIMPLE_JWT = {
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'TOKEN_TYPE_CLAIM': 'token_type',
 }
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
+
+ASGI_APPLICATION = 'unichat.routing.application'

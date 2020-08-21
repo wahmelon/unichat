@@ -2,7 +2,6 @@ import React, { Component} from "react";
 import { Switch, Route, Link } from "react-router-dom";
 import Login from "./login";
 import Signup from "./signup";
-import Hello from "./hello";
 import Logout from "./logout";
 import Feed from "./feed";
 
@@ -23,17 +22,11 @@ class App extends Component {
 
     render() {
         return (
-            <div className="site">
-            <h1> Authentication state: {this.state.isAuthenticated ? " logged in." : " not logged in."}</h1>
-                <main>
-                    <Switch>
-                        <Route exact path={"/authentication/"} component={this.state.isAuthenticated ? Logout : Login}/>
-                        <Route exact path={"/signup/"} component={Signup}/>
-                        <Route exact path={"/hello/"} component={Hello}/>
-                        <Route exact path={"/"} component={this.state.isAuthenticated ? Feed : Login}/> 
-                    </Switch>
-                </main>
-            </div>
+	        <Switch>
+	            <Route exact path={"/authentication/"} component={this.state.isAuthenticated ? Logout : Login}/>
+	            <Route exact path={"/signup/"} component={Signup}/>
+	            <Route exact path={"/"} component={this.state.isAuthenticated ? Feed : Login}/> 
+	        </Switch>
         );
     }
 }

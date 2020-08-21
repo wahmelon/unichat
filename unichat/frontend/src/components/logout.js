@@ -2,6 +2,42 @@
 import React, { Component } from "react";
 import axiosInstance from "../axiosApi";
 import { Link } from "react-router-dom";
+import styled from 'styled-components';
+
+const remainingHeightForContentView = window.innerHeight - 140; // 140 = remaining rows + gaps
+
+const LogoutGrid = styled.div`
+  display: grid;
+  grid-template-columns:  1fr ;
+  grid-template-rows:  50px  ${remainingHeightForContentView}px  50px ;
+  gap: 10px 10px;
+  grid-template-areas: "menu" "content" "nav";
+
+`;
+
+const LogoutMenuDiv = styled.div`
+    font-size: 1.5em;
+    grid-area: menu;
+    background-color: #dfe3ee;
+    align-items: center;            
+    
+`;
+
+const LogoutContentDiv = styled.div`
+    font-size: 1.5em;
+    grid-area: content;
+    background-color: #dfe3ee;
+    align-items: center;            
+    
+`;
+
+const LogoutNavDiv = styled.div`
+    font-size: 1.5em;
+    grid-area: nav;
+    background-color: #dfe3ee;
+    align-items: center;            
+    
+`;
 
 
 class Logout extends Component {
@@ -31,15 +67,19 @@ class Logout extends Component {
 
     render() {
         return (
-            <div>
-                <nav>
+            <LogoutGrid>
+                <LogoutMenuDiv>
+                </LogoutMenuDiv>
+                <LogoutContentDiv>
+                    Logout
+                    <button onClick={this.handleLogout}>
+                        Click me!
+                    </button>
+                </LogoutContentDiv>
+                <LogoutNavDiv>
                     <Link className={"nav-link"} to={"/"}>Feed</Link>
-                </nav>
-                Logout
-                <button onClick={this.handleLogout}>
-                  Click me!
-                </button>
-            </div>
+                </LogoutNavDiv>
+            </LogoutGrid>
         )
     }
 }

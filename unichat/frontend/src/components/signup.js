@@ -3,6 +3,43 @@ import React, { Component } from "react";
 import axiosInstance from "../axiosApi";
 import { Link } from "react-router-dom";
 import { attemptLogin } from "./attemptlogin";
+import styled from 'styled-components';
+
+const remainingHeightForContentView = window.innerHeight - 140; // 140 = remaining rows + gaps
+
+
+const SignupGrid = styled.div`
+  display: grid;
+  grid-template-columns:  1fr ;
+  grid-template-rows:  50px  ${remainingHeightForContentView}px  50px ;
+  gap: 10px 10px;
+  grid-template-areas: "menu" "content" "nav";
+
+`;
+
+const SignupMenuDiv = styled.div`
+    font-size: 1.5em;
+    grid-area: menu;
+    background-color: #dfe3ee;
+    align-items: center;            
+    
+`;
+
+const SignupContentDiv = styled.div`
+    font-size: 1.5em;
+    grid-area: content;
+    background-color: #dfe3ee;
+    align-items: center;            
+    
+`;
+
+const SignupNavDiv = styled.div`
+    font-size: 1.5em;
+    grid-area: nav;
+    background-color: #dfe3ee;
+    align-items: center;            
+    
+`;
 
 
 
@@ -49,27 +86,31 @@ class Signup extends Component{
 
 render() {
     return (
-        <div>
-            <nav>
-                <Link className={"nav-link"} to={"/authentication/"}>Login</Link>
-            </nav>
+        <SignupGrid>
+        <SignupMenuDiv>
+        </SignupMenuDiv>
+        <SignupContentDiv>
             Signup
             <form onSubmit={this.handleSubmit}>
                 <label>
-                    Username:
-                    <input name="username" type="text" value={this.state.username} onChange={this.handleChange}/>
+                Username:
+                <input name="username" type="text" value={this.state.username} onChange={this.handleChange}/>
                 </label>
                 <label>
-                    Email:
-                    <input name="email" type="email" value={this.state.email} onChange={this.handleChange}/>
+                Email:
+                <input name="email" type="email" value={this.state.email} onChange={this.handleChange}/>
                 </label>
                 <label>
-                    Password:
-                    <input name="password" type="password" value={this.state.password} onChange={this.handleChange}/>
+                Password:
+                <input name="password" type="password" value={this.state.password} onChange={this.handleChange}/>
                 </label>
                 <input type="submit" value="Submit"/>
             </form>
-        </div>
+            </SignupContentDiv>
+        <SignupNavDiv>
+            <Link className={"nav-link"} to={"/authentication/"}>Login</Link>
+        </SignupNavDiv>
+        </SignupGrid>
     )
 //above ternery operators aid in error handling
 }
