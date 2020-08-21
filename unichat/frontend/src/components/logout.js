@@ -46,6 +46,8 @@ class Logout extends Component {
         this.handleLogout = this.handleLogout.bind(this);
     }
 
+    
+
     handleLogout(){
         event.preventDefault();
         axiosInstance.post('/blacklist/', {

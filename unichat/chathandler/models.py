@@ -17,6 +17,9 @@ class Topic(models.Model):
 	def __str__(self):
 		return "%s: %s" % (self.poster, self.content)
 
+	class Meta:
+		ordering = ['created_time']
+
 class Comment(models.Model):
 	poster = models.TextField()
 	content = models.TextField()

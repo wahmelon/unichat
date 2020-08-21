@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import MyTokenObtainPairSerializer, StudentUserSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .models import StudentUser
+from .models import StudentUser, Unit
 
 class ObtainTokenPairWithCurrentUnitsView(TokenObtainPairView):
     #permission_classes = (permissions.AllowAny,)
@@ -32,10 +32,29 @@ class GetUserGroups(APIView):
 		raw_token = jwt_object.get_raw_token(header)
 		validated_token = jwt_object.get_validated_token(raw_token)
 		user = jwt_object.get_user(validated_token)
-		django_user = StudentUser.objects.get(username=user)
-		username = django_user.username
-		print(django_user.id)
-		return Response(data={"username":username}, status=status.HTTP_200_OK)
+		return Response(data={"username":user.username}, status=status.HTTP_200_OK)
+
+class SetUniInfo(APIView):
+	def post(self, request):
+		jwt_object = JWTAuthentication()
+		header = jwt_object.get_header(request)
+		raw_token = jwt_object.get_raw_token(header)
+		validated_token = jwt_object.get_validated_token(raw_token)
+		user = jwt_object.get_user(validated_token)
+
+		#add django_user = filter studentuser by user
+
+		test_unit_database = ['MATH1000','MATH2000']
+		unit_list_string = request.data.unit_list #fix this, make frontend safer so this parser can be safer
+		for unit_code in test_unit_database:
+			if unit_code in unit_list_string:
+				unit_django_object = Unit.objects.get(unit_code=unit_code) #filter by unit_code
+				django_user.unit = unit_django_object #fix this syntax, check will add not override existing relationship
+
+		faculty = request.data.faculty
+		django_user.faculty = faculty #fix this syntax
+		print(request.data)
+
 
 
 class LogoutAndBlacklistRefreshTokenForUserView(APIView):

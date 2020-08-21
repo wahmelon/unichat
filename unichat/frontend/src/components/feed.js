@@ -44,12 +44,22 @@ const FeedNavDiv = styled.div`
 
 
 class Feed extends Component {
-
-    state = {
+    constructor(props){
+        super(props);
+        this.state = {
 
         groupArray : [], //university, faculty, enrolled units
-        username: ""
+        username: "",
+        unit_list: "",
+        faculty: ""
+    };
+
+        this.handleTest = this.handleTest.bind(this);
+                this.handleChange = this.handleChange.bind(this);
+
+
     }
+
 
     componentDidMount(){
                 axiosInstance.get('/getusergroups/')
@@ -58,6 +68,25 @@ class Feed extends Component {
                 this.setState({username:result.data.username})
             }
         ).catch(error => {throw error;})
+
+    }
+
+        handleChange(event) {
+        this.setState({[event.target.name]: event.target.value});
+    }
+
+        handleTest(event){
+        event.preventDefault();
+        axiosInstance.post('/user/set_uni_info/', {
+            unit_list: this.state.unit_list,
+            faculty: this.state.faculty
+        }).then(
+                result => {
+                    console.log(result)
+                    }                
+        ).catch (error => {
+            console.log(error.stack);
+        })
 
     }
 
@@ -73,9 +102,22 @@ class Feed extends Component {
                 </FeedMenuDiv>
                 <FeedContentDiv>
                         <h1>Feed of: {this.state.username}.</h1>
-                    <button onClick={this.getMessage}>
-                        Click me!
+
+
+
+
+                <p>Enrolled units (write as 8 alphanumerals separated by comma no spaces):</p>
+                <input name="unit_list" type="text" value={this.state.unit_list} onChange={this.handleChange}/>
+                Faculty:
+                <input name="faculty" type="text" value={this.state.faculty} onChange={this.handleChange}/>
+
+                    <button onClick={this.handleTest}>
+                        Test Set Uni info!
                     </button>
+
+
+
+
                 </FeedContentDiv>
                 <FeedNavDiv>
                     <Link className={"nav-link"} to={"/authentication/"}>Logout</Link>
