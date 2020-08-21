@@ -5,6 +5,7 @@ from chathandler.models import Topic, Comment
 class Unit(models.Model):
 	unit_code = models.CharField(max_length=120)
 	unit_name = models.CharField(max_length=120)
+	university = models.CharField(max_length=120)
 	def __str__(self):
 		return self.unit_code
 
@@ -19,6 +20,5 @@ class StudentUser(AbstractUser):
 	def __str__(self):
 		return "%s: %s" % (self.email, self.username)
 
-	#to add: alias
 	
 # Create your models here.
