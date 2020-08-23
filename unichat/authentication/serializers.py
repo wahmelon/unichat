@@ -1,6 +1,7 @@
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from .models import StudentUser, Unit
+import re
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
@@ -41,13 +42,18 @@ class StudentUserSerializer(serializers.ModelSerializer):
 		fields = ('email', 'username', 'password')
 		extra_kwargs = {'password': {'write_only': True}}
 
-	def create(self, validated_data):
+	def create(self, validated_data): #validated_data is parsed into a valid python dictionary
 		password = validated_data.pop('password', None)
 		instance = self.Meta.model(**validated_data)  # as long as the fields are the same, we can just use this
 		if password is not None:
 			instance.set_password(password)
+		email = validated_data.pop('email', None)
+		email_format_dict = {'unsw.edu.au':'UNSW', 'uni.sydney.edu.au':'USYD', 'anu.edu.au':'ANU', 'student.unimelb.edu.au':'UNIMELB'}
+		for key in email_format_dict:
+			if key in email:
+				instance.university = email_format_dict[key]
+		print('success!')
 		instance.faculty = "" #currently being added in a later screen
-		instance.university = "" #currently being added in a later screen
 		instance.save()
 		return instance
 

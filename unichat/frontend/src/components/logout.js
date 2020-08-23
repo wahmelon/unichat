@@ -93,15 +93,14 @@ class Logout extends Component {
                     Account management
                     <p>Enrolled units (write as 8 alphanumerals separated by comma no spaces):</p>
                     <input name="unit_list" type="text" value={this.state.unit_list} onChange={this.handleChange}/>
-                Faculty:
-                <input name="faculty" type="text" value={this.state.faculty} onChange={this.handleChange}/>
-
+                    Faculty:
+                    <input name="faculty" type="text" value={this.state.faculty} onChange={this.handleChange}/>
                     <button onClick={(e) => this.setUniInfoInComponent(e, this.state.unit_list, this.state.faculty)}>
-                        Click to submit uni info!
+                    Click to submit uni info!
                     </button>
                     Logout
                     <button onClick={this.handleLogout}>
-                        Click me to logout!
+                    Click me to logout!
                     </button>
                 </LogoutContentDiv>
                 <LogoutNavDiv>

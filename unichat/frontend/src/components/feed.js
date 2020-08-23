@@ -45,7 +45,8 @@ class Feed extends Component {
     constructor(props){
         super(props);
         this.state = {
-        username: ""
+        username: "",
+        university: ""
     };
 
         this.handleChange = this.handleChange.bind(this);

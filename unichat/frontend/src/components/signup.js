@@ -98,7 +98,7 @@ render() {
                 <input name="username" type="text" value={this.state.username} onChange={this.handleChange}/>
                 </label>
                 <label>
-                Email:
+                Email (supported - UNSW,USYD,ANU,UNIMELB)
                 <input name="email" type="email" value={this.state.email} onChange={this.handleChange}/>
                 </label>
                 <label>
