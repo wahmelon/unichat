@@ -2,8 +2,8 @@
 import React, { Component } from "react";
 import axiosInstance from "../axiosApi";
 import { Link } from "react-router-dom";
-import { attemptLogin } from "./attemptlogin";
 import styled from 'styled-components';
+import { attemptLogin } from "./Utilities";
 
 const remainingHeightForContentView = window.innerHeight - 140; // 140 = remaining rows + gaps
 
@@ -51,9 +51,6 @@ class Signup extends Component{
             username: "",
             password: "",
             email:"",
-            unit_list:"",
-            faculty:"",
-            university:""
         };
 
         this.handleChange = this.handleChange.bind(this);
@@ -66,8 +63,6 @@ class Signup extends Component{
 
 
     handleSubmit(event){
-        let statusOne = false;
-        let statusTwo = false;
         event.preventDefault();
         axiosInstance.post('/user/create/', {
                 username: this.state.username,
@@ -75,28 +70,13 @@ class Signup extends Component{
                 password: this.state.password,
             }).then(
                 result => {
-                    if (result.status == 201) {
-                        statusOne = true;
-                    }
+                    attemptLogin(this.state.username, this.state.password);
+                    console.log(result);
                 }
         ).catch (error => {
             console.log(error.stack);
         })
-        axiosInstance.post('/user/set_uni_info/', {
-            unit_list: this.state.unit_list,
-            faculty: this.state.faculty
-        }).then(
-                result => {
-                    if (result.status == 201) {
-                        statusTwo = true;
-                    }                
-                }
-        ).catch (error => {
-            console.log(error.stack);
-        })
-                    if (statusOne && statusTwo) {
-                        attemptLogin(this.state.username, this.state.password)
-                    }
+        //set up auth checking, if auth - attempt login if not raise alert?
 
     } //.then is used as otherwise react will assign undefined to headers (hasn't received yet)
     //489 Bad Event - The server did not understand an event package specified in an Event header field.
@@ -126,14 +106,6 @@ render() {
                 <input name="password" type="password" value={this.state.password} onChange={this.handleChange}/>
                 </label>
                 <input type="submit" value="Submit"/>
-                <label>
-                <p>Enrolled units (write as 8 alphanumerals separated by comma no spaces):</p>
-                <input name="unit_list" type="text" value={this.state.unit_list} onChange={this.handleChange}/>
-                </label>
-                <label>
-                Faculty:
-                <input name="faculty" type="text" value={this.state.faculty} onChange={this.handleChange}/>
-                </label>
             </form>
             </SignupContentDiv>
         <SignupNavDiv>

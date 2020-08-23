@@ -45,11 +45,13 @@ class SetUniInfo(APIView):
 		#all_units = Unit.objects.all() #change to filter based on university (email)
 
 		request_unit_as_list = [request.data['unit_list']] #fix this, make frontend safer so this parser can be safer
+		print(request_unit_as_list)
 		for unit_code in request_unit_as_list: #add code to turn frontend created string/json into list to iterate over
 			try:
 				unit_as_django_object = Unit.objects.get(unit_code=unit_code) #filter by unit_code
 				django_user.current_units.add(unit_as_django_object)
-				print('added unit successfully')
+				print('added unit_code successfully')
+				print(unit_code)
 			except:
 				print('error adding unit')
 		print(request.data['faculty'])

@@ -3,6 +3,8 @@ import React, { Component } from "react";
 import axiosInstance from "../axiosApi";
 import { Link } from "react-router-dom";
 import styled from 'styled-components';
+import { setUniInfo } from './Utilities';
+
 
 const remainingHeightForContentView = window.innerHeight - 140; // 140 = remaining rows + gaps
 
@@ -44,8 +46,23 @@ class Logout extends Component {
     constructor(props) {
         super(props);
         this.handleLogout = this.handleLogout.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.setUniInfoInComponent  = this.setUniInfoInComponent.bind(this);
+
+        this.state = {
+        unit_list: "",
+        faculty: ""
+    };
     }
 
+    handleChange(event) {
+        this.setState({[event.target.name]: event.target.value});
+    }
+
+    setUniInfoInComponent(event, unit_list, faculty) { //if not set to local variable there will be async issues
+        event.preventDefault();
+        setUniInfo(unit_list, faculty)
+    }
     
 
     handleLogout(){
@@ -73,9 +90,18 @@ class Logout extends Component {
                 <LogoutMenuDiv>
                 </LogoutMenuDiv>
                 <LogoutContentDiv>
+                    Account management
+                    <p>Enrolled units (write as 8 alphanumerals separated by comma no spaces):</p>
+                    <input name="unit_list" type="text" value={this.state.unit_list} onChange={this.handleChange}/>
+                Faculty:
+                <input name="faculty" type="text" value={this.state.faculty} onChange={this.handleChange}/>
+
+                    <button onClick={(e) => this.setUniInfoInComponent(e, this.state.unit_list, this.state.faculty)}>
+                        Click to submit uni info!
+                    </button>
                     Logout
                     <button onClick={this.handleLogout}>
-                        Click me!
+                        Click me to logout!
                     </button>
                 </LogoutContentDiv>
                 <LogoutNavDiv>

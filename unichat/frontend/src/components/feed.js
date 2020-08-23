@@ -1,5 +1,3 @@
-// djsr/frontend/src/components/login.js
-
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
 import axiosInstance from "../axiosApi";
@@ -47,16 +45,10 @@ class Feed extends Component {
     constructor(props){
         super(props);
         this.state = {
-
-        groupArray : [], //university, faculty, enrolled units
-        username: "",
-        unit_list: "",
-        faculty: ""
+        username: ""
     };
 
-        this.handleTest = this.handleTest.bind(this);
-                this.handleChange = this.handleChange.bind(this);
-
+        this.handleChange = this.handleChange.bind(this);
 
     }
 
@@ -71,27 +63,9 @@ class Feed extends Component {
 
     }
 
-        handleChange(event) {
+    handleChange(event) {
         this.setState({[event.target.name]: event.target.value});
     }
-
-        handleTest(event){
-        event.preventDefault();
-        axiosInstance.post('/user/set_uni_info/', {
-            unit_list: this.state.unit_list,
-            faculty: this.state.faculty
-        }).then(
-                result => {
-                    console.log(result)
-                    }                
-        ).catch (error => {
-            console.log(error.stack);
-        })
-
-    }
-
-
-
 
 
 
@@ -101,26 +75,10 @@ class Feed extends Component {
                 <FeedMenuDiv>
                 </FeedMenuDiv>
                 <FeedContentDiv>
-                        <h1>Feed of: {this.state.username}.</h1>
-
-
-
-
-                <p>Enrolled units (write as 8 alphanumerals separated by comma no spaces):</p>
-                <input name="unit_list" type="text" value={this.state.unit_list} onChange={this.handleChange}/>
-                Faculty:
-                <input name="faculty" type="text" value={this.state.faculty} onChange={this.handleChange}/>
-
-                    <button onClick={this.handleTest}>
-                        Test Set Uni info!
-                    </button>
-
-
-
-
+                    <h1>Feed of: {this.state.username}.</h1>
                 </FeedContentDiv>
                 <FeedNavDiv>
-                    <Link className={"nav-link"} to={"/authentication/"}>Logout</Link>
+                    <Link className={"nav-link"} to={"/authentication/"}>Account management</Link>
                 </FeedNavDiv>
             </FeedGrid>
         )
