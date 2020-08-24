@@ -26,8 +26,10 @@ module.exports = {
                     loader: "babel-loader",
                     options: {presets: ["@babel/env"]}
                 },
-            }
-        ],
+            },
+
+            {test: /\.(png|jpe?g|gif)$/i, use: [{loader: 'file-loader'}]}
+        ]
     },
 };
 

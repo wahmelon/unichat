@@ -2,7 +2,8 @@ import React, { Component } from "react";
 import { Link } from "react-router-dom";
 import axiosInstance from "../axiosApi";
 import styled from 'styled-components';
-import WebSocketService from './websocket'
+import WebSocketService from './websocket';
+import upvoteIcon from './upvote-icon.jpg';
 
 const remainingWidthForContentView = window.innerWidth - 66; // 140 = remaining rows + gaps (in feedcard and feed)
 
@@ -79,7 +80,8 @@ class FeedCard extends Component {
         this.state = {
         username: "",
         university: "",
-        faculty:""
+        faculty:"",
+        upvotes: 0
 
         //need to store messages in state here... as a dictionary? with groups as keys... values also a dictionary with message data....
     };
@@ -91,7 +93,7 @@ class FeedCard extends Component {
         const WebSocketServiceInComponent = new WebSocketService(room_name)
         this.getWebSocketStatus(() => {
             WebSocketServiceInComponent.addCallback(this.updateMessagesState.bind(this))
-            }
+            }, WebSocketServiceInComponent 
         );
         WebSocketServiceInComponent.connect();
 
@@ -100,10 +102,10 @@ class FeedCard extends Component {
     }
 
     //finally , add updateMessagesState method and experiment with renderMessages method to read state and group message based on keys
-    getWebSocketStatus(callback) {
+    getWebSocketStatus(callback, WebSocketServiceInComponent) {
         const component = this;
         setTimeout(function() {
-          if (WebSocketService.state === 1) {
+          if (WebSocketServiceInComponent.state === 1) {
             //was (said .state() was not a function)
             //          if (WebSocketService.state() === 1) {
             console.log(`websocket ${WebSocketService.room_name} connected`); //was : WebsocketServiceInComponent.room_name (said not defined)
@@ -114,7 +116,7 @@ class FeedCard extends Component {
             // }); //triggers get_last_20 function on consumer.py which returns 20 messages before timeid
             return;
           } else {
-            console.log(`websocket ${WebSocketService.room_name}waiting for connection...`);//was : WebsocketServiceInComponent.room_name (said not defined)
+            console.log(`websocket ${WebSocketService.room_name} waiting for connection...`);//was : WebsocketServiceInComponent.room_name (said not defined)
             component.getWebSocketStatus(callback);
           }; 
         }, 100);
@@ -155,6 +157,35 @@ class FeedCard extends Component {
                 <Report>
                 </Report>
                 <Voting>
+                    <input 
+                    type="image" 
+                    src={upvoteIcon}
+                    style={{
+                        "width" : "100%"
+                    //     "height" : "100%",
+                    }}
+                    onClick = {
+                        (e) => {
+                            e.preventDefault();
+                            this.setState({upvotes: this.state.upvotes + 1})
+                            WebSocketServiceInComponent.sendMessage(message);
+   
+                            console.log(this.state.upvotes);
+                            // const message = {
+                            //     //'type' required for django channels processing - tells channels which method to use to handle
+
+                            //     'type' : 'video_post',
+                            //     'ip_origin' : ipAddress,
+                            //     'post_time' : Date.now(),
+                            //      'youtube_url' : this.state.input,
+                            //      'skip_counter' : this.state.skipCounter
+                            //     };
+                            // console.log(message);
+                            // WebSocketInstance.sendMessage(message);
+                            // this.setState({input: ''})
+                            }
+                        }
+                    />
                 </Voting>
             </FeedCardGrid>
         )
