@@ -36,7 +36,7 @@ class StudentUserCreate(APIView):
 class GetUserGroups(APIView):
 	def get(self, request):
 		user = UserFromToken(request)
-		return Response(data={"username":user.username}, status=status.HTTP_200_OK)
+		return Response(data={"username":user.username, "university": user.university}, status=status.HTTP_200_OK)
 
 class SetUniInfo(APIView):
 	def post(self, request):

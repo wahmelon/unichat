@@ -36,10 +36,11 @@ class StudentUserSerializer(serializers.ModelSerializer):
 	)
 	username = serializers.CharField()
 	password = serializers.CharField(min_length=8, write_only=True)
+	faculty = serializers.CharField()
 
 	class Meta:
 		model = StudentUser
-		fields = ('email', 'username', 'password')
+		fields = ('email', 'username', 'password', 'faculty')
 		extra_kwargs = {'password': {'write_only': True}}
 
 	def create(self, validated_data): #validated_data is parsed into a valid python dictionary
@@ -53,7 +54,7 @@ class StudentUserSerializer(serializers.ModelSerializer):
 			if key in email:
 				instance.university = email_format_dict[key]
 		print('success!')
-		instance.faculty = "" #currently being added in a later screen
+		instance.faculty = validated_data.pop('faculty',None)
 		instance.save()
 		return instance
 

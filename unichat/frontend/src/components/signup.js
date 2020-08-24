@@ -51,6 +51,7 @@ class Signup extends Component{
             username: "",
             password: "",
             email:"",
+            faculty: ""
         };
 
         this.handleChange = this.handleChange.bind(this);
@@ -68,6 +69,7 @@ class Signup extends Component{
                 username: this.state.username,
                 email: this.state.email,
                 password: this.state.password,
+                faculty: this.state.faculty
             }).then(
                 result => {
                     attemptLogin(this.state.username, this.state.password);
@@ -105,6 +107,10 @@ render() {
                 Password:
                 <input name="password" type="password" value={this.state.password} onChange={this.handleChange}/>
                 </label>
+                <label>
+                Faculty:
+                <input name="faculty" type="text" value={this.state.faculty} onChange={this.handleChange}/>
+                </label>                
                 <input type="submit" value="Submit"/>
             </form>
             </SignupContentDiv>
