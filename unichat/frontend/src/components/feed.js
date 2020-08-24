@@ -93,7 +93,7 @@ class Feed extends Component {
                 <FeedMenuDiv>
                 </FeedMenuDiv>
                 <FeedContentDiv>
-                    <FeedCard room_name="UNSW"/>
+                    <FeedCard group_name="UNSW"/>
                 </FeedContentDiv>
                 <FeedNavDiv>
                     <Link className={"nav-link"} to={"/authentication/"}>Account management</Link>

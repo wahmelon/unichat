@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { Link } from "react-router-dom";
 import axiosInstance from "../axiosApi";
 import styled from 'styled-components';
-import WebSocketService from './websocket';
+import WebSocketInstance from './websocket';
 import upvoteIcon from './upvote-icon.jpg';
 
 const remainingWidthForContentView = window.innerWidth - 66; // 140 = remaining rows + gaps (in feedcard and feed)
@@ -81,34 +81,34 @@ class FeedCard extends Component {
         username: "",
         university: "",
         faculty:"",
-        upvotes: 0
+        upvotes: 0,
+        messages: ""
 
         //need to store messages in state here... as a dictionary? with groups as keys... values also a dictionary with message data....
     };
-        console.log(this.props);
-        const room_name = this.props.room_name;
-        console.log(room_name);
 
+        WebSocketInstance.connect(this.props.group_name)
         this.handleChange = this.handleChange.bind(this);
-        const WebSocketServiceInComponent = new WebSocketService(room_name)
         this.getWebSocketStatus(() => {
-            WebSocketServiceInComponent.addCallback(this.updateMessagesState.bind(this))
-            }, WebSocketServiceInComponent 
+            WebSocketInstance.addCallback(this.updateMessagesState.bind(this))
+            } 
         );
-        WebSocketServiceInComponent.connect();
 
 
 
     }
 
+
     //finally , add updateMessagesState method and experiment with renderMessages method to read state and group message based on keys
-    getWebSocketStatus(callback, WebSocketServiceInComponent) {
+    getWebSocketStatus(callback) {
+        const group_name = this.props.group_name;
+        // WebSocketServiceInComponent.connect();
         const component = this;
         setTimeout(function() {
-          if (WebSocketServiceInComponent.state === 1) {
+          if (WebSocketInstance.state() === 1) {
             //was (said .state() was not a function)
             //          if (WebSocketService.state() === 1) {
-            console.log(`websocket ${WebSocketService.room_name} connected`); //was : WebsocketServiceInComponent.room_name (said not defined)
+            console.log(`websocket for ${group_name} connected`); //was : WebsocketServiceInComponent.room_name (said not defined)
             callback();
             // WebSocketService.sendMessage({
             //     'type' : 'get_last_20',
@@ -116,7 +116,7 @@ class FeedCard extends Component {
             // }); //triggers get_last_20 function on consumer.py which returns 20 messages before timeid
             return;
           } else {
-            console.log(`websocket ${WebSocketService.room_name} waiting for connection...`);//was : WebsocketServiceInComponent.room_name (said not defined)
+            console.log(`websocket ${group_name} waiting for connection...`);//was : WebsocketServiceInComponent.room_name (said not defined)
             component.getWebSocketStatus(callback);
           }; 
         }, 100);
@@ -140,6 +140,11 @@ class FeedCard extends Component {
         this.setState({[event.target.name]: event.target.value});
     }
 
+    updateMessagesState(message) {
+        console.log(message);
+        this.setState({messages : [...this.state.messages, message.content]});
+    };
+
 
 
 
@@ -151,6 +156,7 @@ class FeedCard extends Component {
                 <Topic>
                 </Topic>
                 <Comments>
+                    Upvotes: {this.state.messages}
                 </Comments>
                 <Userinput>
                 </Userinput>
@@ -168,7 +174,10 @@ class FeedCard extends Component {
                         (e) => {
                             e.preventDefault();
                             this.setState({upvotes: this.state.upvotes + 1})
-                            WebSocketServiceInComponent.sendMessage(message);
+                            WebSocketInstance.sendMessage({
+                                'type':'chat_message',
+                                'content':'test'
+                            });
    
                             console.log(this.state.upvotes);
                             // const message = {

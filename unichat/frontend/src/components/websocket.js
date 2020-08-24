@@ -1,25 +1,34 @@
 class WebSocketService {
 
-  updateMessagesInStateCallback = {};
+  callbackDictionary = {};
 
+  static instance = null;
 
-  constructor(group_name) {
-    this.group_name = group_name;
+  static getInstance() {
+    if (!WebSocketService.instance) {
+      WebSocketService.instance = new WebSocketService();
+    }
+    return WebSocketService.instance;
   }
 
-  connect() {
 
-    const path = `ws://127.0.0.1:8000/ws/chat/${this.group_name}/`
+  constructor() {
+    this.socketRef = null;
+  }
+
+  connect(group_name) {
+
+    const path = `ws://127.0.0.1:8000/ws/chat/${group_name}/`
     //dev django server
     this.socketRef = new WebSocket(path);
 
     this.socketRef.onopen = () => {
-      console.log(`WebSocket for ${this.group_name} open`);
+      console.log(`WebSocket for ${group_name} open`);
     };
     this.socketRef.onmessage = e => {
       const data = e.data;
       const parsedData = JSON.parse(data);
-      this.updateMessagesInStateCallback['command'](parsedData);
+      this.callbackDictionary['command'](parsedData);
       //shouldn't run if dictionary hasn't been populated successfully
       //updateMessagesInStateCallback is populated in the component that imports the WS instance
     };
@@ -27,7 +36,7 @@ class WebSocketService {
       console.log(e.message);
     };
     this.socketRef.onclose = () => {
-      console.log(`WebSocket for ${this.group_name} closed let's reopen`);
+      console.log(`WebSocket for ${group_name} closed let's reopen`);
       this.connect();
     };    
 
@@ -51,10 +60,15 @@ class WebSocketService {
   }
 
   addCallback(command) {
-    this.updateMessagesInStateCallback['command'] = command;
+    this.callbackDictionary['command'] = command;
+    console.log(this.callbackDictionary);
   }
+
+
 
 };
 
+const WebSocketInstance = WebSocketService.getInstance();
 
-export default WebSocketService;
+
+export default WebSocketInstance;
