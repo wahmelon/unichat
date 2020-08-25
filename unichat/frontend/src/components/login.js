@@ -2,10 +2,10 @@
 
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
+import { attemptLogin } from "./utilities";
 import styled from 'styled-components';
-import { attemptLogin } from "./Utilities";
 
-const remainingHeightForContentView = window.innerHeight - 140; // 140 = remaining rows + gaps
+const remainingHeightForContentView = window.innerHeight - 140
 
 const LoginGrid = styled.div`
   display: grid;

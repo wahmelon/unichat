@@ -3,7 +3,7 @@ import React, { Component } from "react";
 import axiosInstance from "../axiosApi";
 import { Link } from "react-router-dom";
 import styled from 'styled-components';
-import { setUniInfo } from './Utilities';
+import { setUniInfo } from './utilities';
 
 
 const remainingHeightForContentView = window.innerHeight - 140; // 140 = remaining rows + gaps

@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import WebSocketInstance from './websocket';
 import upvoteIcon from './upvote-icon.jpg';
 
-const remainingWidthForContentView = window.innerWidth - 66; // 140 = remaining rows + gaps (in feedcard and feed)
+const remainingWidthForContentView = window.innerWidth - 56; // 140 = remaining rows + gaps (in feedcard and feed)
 
 const FeedCardGrid = styled.div`
   display: grid;
