@@ -50,7 +50,7 @@ class Logout extends Component {
         this.setUniInfoInComponent  = this.setUniInfoInComponent.bind(this);
 
         this.state = {
-        unit_list: "",
+        group_list: "",
         faculty: ""
     };
     }
@@ -59,9 +59,9 @@ class Logout extends Component {
         this.setState({[event.target.name]: event.target.value});
     }
 
-    setUniInfoInComponent(event, unit_list, faculty) { //if not set to local variable there will be async issues
+    setUniInfoInComponent(event, group_list, faculty) { //if not set to local variable there will be async issues
         event.preventDefault();
-        setUniInfo(unit_list, faculty)
+        setUniInfo(group_list, faculty)
     }
     
 
@@ -92,10 +92,10 @@ class Logout extends Component {
                 <LogoutContentDiv>
                     Account management
                     <p>Enrolled units (write as 8 alphanumerals separated by comma no spaces):</p>
-                    <input name="unit_list" type="text" value={this.state.unit_list} onChange={this.handleChange}/>
+                    <input name="group_list" type="text" value={this.state.group_list} onChange={this.handleChange}/>
                     Faculty:
                     <input name="faculty" type="text" value={this.state.faculty} onChange={this.handleChange}/>
-                    <button onClick={(e) => this.setUniInfoInComponent(e, this.state.unit_list, this.state.faculty)}>
+                    <button onClick={(e) => this.setUniInfoInComponent(e, this.state.group_list, this.state.faculty)}>
                     Click to submit uni info!
                     </button>
                     Logout

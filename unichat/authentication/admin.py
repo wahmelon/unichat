@@ -1,11 +1,11 @@
 from django.contrib import admin
-from .models import StudentUser, Unit
+from .models import StudentUser, Group
 
 class StudentUserAdmin(admin.ModelAdmin):
 	model = StudentUser
 
 admin.site.register(StudentUser, StudentUserAdmin)
-admin.site.register(Unit)
+admin.site.register(Group)
 
 
 # Register your models here.

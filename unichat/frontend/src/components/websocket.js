@@ -14,16 +14,17 @@ class WebSocketService {
 
   constructor() {
     this.socketRef = null;
+    
   }
 
   connect(group_name) {
 
-    const path = `ws://127.0.0.1:8000/ws/chat/${group_name}/`
+    const path = `ws://127.0.0.1:8000/ws/chat/${this.callbackDictionary.group_name}/`
     //dev django server
     this.socketRef = new WebSocket(path);
 
     this.socketRef.onopen = () => {
-      console.log(`WebSocket for ${group_name} open`);
+      console.log(`WebSocket for ${this.callbackDictionary.group_name} open`);
     };
     this.socketRef.onmessage = e => {
       const data = e.data;
@@ -36,7 +37,7 @@ class WebSocketService {
       console.log(e.message);
     };
     this.socketRef.onclose = () => {
-      console.log(`WebSocket for ${group_name} closed let's reopen`);
+      console.log(`WebSocket for ${this.callbackDictionary.group_name} closed let's reopen`);
       this.connect();
     };    
 
@@ -61,6 +62,11 @@ class WebSocketService {
 
   addCallback(command) {
     this.callbackDictionary['command'] = command;
+    console.log(this.callbackDictionary);
+  }
+
+  addGroupName(group_name) {
+    this.callbackDictionary['group_name'] = group_name;
     console.log(this.callbackDictionary);
   }
 

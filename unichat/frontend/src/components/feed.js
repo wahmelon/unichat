@@ -91,7 +91,8 @@ class Feed extends Component {
         username: "",
         university: "",
         faculty:"",
-        topic_to_be_posted: ""
+        topic_to_be_posted: "",
+        audience: ""
 
         //need to store messages in state here... as a dictionary? with groups as keys... values also a dictionary with message data....
     };
@@ -148,15 +149,28 @@ class Feed extends Component {
                 <InputDiv>
                     <input 
                     name="topicpost"
+                    placeholder="What's on your mind?"
                     type="text"                     
                     style=
                     {{
                         "width" : "100%",
-                        "height" : "100%",
+                        "height" : "50%",
                         "fontSize" : "20px"
                     }}
                     value={this.state.topic_to_be_posted} 
                     onChange={(e) => this.setState({ topic_to_be_posted: e.target.value })}/>
+                    <input 
+                    name="audience"
+                    placeholder="Input group code"
+                    type="text"                     
+                    style=
+                    {{
+                        "width" : "100%",
+                        "height" : "50%",
+                        "fontSize" : "20px"
+                    }}
+                    value={this.state.audience} 
+                    onChange={(e) => this.setState({ audience: e.target.value })}/>
                 </InputDiv>
                 <SendButtonDiv>
                     <input 
@@ -169,8 +183,18 @@ class Feed extends Component {
                     onClick = {
                         (e) => {
                             e.preventDefault();
-                            console.log('posted: ', this.state.topic_to_be_posted);
-
+                            console.log('test')
+                            console.log(Date.now())
+                            console.log(typeof(Date.now()))
+                            axiosInstance.post('/user/post_topic/',
+                            {
+                            topic_to_be_posted: this.state.topic_to_be_posted,
+                            created_time: Date.now(),
+                            audience: this.state.audience
+                            }
+                            ).then(
+                            result => {console.log(result)}
+                            ).catch (error => {console.log(error.stack)})
                             this.setState({topic_to_be_posted: ""})
                             //SEND VIA POST AXIOS
                             // WebSocketInstance.sendMessage({

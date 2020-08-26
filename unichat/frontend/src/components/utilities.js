@@ -17,9 +17,9 @@ axiosInstance.post('/token/obtain/', {
 })
 };
 
-function setUniInfo(unit_list, faculty){
+function setUniInfo(group_list, faculty){
         axiosInstance.post('/user/set_uni_info/', {
-            unit_list: unit_list,
+            group_list: group_list,
             faculty: faculty
         }).then(
                 result => {

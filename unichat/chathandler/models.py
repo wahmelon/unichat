@@ -1,11 +1,13 @@
 from django.db import models
+#from authentication.models import Group, StudentUser
 
 class Topic(models.Model):
-	poster = models.TextField()
+	audience = models.ForeignKey("authentication.Group", on_delete=models.CASCADE)
+	poster = models.ForeignKey("authentication.StudentUser", on_delete=models.CASCADE)
 	content = models.TextField()
 	created_time = models.BigIntegerField()
-	upvotes = models.PositiveSmallIntegerField()
-	downvotes = models.PositiveSmallIntegerField()
+	upvotes = models.PositiveSmallIntegerField(default=0)
+	downvotes = models.PositiveSmallIntegerField(default=0)
 	#time field should be created by a Date.now() function in frontend
 	def as_dict(self):
 		return {
@@ -15,13 +17,13 @@ class Topic(models.Model):
 		}
 
 	def __str__(self):
-		return "%s: %s" % (self.poster, self.content)
+		return self.content
 
 	class Meta:
 		ordering = ['created_time']
 
 class Comment(models.Model):
-	poster = models.TextField()
+	poster = models.ForeignKey("authentication.StudentUser", on_delete=models.CASCADE)
 	content = models.TextField()
 	created_time = models.BigIntegerField()
 	upvotes = models.PositiveSmallIntegerField()
@@ -30,7 +32,7 @@ class Comment(models.Model):
 	topic_owner = models.ForeignKey(Topic, on_delete=models.CASCADE)
 
 	def __str__(self):
-		return "%s: %s" % (self.poster, self.content)
+		return self.content
 
 	class Meta:
 		ordering = ['created_time']

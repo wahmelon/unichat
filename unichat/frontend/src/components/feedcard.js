@@ -90,7 +90,8 @@ class FeedCard extends Component {
         WebSocketInstance.connect(this.props.group_name)
         this.handleChange = this.handleChange.bind(this);
         this.getWebSocketStatus(() => {
-            WebSocketInstance.addCallback(this.updateMessagesState.bind(this))
+            WebSocketInstance.addCallback(this.updateMessagesState.bind(this)); //ensures instance is still bound and connected to correct group on reload
+            WebSocketInstance.addGroupName(this.props.group_name)
             } 
         );
 

@@ -2,15 +2,15 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from chathandler.models import Topic, Comment
 
-class Unit(models.Model):
-	unit_code = models.CharField(max_length=120)
-	unit_name = models.CharField(max_length=120)
-	university = models.CharField(max_length=120)
+class Group(models.Model): #should be class Group
+	group_code = models.CharField(max_length=120) 
+	group_name = models.CharField(max_length=120) 
+	parent_organisation = models.CharField(max_length=120) 
 	def __str__(self):
-		return self.unit_code
+		return self.group_code
 
 class StudentUser(AbstractUser):
-	current_units = models.ManyToManyField(Unit, related_name = "units_list")
+	current_groups = models.ManyToManyField(Group, related_name = "groups_list")
 	faculty = models.CharField(max_length=120)
 	university = models.CharField(max_length=120)
 	karma = models.PositiveSmallIntegerField(default=0)
