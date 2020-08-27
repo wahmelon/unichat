@@ -18,7 +18,7 @@ class StudentUser(AbstractUser):
 	comments_posted = models.ManyToManyField(Comment, blank=True)
 
 	def __str__(self):
-		return "%s: %s" % (self.email, self.username)
+		return self.username
 
 	
 # Create your models here.

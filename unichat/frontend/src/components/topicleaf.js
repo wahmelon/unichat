@@ -5,9 +5,9 @@ import styled from 'styled-components';
 import WebSocketInstance from './websocket';
 import upvoteIcon from './upvote-icon.jpg';
 
-const remainingWidthForContentView = window.innerWidth - 56; // 140 = remaining rows + gaps (in feedcard and feed)
+const remainingWidthForContentView = window.innerWidth - 56; // 140 = remaining rows + gaps (in Topic and feed)
 
-const FeedCardGrid = styled.div`
+const TopicLeafGrid = styled.div`
   display: grid;
   grid-template-columns:  ${remainingWidthForContentView}px 50px ;
   grid-template-rows:  25px minmax(25px, auto) minmax(50px, auto) minmax(50px, auto) 25px;
@@ -30,7 +30,7 @@ const UserAndAudience = styled.div`
     
 `;
 
-const Topic = styled.div`
+const Content = styled.div`
     font-size: 1.5em;
     grid-area: Topic;
     background-color: #FF8A71;
@@ -74,7 +74,7 @@ const Voting = styled.div`
 // ADD CODE TO SWITCH ON AND OFF DEPENDING ON VISIBILITY. FEED SHOULD MAINTAIN A LIST OF WHAT 
 //WILL BE RENDERED IN THE FUTURE to preload/start websocket of card about to come into view...
 
-class FeedCard extends Component {
+class TopicLeaf extends Component {
     constructor(props){
         super(props);
         this.state = {
@@ -131,7 +131,7 @@ class FeedCard extends Component {
     //     .then(
     //         result => {
     //             this.setState({username:result.data.username,university:result.data.university,faculty:result.data.faculty});
-    //             console.log('feedcard',this.state);
+    //             console.log('Topic',this.state);
     //         }
     //     ).catch(error => {throw error;})
     //     const groups = [this.state.university,this.state.faculty];
@@ -151,11 +151,11 @@ class FeedCard extends Component {
 
     render() {
         return (
-            <FeedCardGrid>
+            <TopicLeafGrid>
                 <UserAndAudience>
                 </UserAndAudience>
-                <Topic>
-                </Topic>
+                <Content>
+                </Content>
                 <Comments>
                     Upvotes: {this.state.messages}
                 </Comments>
@@ -197,8 +197,8 @@ class FeedCard extends Component {
                         }
                     />
                 </Voting>
-            </FeedCardGrid>
+            </TopicLeafGrid>
         )
     }
 }
-export default FeedCard;
+export default TopicLeaf;

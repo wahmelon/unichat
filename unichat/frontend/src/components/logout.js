@@ -51,8 +51,19 @@ class Logout extends Component {
 
         this.state = {
         group_list: "",
-        faculty: ""
+        faculty: "",
+        username: ""
     };
+    }
+
+    componentDidMount(){
+
+        axiosInstance.get('/getusergroups/')
+        .then(
+            result => {
+                this.setState({username:result.data.username});
+            }
+        ).catch(error => {throw error})
     }
 
     handleChange(event) {
@@ -104,7 +115,7 @@ class Logout extends Component {
                     </button>
                 </LogoutContentDiv>
                 <LogoutNavDiv>
-                    <Link className={"nav-link"} to={"/"}>Feed</Link>
+                    <Link className={"nav-link"} to={"/"}>Feed for {this.state.username}</Link>
                 </LogoutNavDiv>
             </LogoutGrid>
         )

@@ -37,6 +37,16 @@ class StudentUserCreate(APIView):
 class GetUserGroups(APIView):
 	def get(self, request):
 		user = UserFromToken(request)
+		django_user = StudentUser.objects.get(username=user.username)
+
+		user_current_groups = django_user.current_groups.all()[:20]
+		for group in user_current_groups:
+			topics_of_group = group.topics.all() #change this to limit to specific number
+			#topics has been set as related_name on foreign key params in Topic object referencing Group object #allowing this lookup
+			for topic in topics_of_group:
+				print(topic.as_dict())
+
+			
 		return Response(data={"username":user.username, "university": user.university}, status=status.HTTP_200_OK)
 
 class SetUniInfo(APIView):
@@ -60,6 +70,7 @@ class SetUniInfo(APIView):
 		django_user.faculty = request.data['faculty']
 		print('test')
 		print(django_user.faculty)
+		print(django_user.current_groups.all())
 		return Response(data={"test response set_uni_info":"ok"}, status=status.HTTP_200_OK)
 
 
@@ -82,6 +93,8 @@ class PostTopic(APIView):
 		try:
 			poster = UserFromToken(request)
 			poster_as_django_obj = StudentUser.objects.get(username=poster.username)
+			print(poster_as_django_obj.current_groups)
+			# audience_as_django_obj = poster_as_django_obj.current_groups.objects.get(group_code=request.data['audience'])
 			audience_as_django_obj = Group.objects.get(group_code=request.data['audience'])
 			topic_django_object = Topic.objects.create(
 				poster=poster_as_django_obj, 
@@ -92,6 +105,7 @@ class PostTopic(APIView):
 				downvotes=0
 				)
 			topic_django_object.save()
+			print(topic_django_object.id)
 			return Response(status=status.HTTP_201_CREATED)
 		except:
 			return Response(data={"error":"ensure audience is as group_code e.g UNSW (260820)"},status=status.HTTP_400_BAD_REQUEST)

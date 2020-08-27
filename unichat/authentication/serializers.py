@@ -53,9 +53,14 @@ class StudentUserSerializer(serializers.ModelSerializer):
 		for key in email_format_dict:
 			if key in email:
 				instance.university = email_format_dict[key]
+				instance.save()
+				group_as_django_object = Group.objects.get(group_code=email_format_dict[key]) #automatically adds university as a current_group, searches by code in dict above
+				#but should change to be programmatic
+				instance.current_groups.add(group_as_django_object)
+				instance.save()
+				print(instance.current_groups.all())
 		print('success!')
 		instance.faculty = validated_data.pop('faculty',None)
-		instance.save()
 		return instance
 
 

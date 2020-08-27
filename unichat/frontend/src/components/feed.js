@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import axiosInstance from "../axiosApi";
 import styled from 'styled-components';
 import WebSocketService from './websocket'
-import FeedCard from './feedcard';
-import upvoteIcon from './upvote-icon.jpg';
+import TopicLeaf from './TopicLeaf';
+import sendButton from './sendbutton.png';
 
 
-const remainingWidthForInputView = (window.innerWidth - 56); // 140 = remaining rows + gaps (in feedcard and feed) 56
+const remainingWidthForInputView = (window.innerWidth - 56); // 140 = remaining rows + gaps (in Topic and feed) 56
 
 const remainingHeightForContentView = (window.innerHeight - 160); // 140 = remaining rows + gaps 160
 console.log(remainingHeightForContentView);
@@ -115,7 +115,7 @@ class Feed extends Component {
 
     componentDidMount(){
         const remainingHeightForContentView = (window.innerHeight - 160); // 140 = remaining rows + gaps
-        const remainingWidthForInputView = (window.innerWidth - 56); // 140 = remaining rows + gaps (in feedcard and feed)
+        const remainingWidthForInputView = (window.innerWidth - 56); // 140 = remaining rows + gaps (in Topic and feed)
 
 
         console.log('height of window', window.innerHeight);
@@ -175,7 +175,7 @@ class Feed extends Component {
                 <SendButtonDiv>
                     <input 
                     type="image" 
-                    src={upvoteIcon}
+                    src={sendButton}
                     style={{
                         "width" : "100%",
                         "height" : "100%"
@@ -221,10 +221,10 @@ class Feed extends Component {
                 <FeedTopicInputDiv>
                 </FeedTopicInputDiv>
                 <FeedContentDiv>
-                    <FeedCard group_name="UNSW"/>
+                    <TopicLeaf group_name="UNSW"/>
                 </FeedContentDiv>
                 <FeedNavDiv>
-                    <Link className={"nav-link"} to={"/authentication/"}>Account management</Link>
+                    <Link className={"nav-link"} to={"/authentication/"}>Account management for {this.state.username}</Link>
                 </FeedNavDiv>
             </FeedGrid>
         )
