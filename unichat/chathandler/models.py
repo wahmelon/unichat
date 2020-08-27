@@ -11,9 +11,10 @@ class Topic(models.Model):
 	#time field should be created by a Date.now() function in frontend
 	def as_dict(self):
 
+
 		return {
-		'audience' : self.audience,
-		'poster' : self.poster,
+		'audience' : str(self.audience),
+		'poster' : str(self.poster),
 		'content' : self.content,
 		'created_time' : self.created_time,
 		'upvotes' : self.upvotes,
