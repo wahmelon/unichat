@@ -39,12 +39,12 @@ class GetUserGroups(APIView):
 		user = UserFromToken(request)
 		django_user = StudentUser.objects.get(username=user.username)
 
-		user_current_groups = django_user.current_groups.all()[:20]
+		user_current_groups = django_user.current_groups.all()
 		for group in user_current_groups:
-			topics_of_group = group.topics.all() #change this to limit to specific number
+			topics_of_group = group.topics.all()[:20] 
 			#topics has been set as related_name on foreign key params in Topic object referencing Group object #allowing this lookup
-			for topic in topics_of_group:
-				print(topic.as_dict())
+			content = [topic.as_dict() for topic in topics_of_group]
+			print(content)
 
 			
 		return Response(data={"username":user.username, "university": user.university}, status=status.HTTP_200_OK)
