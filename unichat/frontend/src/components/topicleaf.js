@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import WebSocketInstance from './websocket';
 import upvoteIcon from './upvote-icon.jpg';
 import downvoteIcon from './downvoteicon.jpg';
+import sendButton from './sendbutton.png';
 
 const remainingWidthForContentView = window.innerWidth - 56; // 140 = remaining rows + gaps (in Topic and feed)
 
@@ -83,7 +84,8 @@ class TopicLeaf extends Component {
         group: "",
         upvotes: 0,
         downvotes: 0,
-        comments: ""
+        comments: "",
+        comment_to_be_posted :""
 
         //need to store messages in state here... as a dictionary? with groups as keys... values also a dictionary with message data....
     };
@@ -153,9 +155,12 @@ class TopicLeaf extends Component {
         this.setState({[event.target.name]: event.target.value});
     }
 
-    updateCommentsInState(websocket_message) {
-        console.log(websocket_message);
-        this.setState({comments : [...this.state.comments, websocket_message.comment]});
+    updateCommentsInState(comment_websocket_message) {
+        console.log(comment_websocket_message);
+        let withNewComment = [...this.state.comments, comment_websocket_message.content].sort((a,b)=> a['created_time'] - b['created_time']);
+        // this.setState({comments : [...this.state.comments, websocket_message.comment]});
+        this.setState({comments:withNewComment});
+        console.log(this.state.comments)
     };
 
     updateDownvotesInState() {
@@ -186,10 +191,20 @@ class TopicLeaf extends Component {
         });
     };
 
-
-
-
-
+    submitComment(e) {
+        e.preventDefault();
+        WebSocketInstance.sendMessage({
+            'type' : 'websocket_message',
+            'action' : 'comment',
+            'content' : this.state.comment_to_be_posted,
+            'poster' : this.props.username,
+            'topic_owner' : this.props.topic_id,
+            'created_time' : Date.now()
+            //need more here to create commment in db
+        });
+        this.setState({comment_to_be_posted: ""});
+        console.log(this.state.comment_to_be_posted)
+    }
 
 
     render() {
@@ -203,6 +218,28 @@ class TopicLeaf extends Component {
                     {this.state.comments}
                 </Comments>
                 <Userinput>
+                    <input 
+                        name="comment_to_be_posted"
+                        placeholder="Write comment here"
+                        type="text"                     
+                        style=
+                        {{
+                            "width" : "80%",
+                            "height" : "50%",
+                            "fontSize" : "20px"
+                        }}
+                        value={this.state.comment_to_be_posted} 
+                        onChange={(e) => this.setState({ comment_to_be_posted: e.target.value })}/>
+                        <input 
+                        type="image" 
+                        src={sendButton}
+                        style={{
+                            "width" : "10%"
+                            // "height" : "100%"
+                        }}
+                        onClick = {(e) => this.submitComment(e)}                        
+                        />
+
                 </Userinput>
                 <Report>
                 </Report>

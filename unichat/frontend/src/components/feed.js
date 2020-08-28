@@ -129,7 +129,6 @@ class Feed extends Component {
                 console.log(this.state.feed_data);
             }
         ).catch(error => {throw error;})
-        const groups = [this.state.university,this.state.faculty];
     }
 
     handleChange(event) {
@@ -221,7 +220,7 @@ class Feed extends Component {
                 <FeedTopicInputDiv>
                 </FeedTopicInputDiv>
                 <FeedContentDiv>
-                    <TopicLeaf topic_id="UNSW"/>
+                    <TopicLeaf topic_id="200" username = {this.state.username}/>
                 </FeedContentDiv>
                 <FeedNavDiv>
                     <Link className={"nav-link"} to={"/authentication/"}>Account management for {this.state.username}</Link>
