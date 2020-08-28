@@ -161,11 +161,11 @@ class TopicLeaf extends Component {
     const final_comment_array_of_dictionaries = [];
 
     for (const [comment_object_key, comment_object_value] of Object.entries(updatedTopic['comments'])) {
-        const temp_comment_dict = {};
+        const temp_comment_array = [];
         for (const [comment_field_key, comment_field_value] of Object.entries(comment_object_value)) {
-            temp_comment_dict[comment_field_key] = comment_field_value
+            temp_comment_array.push(comment_field_key, comment_field_value)
         };
-        final_comment_array_of_dictionaries.push(temp_comment_dict);
+        final_comment_array_of_dictionaries.push(temp_comment_array);
     };
     console.log(final_comment_array_of_dictionaries);
     console.log(typeof(final_comment_array_of_dictionaries));
@@ -174,7 +174,7 @@ class TopicLeaf extends Component {
         this.setState({
             topic_upvotes: updatedTopic['upvotes'],
             topic_downvotes: updatedTopic['downvotes'],
-            // comments: final_comment_array_of_dictionaries //later have a diff function which only adds on new comments? to reduce overhead?
+            comments: final_comment_array_of_dictionaries //later have a diff function which only adds on new comments? to reduce overhead?
 
         });
         console.log('updated topic: ', this.state);
