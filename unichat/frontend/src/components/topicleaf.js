@@ -4,6 +4,7 @@ import axiosInstance from "../axiosApi";
 import styled from 'styled-components';
 import WebSocketInstance from './websocket';
 import upvoteIcon from './upvote-icon.jpg';
+import downvoteIcon from './downvoteicon.jpg';
 
 const remainingWidthForContentView = window.innerWidth - 56; // 140 = remaining rows + gaps (in Topic and feed)
 
@@ -79,19 +80,30 @@ class TopicLeaf extends Component {
         super(props);
         this.state = {
         username: "",
-        university: "",
-        faculty:"",
+        group: "",
         upvotes: 0,
-        messages: ""
+        downvotes: 0,
+        comments: ""
 
         //need to store messages in state here... as a dictionary? with groups as keys... values also a dictionary with message data....
     };
 
-        WebSocketInstance.connect(this.props.group_name)
+        WebSocketInstance.connect(this.props.topic_id)
         this.handleChange = this.handleChange.bind(this);
         this.getWebSocketStatus(() => {
-            WebSocketInstance.addCallback(this.updateMessagesState.bind(this)); //ensures instance is still bound and connected to correct group on reload
-            WebSocketInstance.addGroupName(this.props.group_name)
+            WebSocketInstance.populateCallbackDictionary(
+                {
+                    'topic_id' : this.props.topic_id,
+                    'update_comments' : this.updateCommentsInState.bind(this),
+                    'update_downvotes' : this.updateDownvotesInState.bind(this),
+                    'update_upvotes' : this.updateUpvotesInState.bind(this)
+                }
+
+            );
+            // WebSocketInstance.addCommentsCallback(this.updateCommentsInState.bind(this)); //ensures instance is still bound and connected to correct group on reload
+            // WebSocketInstance.addUpvoteCallback(this.updateUpvotesInState.bind(this));
+            // WebSocketInstance.addDownvoteCallback(this.updateDownvotesInState.bind(this));
+            // WebSocketInstance.addGroupName(this.props.topic_id)
             } 
         );
 
@@ -102,14 +114,14 @@ class TopicLeaf extends Component {
 
     //finally , add updateMessagesState method and experiment with renderMessages method to read state and group message based on keys
     getWebSocketStatus(callback) {
-        const group_name = this.props.group_name;
+        const topic_id = this.props.topic_id;
         // WebSocketServiceInComponent.connect();
         const component = this;
         setTimeout(function() {
           if (WebSocketInstance.state() === 1) {
             //was (said .state() was not a function)
             //          if (WebSocketService.state() === 1) {
-            console.log(`websocket for ${group_name} connected`); //was : WebsocketServiceInComponent.room_name (said not defined)
+            console.log(`websocket for ${topic_id} connected`); //was : WebsocketServiceInComponent.room_name (said not defined)
             callback();
             // WebSocketService.sendMessage({
             //     'type' : 'get_last_20',
@@ -117,7 +129,7 @@ class TopicLeaf extends Component {
             // }); //triggers get_last_20 function on consumer.py which returns 20 messages before timeid
             return;
           } else {
-            console.log(`websocket ${group_name} waiting for connection...`);//was : WebsocketServiceInComponent.room_name (said not defined)
+            console.log(`websocket ${topic_id} waiting for connection...`);//was : WebsocketServiceInComponent.room_name (said not defined)
             component.getWebSocketStatus(callback);
           }; 
         }, 100);
@@ -141,10 +153,41 @@ class TopicLeaf extends Component {
         this.setState({[event.target.name]: event.target.value});
     }
 
-    updateMessagesState(message) {
-        console.log(message);
-        this.setState({messages : [...this.state.messages, message.content]});
+    updateCommentsInState(websocket_message) {
+        console.log(websocket_message);
+        this.setState({comments : [...this.state.comments, websocket_message.comment]});
     };
+
+    updateDownvotesInState() {
+        console.log('added downvote');
+        this.setState({downvotes: this.state.downvotes + 1});
+        console.log(this.state.downvotes)
+    };
+
+    updateUpvotesInState() {
+        console.log('added upvote');
+        this.setState({upvotes: this.state.upvotes + 1});
+        console.log(this.state.upvotes)
+    };
+
+    submitUpvote(e) {
+        e.preventDefault();
+        WebSocketInstance.sendMessage({
+            'type':'websocket_message',
+            'action':'upvote'
+        });
+    };
+
+    submitDownvote(e) {
+        e.preventDefault();
+        WebSocketInstance.sendMessage({
+            'type':'websocket_message',
+            'action':'downvote'
+        });
+    };
+
+
+
 
 
 
@@ -157,7 +200,7 @@ class TopicLeaf extends Component {
                 <Content>
                 </Content>
                 <Comments>
-                    Upvotes: {this.state.messages}
+                    {this.state.comments}
                 </Comments>
                 <Userinput>
                 </Userinput>
@@ -171,30 +214,17 @@ class TopicLeaf extends Component {
                         "width" : "100%"
                     //     "height" : "100%",
                     }}
-                    onClick = {
-                        (e) => {
-                            e.preventDefault();
-                            this.setState({upvotes: this.state.upvotes + 1})
-                            WebSocketInstance.sendMessage({
-                                'type':'chat_message',
-                                'content':'test'
-                            });
-   
-                            console.log(this.state.upvotes);
-                            // const message = {
-                            //     //'type' required for django channels processing - tells channels which method to use to handle
+                    onClick = {(e) => this.submitUpvote(e)}                        
+                    />
 
-                            //     'type' : 'video_post',
-                            //     'ip_origin' : ipAddress,
-                            //     'post_time' : Date.now(),
-                            //      'youtube_url' : this.state.input,
-                            //      'skip_counter' : this.state.skipCounter
-                            //     };
-                            // console.log(message);
-                            // WebSocketInstance.sendMessage(message);
-                            // this.setState({input: ''})
-                            }
-                        }
+                     <input 
+                    type="image" 
+                    src={downvoteIcon}
+                    style={{
+                        "width" : "100%"
+                    //     "height" : "100%",
+                    }}
+                    onClick = {(e)=>this.submitDownvote(e)}                        
                     />
                 </Voting>
             </TopicLeafGrid>

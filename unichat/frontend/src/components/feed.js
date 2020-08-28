@@ -221,7 +221,7 @@ class Feed extends Component {
                 <FeedTopicInputDiv>
                 </FeedTopicInputDiv>
                 <FeedContentDiv>
-                    <TopicLeaf group_name="UNSW"/>
+                    <TopicLeaf topic_id="UNSW"/>
                 </FeedContentDiv>
                 <FeedNavDiv>
                     <Link className={"nav-link"} to={"/authentication/"}>Account management for {this.state.username}</Link>
