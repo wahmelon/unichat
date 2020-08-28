@@ -156,10 +156,11 @@ class TopicLeaf extends Component {
     }
 
     updateCommentsInState(comment_websocket_message) {
-        console.log(comment_websocket_message);
-        let withNewComment = [...this.state.comments, comment_websocket_message.content].sort((a,b)=> a['created_time'] - b['created_time']);
-        // this.setState({comments : [...this.state.comments, websocket_message.comment]});
-        this.setState({comments:withNewComment});
+        console.log('calling update comments in topicleaf ', comment_websocket_message);
+        console.log(comment_websocket_message.content);
+        // let withNewComment = [...this.state.comments, comment_websocket_message.content].sort((a,b)=> a['created_time'] - b['created_time']);
+        this.setState({comments : [...this.state.comments, comment_websocket_message.content]});
+        // this.setState({comments:withNewComment});
         console.log(this.state.comments)
     };
 
@@ -200,7 +201,6 @@ class TopicLeaf extends Component {
             'poster' : this.props.username,
             'topic_owner' : this.props.topic_id,
             'created_time' : Date.now()
-            //need more here to create commment in db
         });
         this.setState({comment_to_be_posted: ""});
         console.log(this.state.comment_to_be_posted)

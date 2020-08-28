@@ -19,9 +19,18 @@ class WebSocketService {
 
   connect(topic_id) {
 
-    const path = `ws://127.0.0.1:8000/ws/chat/${this.callbackDictionary.topic_id}/`
+    // var path = `ws://127.0.0.1:8000/ws/chat/${this.callbackDictionary.topic_id}/`
+
+    if (!this.callbackDictionary.topic_id) { //hasn't been loaded yet
+      console.log('callbackDictionary not loaded yet')
+      this.socketRef = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${topic_id}/`); 
+    } else {
+      this.socketRef = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${this.callbackDictionary.topic_id}/`)
+    }
+
+    // const path = `ws://127.0.0.1:8000/ws/chat/${this.callbackDictionary.topic_id}/`
     //dev django server
-    this.socketRef = new WebSocket(path);
+    
 
     this.socketRef.onopen = () => {
       console.log(`WebSocket for ${this.callbackDictionary.topic_id} open`);
@@ -29,12 +38,13 @@ class WebSocketService {
     this.socketRef.onmessage = e => {
       const data = e.data;
       const parsedData = JSON.parse(data);
-      print('printing parseddata', parsedData)
-      if (parsedData.action === 'comment' ) {
+      if (parsedData['action'] === 'comment') {
+        console.log('attempting to call update comments');
+        console.log(this.callbackDictionary);
         this.callbackDictionary['update_comments'](parsedData);
-      } else if (parsedData.action === 'topic_upvote') {
+      } else if (parsedData['action'] === 'topic_upvote') {
         this.callbackDictionary['update_topic_upvotes']();
-      } else if (parsedData.action === 'topic_downvote') {
+      } else if (parsedData['action'] === 'topic_downvote') {
         this.callbackDictionary['update_topic_downvotes']();
       } else {
         console.log('no action found in websocket message')

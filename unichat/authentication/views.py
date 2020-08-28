@@ -44,7 +44,7 @@ class GetUserGroups(APIView):
 				if topic:
 					topic_comment_list.append(topic.as_dict())
 			#topics has been set as related_name on foreign key params in Topic object referencing Group object #allowing this lookup
-		print(topic_comment_list)
+		# print(topic_comment_list)
 		return Response(data={"username":user.username, "university": user.university, "topic_comment_payload" : topic_comment_list}, status=status.HTTP_200_OK)
 
 class SetUniInfo(APIView):
