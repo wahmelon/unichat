@@ -38,16 +38,13 @@ class GetUserGroups(APIView):
 	def get(self, request):
 		user = UserFromToken(request)
 		django_user = StudentUser.objects.get(username=user.username)
-
-		user_current_groups = django_user.current_groups.all()
-		for group in user_current_groups:
-			topics_of_group = group.topics.all()[:20] 
+		topic_comment_list = []
+		for group in django_user.current_groups.all():
+			for topic in group.topics.all()[:10]:
+				if topic:
+					topic_comment_list.append(topic.as_dict())
 			#topics has been set as related_name on foreign key params in Topic object referencing Group object #allowing this lookup
-			content = [topic.as_dict() for topic in topics_of_group]
-			print(content)
-
-			
-		return Response(data={"username":user.username, "university": user.university}, status=status.HTTP_200_OK)
+		return Response(data={"username":user.username, "university": user.university, "topic_comment_payload" : topic_comment_list}, status=status.HTTP_200_OK)
 
 class SetUniInfo(APIView):
 	def post(self, request):

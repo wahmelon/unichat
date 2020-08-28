@@ -92,7 +92,8 @@ class Feed extends Component {
         university: "",
         faculty:"",
         topic_to_be_posted: "",
-        audience: ""
+        audience: "",
+        feed_data:""
 
         //need to store messages in state here... as a dictionary? with groups as keys... values also a dictionary with message data....
     };
@@ -116,17 +117,16 @@ class Feed extends Component {
     componentDidMount(){
         const remainingHeightForContentView = (window.innerHeight - 160); // 140 = remaining rows + gaps
         const remainingWidthForInputView = (window.innerWidth - 56); // 140 = remaining rows + gaps (in Topic and feed)
-
-
-        console.log('height of window', window.innerHeight);
-        console.log('computed height for feed page', remainingHeightForContentView);
-        console.log('width of window', window.innerWidth);
-        console.log('width of input view', remainingWidthForInputView);
-
         axiosInstance.get('/getusergroups/')
         .then(
             result => {
-                this.setState({username:result.data.username,university:result.data.university,faculty:result.data.faculty});
+                this.setState({
+                    username:result.data.username,
+                    university:result.data.university,
+                    faculty:result.data.faculty,
+                    feed_data:result.data.topic_comment_payload
+                });
+                console.log(this.state.feed_data);
             }
         ).catch(error => {throw error;})
         const groups = [this.state.university,this.state.faculty];
