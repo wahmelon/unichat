@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { Link } from "react-router-dom";
 import axiosInstance from "../axiosApi";
 import styled from 'styled-components';
-import WebSocketService from './websocket'
+import WebSocketInstance from './websocket'
 import TopicLeaf from './TopicLeaf';
 import sendButton from './sendbutton.png';
 
@@ -220,7 +220,7 @@ class Feed extends Component {
                 <FeedTopicInputDiv>
                 </FeedTopicInputDiv>
                 <FeedContentDiv>
-                    <TopicLeaf topic_id="200" username = {this.state.username}/>
+                    <TopicLeaf topic_id="5" username = {this.state.username}/>
                 </FeedContentDiv>
                 <FeedNavDiv>
                     <Link className={"nav-link"} to={"/authentication/"}>Account management for {this.state.username}</Link>

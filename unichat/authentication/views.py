@@ -64,11 +64,7 @@ class SetUniInfo(APIView):
 			except:
 				print('error adding group')
 				return Response(status=status.HTTP_400_BAD_REQUEST)
-		print(request.data['faculty'])
 		django_user.faculty = request.data['faculty']
-		print('test')
-		print(django_user.faculty)
-		print(django_user.current_groups.all())
 		return Response(data={"test response set_uni_info":"ok"}, status=status.HTTP_200_OK)
 
 

@@ -29,12 +29,13 @@ class WebSocketService {
     this.socketRef.onmessage = e => {
       const data = e.data;
       const parsedData = JSON.parse(data);
+      print('printing parseddata', parsedData)
       if (parsedData.action === 'comment' ) {
         this.callbackDictionary['update_comments'](parsedData);
-      } else if (parsedData.action === 'upvote') {
-        this.callbackDictionary['update_upvotes']();
-      } else if (parsedData.action === 'downvote') {
-        this.callbackDictionary['update_downvotes']();
+      } else if (parsedData.action === 'topic_upvote') {
+        this.callbackDictionary['update_topic_upvotes']();
+      } else if (parsedData.action === 'topic_downvote') {
+        this.callbackDictionary['update_topic_downvotes']();
       } else {
         console.log('no action found in websocket message')
       }

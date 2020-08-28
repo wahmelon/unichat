@@ -82,8 +82,8 @@ class TopicLeaf extends Component {
         this.state = {
         username: "",
         group: "",
-        upvotes: 0,
-        downvotes: 0,
+        topic_upvotes: 0,
+        topic_downvotes: 0,
         comments: "",
         comment_to_be_posted :""
 
@@ -97,8 +97,8 @@ class TopicLeaf extends Component {
                 {
                     'topic_id' : this.props.topic_id,
                     'update_comments' : this.updateCommentsInState.bind(this),
-                    'update_downvotes' : this.updateDownvotesInState.bind(this),
-                    'update_upvotes' : this.updateUpvotesInState.bind(this)
+                    'update_topic_downvotes' : this.updateTopicDownvotesInState.bind(this),
+                    'update_topic_upvotes' : this.updateTopicUpvotesInState.bind(this)
                 }
 
             );
@@ -163,31 +163,31 @@ class TopicLeaf extends Component {
         console.log(this.state.comments)
     };
 
-    updateDownvotesInState() {
+    updateTopicDownvotesInState() {
         console.log('added downvote');
-        this.setState({downvotes: this.state.downvotes + 1});
-        console.log(this.state.downvotes)
+        this.setState({topic_downvotes: this.state.topic_downvotes + 1});
+        console.log(this.state.topic_downvotes)
     };
 
-    updateUpvotesInState() {
-        console.log('added upvote');
-        this.setState({upvotes: this.state.upvotes + 1});
-        console.log(this.state.upvotes)
+    updateTopicUpvotesInState() {
+        console.log('added a vote');
+        this.setState({topic_upvotes: this.state.topic_upvotes + 1});
+        console.log(this.state.topic_upvotes)
     };
 
-    submitUpvote(e) {
+    submitTopicUpvote(e) {
         e.preventDefault();
         WebSocketInstance.sendMessage({
             'type':'websocket_message',
-            'action':'upvote'
+            'action':'topic_upvote'
         });
     };
 
-    submitDownvote(e) {
+    submitTopicDownvote(e) {
         e.preventDefault();
         WebSocketInstance.sendMessage({
             'type':'websocket_message',
-            'action':'downvote'
+            'action':'topic_downvote'
         });
     };
 
@@ -251,7 +251,7 @@ class TopicLeaf extends Component {
                         "width" : "100%"
                     //     "height" : "100%",
                     }}
-                    onClick = {(e) => this.submitUpvote(e)}                        
+                    onClick = {(e) => this.submitTopicUpvote(e)}                        
                     />
 
                      <input 
@@ -261,7 +261,7 @@ class TopicLeaf extends Component {
                         "width" : "100%"
                     //     "height" : "100%",
                     }}
-                    onClick = {(e)=>this.submitDownvote(e)}                        
+                    onClick = {(e)=>this.submitTopicDownvote(e)}                        
                     />
                 </Voting>
             </TopicLeafGrid>
