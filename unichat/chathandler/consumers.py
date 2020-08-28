@@ -57,7 +57,6 @@ class ChatConsumer(WebsocketConsumer):
         print('id is: ', self.room_group_name)
         print('sending: ', event)
         # Send message to WebSocket
-        self.send(text_data=json.dumps(event))
         #save message to DB
         topic_as_django_obj = Topic.objects.get(id=self.room_group_name)
         if event['action'] == 'topic_upvote':

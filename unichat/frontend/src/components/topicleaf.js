@@ -80,12 +80,12 @@ class TopicLeaf extends Component {
     constructor(props){
         super(props);
         this.state = {
-        username: "",
-        group: "",
         topic_upvotes: 0,
         topic_downvotes: 0,
-        comments: "",
+        comments: [],
+        //USER INPUT
         comment_to_be_posted :""
+
 
         //need to store messages in state here... as a dictionary? with groups as keys... values also a dictionary with message data....
     };
@@ -96,9 +96,10 @@ class TopicLeaf extends Component {
             WebSocketInstance.populateCallbackDictionary(
                 {
                     'topic_id' : this.props.topic_id,
-                    'update_comments' : this.updateCommentsInState.bind(this),
-                    'update_topic_downvotes' : this.updateTopicDownvotesInState.bind(this),
-                    'update_topic_upvotes' : this.updateTopicUpvotesInState.bind(this)
+                    'update_topic_data' : this.updateTopicDataInState.bind(this)
+                    // 'update_comments' : this.updateCommentsInState.bind(this),
+                    // 'update_topic_downvotes' : this.updateTopicDownvotesInState.bind(this),
+                    // 'update_topic_upvotes' : this.updateTopicUpvotesInState.bind(this)
                 }
 
             );
@@ -155,26 +156,49 @@ class TopicLeaf extends Component {
         this.setState({[event.target.name]: event.target.value});
     }
 
-    updateCommentsInState(comment_websocket_message) {
-        console.log('calling update comments in topicleaf ', comment_websocket_message);
-        console.log(comment_websocket_message.content);
-        // let withNewComment = [...this.state.comments, comment_websocket_message.content].sort((a,b)=> a['created_time'] - b['created_time']);
-        this.setState({comments : [...this.state.comments, comment_websocket_message.content]});
-        // this.setState({comments:withNewComment});
-        console.log(this.state.comments)
+    updateTopicDataInState(updatedTopic) {
+        //need to parse JSON object to dictionary as setState won't accept JSON object
+    const final_comment_array_of_dictionaries = [];
+
+    for (const [comment_object_key, comment_object_value] of Object.entries(updatedTopic['comments'])) {
+        const temp_comment_dict = {};
+        for (const [comment_field_key, comment_field_value] of Object.entries(comment_object_value)) {
+            temp_comment_dict[comment_field_key] = comment_field_value
+        };
+        final_comment_array_of_dictionaries.push(temp_comment_dict);
+    };
+    console.log(final_comment_array_of_dictionaries);
+    console.log(typeof(final_comment_array_of_dictionaries));
+
+
+        this.setState({
+            topic_upvotes: updatedTopic['upvotes'],
+            topic_downvotes: updatedTopic['downvotes'],
+            // comments: final_comment_array_of_dictionaries //later have a diff function which only adds on new comments? to reduce overhead?
+
+        });
+        console.log('updated topic: ', this.state);
     };
 
-    updateTopicDownvotesInState() {
-        console.log('added downvote');
-        this.setState({topic_downvotes: this.state.topic_downvotes + 1});
-        console.log(this.state.topic_downvotes)
-    };
+    // updateCommentsInState(comment_websocket_message) {
+    //     console.log('calling update comments in topicleaf ', comment_websocket_message);
+    //     // let withNewComment = [...this.state.comments, comment_websocket_message.content].sort((a,b)=> a['created_time'] - b['created_time']);
+    //     this.setState({comments : [...this.state.comments, comment_websocket_message.content]});
+    //     // this.setState({comments:withNewComment});
+    //     console.log(this.state.comments)
+    // };
 
-    updateTopicUpvotesInState() {
-        console.log('added a vote');
-        this.setState({topic_upvotes: this.state.topic_upvotes + 1});
-        console.log(this.state.topic_upvotes)
-    };
+    // updateTopicDownvotesInState() {
+    //     console.log('added downvote');
+    //     this.setState({topic_downvotes: this.state.topic_downvotes + 1});
+    //     console.log(this.state.topic_downvotes)
+    // };
+
+    // updateTopicUpvotesInState() {
+    //     console.log('added a vote');
+    //     this.setState({topic_upvotes: this.state.topic_upvotes + 1});
+    //     console.log(this.state.topic_upvotes)
+    // };
 
     submitTopicUpvote(e) {
         e.preventDefault();
