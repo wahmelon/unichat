@@ -6,6 +6,7 @@ import WebSocketInstance from './websocket';
 import upvoteIcon from './upvote-icon.jpg';
 import downvoteIcon from './downvoteicon.jpg';
 import sendButton from './sendbutton.png';
+import collapseIcon from './collapseIcon.png';
 
 const remainingWidthForContentView = window.innerWidth - 56; // 140 = remaining rows + gaps (in Topic and feed)
 
@@ -108,7 +109,9 @@ class TopicLeaf extends Component {
         topic_downvotes: 0,
         comments: [],
         //USER INPUT
-        comment_to_be_posted :""
+        comment_to_be_posted :"",
+        //TOGGLE COMMENTS
+        comments_collapsed:true
     };
 
         WebSocketInstance.connect(this.props.topic_id)
@@ -287,6 +290,7 @@ class TopicLeaf extends Component {
 // add renderMethod that turns arrays back into dictionaries for display in jsx... arrayindexOf + 1.... etc
 
     render() {
+        const comments_collapsed = this.state.comments_collapsed;
         return (
             <TopicLeafGrid>
                 <UserAndAudience>
@@ -296,9 +300,13 @@ class TopicLeaf extends Component {
                 {this.state.topic_content}
                 </Content>
                 <Comments>
+                {comments_collapsed ? 
+                    <span style = {{"fontSize" : "15px"}}>Expand comments to the right</span>
+                    : 
                     <ul style = {{ listStyleType : "none" }}>
                         {this.renderComments(this.state.comments)}
                     </ul>
+                }
                 </Comments>
                 <Userinput>
                     <input 
@@ -329,6 +337,7 @@ class TopicLeaf extends Component {
                 </Report>
                 <Voting>
                     {this.state.topic_upvotes}
+                    <br/>
                     <input 
                     type="image" 
                     src={upvoteIcon}
@@ -338,7 +347,7 @@ class TopicLeaf extends Component {
                     }}
                     onClick = {(e) => this.submitTopicUpvote(e)}                        
                     />
-
+                    <br/>
                      <input 
                     type="image" 
                     src={downvoteIcon}
@@ -348,7 +357,27 @@ class TopicLeaf extends Component {
                     }}
                     onClick = {(e)=>this.submitTopicDownvote(e)}                        
                     />
+                    <br/>
                     {this.state.topic_downvotes}
+                    <br/>
+                     <input 
+                    type="image" 
+                    src={collapseIcon}
+                    style={{
+                        "width" : "100%"
+                    //     "height" : "100%",
+                    }}
+                    onClick = {(e) => {
+                        e.preventDefault();
+                        if (this.state.comments_collapsed) {
+                            this.setState({comments_collapsed:false}) 
+                            } else {
+                            this.setState({comments_collapsed:true})
+                            };
+                        }
+                    }
+                        
+                    />
                 </Voting>
             </TopicLeafGrid>
         )
