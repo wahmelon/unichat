@@ -24,16 +24,16 @@ const TopicLeafGrid = styled.div`
 `;
 
 const UserAndAudience = styled.div`
-    font-size: 1.5em;
+    font-size: 20px;
     grid-area: UserAndAudience;
     background-color: #FF8A71;
-    align-items: center;            
+    align-items: center;
 
     
 `;
 
 const Content = styled.div`
-    font-size: 1.5em;
+    font-size: 30px;
     grid-area: Topic;
     background-color: #FF8A71;
     align-items: center;            
@@ -44,7 +44,6 @@ const Comments = styled.div`
     font-size: 1.5em;
     grid-area: Comments;
     background-color: #FF8A71;
-    align-items: center;            
     
 `;
 
@@ -57,7 +56,7 @@ const Userinput = styled.div`
 `;
 
 const Report = styled.div`
-    font-size: 1.5em;
+    font-size: 20px;
     grid-area: Report;
     background-color: #FF8A71;
     align-items: center;            
@@ -65,12 +64,32 @@ const Report = styled.div`
 `;
 
 const Voting = styled.div`
-    font-size: 1.5em;
+    font-size: 15px;
     grid-area: Voting;
     background-color: #FF8A71;
     align-items: center;            
     
 `;
+
+const CommentGrid = styled.div`
+  display: grid;
+  grid-template-columns:  1fr 25px ;
+  grid-template-rows:  25px minmax(50px, auto);
+  gap: 5px 5px;
+  grid-template-areas: 
+  "CommentContent CommentVoting"
+  "CommentContent CommentVoting"
+`;
+
+const CommentContent = styled.div`
+    grid-area : CommentContent;
+    background-color : #41FEF2;
+`
+
+const CommentVoting = styled.div`
+    grid-area : CommentVoting;
+    background-color : #41FEF2;
+`
 
 // TAKES ROOM_NAME as PROP
 // ADD CODE TO SWITCH ON AND OFF DEPENDING ON VISIBILITY. FEED SHOULD MAINTAIN A LIST OF WHAT 
@@ -80,6 +99,8 @@ class TopicLeaf extends Component {
     constructor(props){
         super(props);
         this.state = {
+        topic_poster : "",
+        topic_content : "",
         topic_title: "",
         topic_audience: "",
         topic_created_time: 0,
@@ -157,6 +178,8 @@ class TopicLeaf extends Component {
         .then(
             result => {
                 this.setState({
+                    topic_content : result.data.topic_data.content,
+                    topic_poster : result.data.topic_data.poster,
                     topic_title : result.data.topic_data.content,
                     topic_audience : result.data.topic_data.audience,
                     topic_created_time : result.data.topic_data.created_time,
@@ -192,6 +215,8 @@ class TopicLeaf extends Component {
         console.log('calling update comments in topicleaf ', comment_websocket_message);
         // let withNewComment = [...this.state.comments, comment_websocket_message.content].sort((a,b)=> a['created_time'] - b['created_time']);
         this.setState({comments : [...this.state.comments, comment_websocket_message]});
+        //spread operator ... is fully necessary to create a shallow clone - new version of the entire array so that javascript will rerender all properties of 
+        //the comments in case not new object but new properties altered on existing objects (eg. upvoted existing comment)
         // this.setState({comments:withNewComment});
         console.log(this.state.comments)
     };
@@ -236,7 +261,28 @@ class TopicLeaf extends Component {
         });
         this.setState({comment_to_be_posted: ""});
         console.log(this.state.comment_to_be_posted)
-    }
+    };
+
+    renderComments = (commentArray) => {
+        //sort comment array by comment.created_time (ascending)
+        return commentArray.map((comment) => (
+            <li
+                key={comment['comment_id']}
+            >
+            <CommentGrid>
+                <CommentContent>
+                    <span style = {{"fontSize" : "15px"}}>{comment['poster'] + ' - ' + comment['created_time']}</span>
+                    <br/>
+                    <span style = {{"fontSize" : "20px"}}>{comment['content']}</span>
+                </CommentContent>
+                <CommentVoting>
+                    {comment['upvotes']}
+                    {comment['downvotes']}
+                </CommentVoting>
+            </CommentGrid>
+            </li>
+            ))
+    };
 
 // add renderMethod that turns arrays back into dictionaries for display in jsx... arrayindexOf + 1.... etc
 
@@ -244,10 +290,15 @@ class TopicLeaf extends Component {
         return (
             <TopicLeafGrid>
                 <UserAndAudience>
+                {this.state.topic_poster} => {this.state.topic_audience}
                 </UserAndAudience>
                 <Content>
+                {this.state.topic_content}
                 </Content>
                 <Comments>
+                    <ul style = {{ listStyleType : "none" }}>
+                        {this.renderComments(this.state.comments)}
+                    </ul>
                 </Comments>
                 <Userinput>
                     <input 
@@ -274,8 +325,10 @@ class TopicLeaf extends Component {
 
                 </Userinput>
                 <Report>
+                Report something
                 </Report>
                 <Voting>
+                    {this.state.topic_upvotes}
                     <input 
                     type="image" 
                     src={upvoteIcon}
@@ -295,6 +348,7 @@ class TopicLeaf extends Component {
                     }}
                     onClick = {(e)=>this.submitTopicDownvote(e)}                        
                     />
+                    {this.state.topic_downvotes}
                 </Voting>
             </TopicLeafGrid>
         )
