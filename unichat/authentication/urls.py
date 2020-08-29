@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt import views as jwt_views
-from .views import ObtainTokenPairWithCurrentGroupsView, StudentUserCreate, GetUserGroups, LogoutAndBlacklistRefreshTokenForUserView, SetUniInfo, PostTopic
+from .views import ObtainTokenPairWithCurrentGroupsView, StudentUserCreate, GetUserGroups, LogoutAndBlacklistRefreshTokenForUserView, SetUniInfo, PostTopic, GetTopicData
 
 
 urlpatterns = [
@@ -10,5 +10,6 @@ urlpatterns = [
     path('token/obtain/', ObtainTokenPairWithCurrentGroupsView.as_view(), name='token_create'),  # override sjwt stock token
     path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
     path('getusergroups/', GetUserGroups.as_view(), name='get_user_groups'),
+    path('get_topic_data/', GetTopicData.as_view(), name='get_topic_data'),
     path('blacklist/', LogoutAndBlacklistRefreshTokenForUserView.as_view(), name='blacklist')
 ]

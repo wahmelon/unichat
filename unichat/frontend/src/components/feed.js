@@ -91,9 +91,11 @@ class Feed extends Component {
         username: "",
         university: "",
         faculty:"",
-        topic_to_be_posted: "",
         audience: "",
-        feed_data:""
+        topic_id_list:"",
+        //USER INPUT
+        topic_to_be_posted: ""
+
 
         //need to store messages in state here... as a dictionary? with groups as keys... values also a dictionary with message data....
     };
@@ -124,9 +126,8 @@ class Feed extends Component {
                     username:result.data.username,
                     university:result.data.university,
                     faculty:result.data.faculty,
-                    feed_data:result.data.topic_comment_payload
+                    topic_id_list:result.data.topic_id_list
                 });
-                console.log(this.state.feed_data);
             }
         ).catch(error => {throw error;})
     }

@@ -62,13 +62,13 @@ class ChatConsumer(WebsocketConsumer):
         if event['action'] == 'topic_upvote':
             topic_as_django_obj.upvotes += 1
             topic_as_django_obj.save()
-            print('updated?',topic_as_django_obj.as_dict())
-            self.send(text_data=json.dumps(topic_as_django_obj.as_dict()))
+            self.send(json.dumps(event))
+
         elif event['action'] == 'topic_downvote':
             topic_as_django_obj.downvotes += 1
             topic_as_django_obj.save()
-            print('updated?',topic_as_django_obj.as_dict())
-            self.send(text_data=json.dumps(topic_as_django_obj.as_dict()))
+            self.send(json.dumps(event))
+
         elif event['action'] == 'comment':
             print('got comment')
             poster = StudentUser.objects.get(username=event['poster'])
@@ -81,13 +81,12 @@ class ChatConsumer(WebsocketConsumer):
                 downvotes=0
                 )
             new_comment.save()
-            print('updated?', topic_as_django_obj.as_dict())
-            self.send(text_data=json.dumps(topic_as_django_obj.as_dict()))
+            #adding fields to event
+            event['comment_id'] = new_comment.id
+            event['downvotes'] = 0
+            event['upvotes'] = 0
+            self.send(json.dumps(event))
             print('comment created successfully')
-
-            #may not send updated! do i need to get object again to ensure object loaded with updated data?
-
-
 
 
         # message_to_django = Message(

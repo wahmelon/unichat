@@ -34,18 +34,26 @@ class StudentUserCreate(APIView):
 				return Response(json, status=status.HTTP_201_CREATED)
 		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class GetUserGroups(APIView):
+class GetUserGroups(APIView): #change to "get topic ids of user groups (or something similar)"
 	def get(self, request):
 		user = UserFromToken(request)
 		django_user = StudentUser.objects.get(username=user.username)
-		topic_comment_list = []
+		topic_id_list = []
 		for group in django_user.current_groups.all():
 			for topic in group.topics.all()[:10]:
 				if topic:
-					topic_comment_list.append(topic.as_dict())
+					topic_id_list.append(topic.id)
+					# topic_comment_list.append(topic.as_dict())
 			#topics has been set as related_name on foreign key params in Topic object referencing Group object #allowing this lookup
 		# print(topic_comment_list)
-		return Response(data={"username":user.username, "university": user.university, "topic_comment_payload" : topic_comment_list}, status=status.HTTP_200_OK)
+		return Response(data={"topic_id_list":topic_id_list,"username":user.username,'faculty':user.faculty, 'university':user.university}, status=status.HTTP_200_OK)
+
+class GetTopicData(APIView):
+	def post (self, request):
+		topic_id = request.data['topic_id']
+		topic_django_object = Topic.objects.get(id=topic_id)
+		return Response(data={"topic_data":topic_django_object.as_dict()}, status=status.HTTP_200_OK)
+
 
 class SetUniInfo(APIView):
 	def post(self, request):

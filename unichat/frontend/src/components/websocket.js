@@ -36,22 +36,22 @@ class WebSocketService {
       console.log(`WebSocket for ${this.callbackDictionary.topic_id} open`);
     };
     this.socketRef.onmessage = e => {
-      const updatedTopic = JSON.parse(e.data);
+      const parsedData = JSON.parse(e.data);
 
-      this.callbackDictionary['update_topic_data'](updatedTopic);
+      // this.callbackDictionary['update_topic_data'](updatedTopic);
       // console.log(parsedData);
-      // if (parsedData['action'] === 'comment') {
-      //   this.callbackDictionary['update_comments'](parsedData);
-      //   return
-      // } else if (parsedData['action'] === 'topic_upvote') {
-      //   this.callbackDictionary['update_topic_upvotes']();
-      //   return
-      // } else if (parsedData['action'] === 'topic_downvote') {
-      //   this.callbackDictionary['update_topic_downvotes']();
-      //   return
-      // } else {
-      //   return
-      // }
+      if (parsedData['action'] === 'comment') {
+        this.callbackDictionary['update_comments'](parsedData);
+        return
+      } else if (parsedData['action'] === 'topic_upvote') {
+        this.callbackDictionary['update_topic_upvotes']();
+        return
+      } else if (parsedData['action'] === 'topic_downvote') {
+        this.callbackDictionary['update_topic_downvotes']();
+        return
+      } else {
+        return
+      }
       //shouldn't run if dictionary hasn't been populated successfully
       //updateMessagesInStateCallback is populated in the component that imports the WS instance
     };
@@ -84,7 +84,7 @@ class WebSocketService {
 
   populateCallbackDictionary(dictionary) {
     this.callbackDictionary = dictionary;
-    console.log(this.callbackDictionary)
+    console.log('populated callback dictionary: ', this.callbackDictionary)
   }
 
   // addGroupName(topic_id) {
