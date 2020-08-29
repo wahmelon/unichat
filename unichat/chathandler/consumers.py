@@ -69,7 +69,7 @@ class ChatConsumer(WebsocketConsumer):
             topic_as_django_obj.save()
             self.send(json.dumps(event))
 
-        elif event['action'] == 'comment':
+        elif event['action'] == 'add_comment':
             print('got comment')
             poster = StudentUser.objects.get(username=event['poster'])
             new_comment = Comment(
@@ -87,6 +87,25 @@ class ChatConsumer(WebsocketConsumer):
             event['upvotes'] = 0
             self.send(json.dumps(event))
             print('comment created successfully')
+
+        elif event['action'] == 'comment_upvote':
+            print('upvoting comment')
+            comment_django_obj = Comment.objects.get(id=event['comment_id'])
+            comment_django_obj.upvotes += 1
+            comment_django_obj.save()
+            payload = comment_django_obj.as_dict()
+            payload['action'] = 'comment_upvote'
+            self.send(json.dumps(payload))
+
+        elif event['action'] == 'comment_downvote':
+            print('downvoting comment')
+            comment_django_obj = Comment.objects.get(id=event['comment_id'])
+            comment_django_obj.downvotes += 1
+            comment_django_obj.save()
+            payload = comment_django_obj.as_dict()
+            payload['action'] = 'comment_downvote'
+            self.send(json.dumps(payload))
+
 
 
         # message_to_django = Message(

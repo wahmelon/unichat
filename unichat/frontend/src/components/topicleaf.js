@@ -121,9 +121,10 @@ class TopicLeaf extends Component {
                 {
                     'topic_id' : this.props.topic_id,
                     // 'update_topic_data' : this.updateTopicDataInState.bind(this)
-                    'update_comments' : this.updateCommentsInState.bind(this),
+                    'add_comment' : this.addCommentInState.bind(this),
                     'update_topic_downvotes' : this.updateTopicDownvotesInState.bind(this),
-                    'update_topic_upvotes' : this.updateTopicUpvotesInState.bind(this)
+                    'update_topic_upvotes' : this.updateTopicUpvotesInState.bind(this),
+                    'update_comment' : this.updateCommentInState.bind(this)
                 }
 
             );
@@ -212,12 +213,19 @@ class TopicLeaf extends Component {
     //     console.log('updated topic: ', this.state);
     // };
 
+    updateCommentInState(updatedComment) {
+
+        const oldComment = this.state.comments.find(comment => comment.comment_id === updatedComment['comment_id'])
+        const clonedCommentsInState = this.state.comments.slice(); 
+        clonedCommentsInState.splice(this.state.comments.indexOf(oldComment), 1, updatedComment); //takes out old comment and adds updatedComment
+        this.setState({comments : clonedCommentsInState});
+    };
 
 
-    updateCommentsInState(comment_websocket_message) {
-        console.log('calling update comments in topicleaf ', comment_websocket_message);
+    addCommentInState(newComment) {
+        console.log('calling update comments in topicleaf ', newComment);
         // let withNewComment = [...this.state.comments, comment_websocket_message.content].sort((a,b)=> a['created_time'] - b['created_time']);
-        this.setState({comments : [...this.state.comments, comment_websocket_message]});
+        this.setState({comments : [...this.state.comments, newComment]});
         //spread operator ... is fully necessary to create a shallow clone - new version of the entire array so that javascript will rerender all properties of 
         //the comments in case not new object but new properties altered on existing objects (eg. upvoted existing comment)
         // this.setState({comments:withNewComment});
@@ -252,11 +260,32 @@ class TopicLeaf extends Component {
         });
     };
 
+    submitCommentDownvote(e, comment_id) {
+        e.preventDefault();
+        WebSocketInstance.sendMessage({
+            'type':'websocket_message',
+            'action':'comment_downvote',
+            'comment_id' : comment_id
+        });
+    };
+
+    submitCommentUpvote(e, comment_id) {
+        e.preventDefault();
+        WebSocketInstance.sendMessage({
+            'type':'websocket_message',
+            'action':'comment_upvote',
+            'comment_id' : comment_id
+        });
+    };
+
+
+
+
     submitComment(e) {
         e.preventDefault();
         WebSocketInstance.sendMessage({
             'type' : 'websocket_message',
-            'action' : 'comment',
+            'action' : 'add_comment',
             'content' : this.state.comment_to_be_posted,
             'poster' : this.props.username,
             'topic_owner' : this.props.topic_id,
@@ -280,7 +309,34 @@ class TopicLeaf extends Component {
                 </CommentContent>
                 <CommentVoting>
                     {comment['upvotes']}
+                    <input 
+                    type="image" 
+                    src={upvoteIcon}
+                    style={{
+                        "width" : "100%"
+                    //     "height" : "100%",
+                    }}
+                    onClick = {(e) => this.submitCommentUpvote(e, comment['comment_id'])}                        
+                    />
+                    <input 
+                    type="image" 
+                    src={downvoteIcon}
+                    style={{
+                        "width" : "100%"
+                    //     "height" : "100%",
+                    }}
+                    onClick = {(e) => this.submitCommentDownvote(e, comment['comment_id'])}                        
+                    />
                     {comment['downvotes']}
+
+
+
+
+
+
+
+
+
                 </CommentVoting>
             </CommentGrid>
             </li>

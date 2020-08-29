@@ -40,8 +40,8 @@ class WebSocketService {
 
       // this.callbackDictionary['update_topic_data'](updatedTopic);
       // console.log(parsedData);
-      if (parsedData['action'] === 'comment') {
-        this.callbackDictionary['update_comments'](parsedData);
+      if (parsedData['action'] === 'add_comment') {
+        this.callbackDictionary['add_comment'](parsedData);
         return
       } else if (parsedData['action'] === 'topic_upvote') {
         this.callbackDictionary['update_topic_upvotes']();
@@ -49,6 +49,8 @@ class WebSocketService {
       } else if (parsedData['action'] === 'topic_downvote') {
         this.callbackDictionary['update_topic_downvotes']();
         return
+      } else if (parsedData['action'] === 'comment_upvote' || parsedData['action'] === 'comment_downvote') {
+        this.callbackDictionary['update_comment'](parsedData);
       } else {
         return
       }
