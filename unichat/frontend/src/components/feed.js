@@ -92,7 +92,7 @@ class Feed extends Component {
         university: "",
         faculty:"",
         audience: "",
-        topic_id_list:"",
+        topic_id_list:[],
         //USER INPUT
         topic_to_be_posted: ""
 
@@ -128,6 +128,7 @@ class Feed extends Component {
                     faculty:result.data.faculty,
                     topic_id_list:result.data.topic_id_list
                 });
+                console.log('feed topic list: ', this.state.topic_id_list);
             }
         ).catch(error => {throw error;})
     }
@@ -135,6 +136,20 @@ class Feed extends Component {
     handleChange(event) {
         this.setState({[event.target.name]: event.target.value});
     }
+
+    renderTopics(topicIdArray) {
+        <TopicLeaf topic_id="5" username = {this.state.username}/>
+    }
+
+    renderTopics = (topicIdArray) => {
+        //sort comment array by comment.created_time (ascending)
+        console.log(typeof(topicIdArray));
+        return topicIdArray.map((id) => (
+            <li key={id}>
+                <TopicLeaf topic_id={id} username = {this.state.username}/>
+            </li>
+            ))
+    };
 
 
 
@@ -221,7 +236,7 @@ class Feed extends Component {
                 <FeedTopicInputDiv>
                 </FeedTopicInputDiv>
                 <FeedContentDiv>
-                    <TopicLeaf topic_id="5" username = {this.state.username}/>
+                    {this.renderTopics(this.state.topic_id_list)}
                 </FeedContentDiv>
                 <FeedNavDiv>
                     <Link className={"nav-link"} to={"/authentication/"}>Account management for {this.state.username}</Link>

@@ -55,7 +55,6 @@ class ChatConsumer(WebsocketConsumer):
         # Receive message from room group
     def websocket_message(self, event):
         print('id is: ', self.room_group_name)
-        print('sending: ', event)
         # Send message to WebSocket
         #save message to DB
         topic_as_django_obj = Topic.objects.get(id=self.room_group_name)

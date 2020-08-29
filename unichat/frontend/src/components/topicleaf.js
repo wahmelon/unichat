@@ -328,15 +328,6 @@ class TopicLeaf extends Component {
                     onClick = {(e) => this.submitCommentDownvote(e, comment['comment_id'])}                        
                     />
                     {comment['downvotes']}
-
-
-
-
-
-
-
-
-
                 </CommentVoting>
             </CommentGrid>
             </li>
