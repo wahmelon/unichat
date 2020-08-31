@@ -93,9 +93,11 @@ class Feed extends Component {
         faculty:"",
         topic_id_list:[],
         user_id: "",
+        group_codes_and_ids : [],
+
         //USER INPUT
         topic_to_be_posted: "",
-        group_codes_and_ids : []
+        audience: ""
 
         //need to store messages in state here... as a dictionary? with groups as keys... values also a dictionary with message data....
     };
