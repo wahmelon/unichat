@@ -114,6 +114,8 @@ class ChatConsumer(WebsocketConsumer):
             comment_django_obj.save()
             payload = comment_django_obj.as_dict()
             payload['action'] = 'comment_upvote'
+            payload.update(event)
+            print('payload: ', payload)
             self.send(json.dumps(payload))
 
         elif event['action'] == 'comment_downvote':
@@ -123,6 +125,8 @@ class ChatConsumer(WebsocketConsumer):
             comment_django_obj.save()
             payload = comment_django_obj.as_dict()
             payload['action'] = 'comment_downvote'
+            payload.update(event)
+            print('payload: ', payload)
             self.send(json.dumps(payload))
 
 

@@ -55,6 +55,7 @@ class WebSocketService {
         this.callbackDictionary[`update_topic_downvote_to_${parsedData['topic_id']}`]();
         return
       } else if (parsedData['action'] === 'comment_upvote' || parsedData['action'] === 'comment_downvote') {
+        console.log(`update_comment_to_${parsedData['comment_id']}`);
         this.callbackDictionary[`update_comment_to_${parsedData['topic_id']}`](parsedData);
       } else {
         return
