@@ -1,0 +1,12 @@
+feed.js controls single websocket
+get request gets feed data which is added to state
+topics (separate components) are rendered based on this feed.js state
+each topic has methods bound to feed.js to send messages over the feed.js controlled websocket instance, methods passed down thru props
+
+feed.js passes callbacks to the websocket, allowing messages to be sent over it
+each topic then manages its own state, adding callbacks named specific to each topic_id each time it renders to feed.js, which in turn passes it to the websocket allowing websocket to programatically trigger state updates due to received messages in particular topics by topic_id,
+topics can also send messages over the websocket (callback to feed.js, which callsback to websocket)
+
+any message sent over websocket has group id, topic id, and if required comment id so websocket knows which of its callbacks to trigger update in the appropriate topic
+
+on the backend, the consumer takes in a parameter via URL in the path (user_id) allowing it to broadcast over the appropriate groups
