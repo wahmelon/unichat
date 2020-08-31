@@ -114,54 +114,47 @@ class TopicLeaf extends Component {
         comments_collapsed:true
     };
 
-        WebSocketInstance.connect(this.props.topic_id)
+
+
         this.handleChange = this.handleChange.bind(this);
-        this.getWebSocketStatus(() => {
-            WebSocketInstance.populateCallbackDictionary(
-                {
-                    'topic_id' : this.props.topic_id,
-                    // 'update_topic_data' : this.updateTopicDataInState.bind(this)
-                    'add_comment' : this.addCommentInState.bind(this),
-                    'update_topic_downvotes' : this.updateTopicDownvotesInState.bind(this),
-                    'update_topic_upvotes' : this.updateTopicUpvotesInState.bind(this),
-                    'update_comment' : this.updateCommentInState.bind(this)
-                }
+        const add_comment_command_name = `add_comment_to_${this.props.topic_id}`;
+        const update_topic_downvote_command_name = `update_topic_downvote_to_${this.props.topic_id}`;
+        const update_topic_upvote_command_name = `update_topic_upvotes_to_${this.props.topic_id}`;
+        const update_comment_command_name = `update_comment_to_${this.props.topic_id}`;
 
-            );
-            // WebSocketInstance.addCommentsCallback(this.updateCommentsInState.bind(this)); //ensures instance is still bound and connected to correct group on reload
-            // WebSocketInstance.addUpvoteCallback(this.updateUpvotesInState.bind(this));
-            // WebSocketInstance.addDownvoteCallback(this.updateDownvotesInState.bind(this));
-            // WebSocketInstance.addGroupName(this.props.topic_id)
-            } 
-        );
+        this.tempCallbackDict = {};
+        this.tempCallbackDict[`add_comment_to_${this.props.topic_id}`] = this.addCommentInState.bind(this);
+        this.tempCallbackDict[`update_topic_upvote_to_${this.props.topic_id}`] = this.updateTopicUpvotesInState.bind(this);
+        this.tempCallbackDict[`update_topic_downvote_to_${this.props.topic_id}`] = this.updateTopicDownvotesInState.bind(this);
+        this.tempCallbackDict[`update_comment_to_${this.props.topic_id}`] = this.updateCommentInState.bind(this);
+        this.props.populateFeedCallbackDictionary(this.tempCallbackDict);
 
 
-
-    }
+    };
 
 
     //finally , add updateMessagesState method and experiment with renderMessages method to read state and group message based on keys
-    getWebSocketStatus(callback) {
-        const topic_id = this.props.topic_id;
-        // WebSocketServiceInComponent.connect();
-        const component = this;
-        setTimeout(function() {
-          if (WebSocketInstance.state() === 1) {
-            //was (said .state() was not a function)
-            //          if (WebSocketService.state() === 1) {
-            console.log(`websocket for ${topic_id} connected`); //was : WebsocketServiceInComponent.room_name (said not defined)
-            callback();
-            // WebSocketService.sendMessage({
-            //     'type' : 'get_last_20',
-            //     'timeid' : Date.now()
-            // }); //triggers get_last_20 function on consumer.py which returns 20 messages before timeid
-            return;
-          } else {
-            console.log(`websocket ${topic_id} waiting for connection...`);//was : WebsocketServiceInComponent.room_name (said not defined)
-            component.getWebSocketStatus(callback);
-          }; 
-        }, 100);
-      };
+    // getWebSocketStatus(callback) {
+    //     const topic_id = this.props.topic_id;
+    //     // WebSocketServiceInComponent.connect();
+    //     const component = this;
+    //     setTimeout(function() {
+    //       if (WebSocketInstance.state() === 1) {
+    //         //was (said .state() was not a function)
+    //         //          if (WebSocketService.state() === 1) {
+    //         console.log(`websocket for ${topic_id} connected`); //was : WebsocketServiceInComponent.room_name (said not defined)
+    //         callback();
+    //         // WebSocketService.sendMessage({
+    //         //     'type' : 'get_last_20',
+    //         //     'timeid' : Date.now()
+    //         // }); //triggers get_last_20 function on consumer.py which returns 20 messages before timeid
+    //         return;
+    //       } else {
+    //         console.log(`websocket ${topic_id} waiting for connection...`);//was : WebsocketServiceInComponent.room_name (said not defined)
+    //         component.getWebSocketStatus(callback);
+    //       }; 
+    //     }, 100);
+    //   };
 
     // componentDidMount(){
     //         const WebSocketServiceInComponent = new WebSocketService(room_name=this.props.room_name)
@@ -178,6 +171,7 @@ class TopicLeaf extends Component {
     // }
 
     componentDidMount(){
+        console.log('logging temp dict: ', this.tempCallbackDict);
         axiosInstance.post('/get_topic_data/', {topic_id : this.props.topic_id})
         .then(
             result => {
@@ -246,34 +240,43 @@ class TopicLeaf extends Component {
 
     submitTopicUpvote(e) {
         e.preventDefault();
-        WebSocketInstance.sendMessage({
+        this.props.sendWithFeedWebsocket({
             'type':'websocket_message',
-            'action':'topic_upvote'
+            'action':'topic_upvote',
+            'group_code' : this.props.group_code,
+            'topic_id' :  this.props.topic_id            
         });
     };
 
     submitTopicDownvote(e) {
         e.preventDefault();
-        WebSocketInstance.sendMessage({
+        this.props.sendWithFeedWebsocket({
             'type':'websocket_message',
-            'action':'topic_downvote'
+            'action':'topic_downvote',
+            'group_code' : this.props.group_code,
+            'topic_id' :  this.props.topic_id
         });
     };
 
     submitCommentDownvote(e, comment_id) {
         e.preventDefault();
-        WebSocketInstance.sendMessage({
+        this.props.sendWithFeedWebsocket({
             'type':'websocket_message',
             'action':'comment_downvote',
+            'group_code' :  this.props.group_code,
+            'topic_id' :  this.props.topic_id,
             'comment_id' : comment_id
+
         });
     };
 
     submitCommentUpvote(e, comment_id) {
         e.preventDefault();
-        WebSocketInstance.sendMessage({
+        this.props.sendWithFeedWebsocket({
             'type':'websocket_message',
             'action':'comment_upvote',
+            'group_code' :  this.props.group_code,
+            'topic_id' :  this.props.topic_id,            
             'comment_id' : comment_id
         });
     };
@@ -283,12 +286,13 @@ class TopicLeaf extends Component {
 
     submitComment(e) {
         e.preventDefault();
-        WebSocketInstance.sendMessage({
+        this.props.sendWithFeedWebsocket({
             'type' : 'websocket_message',
             'action' : 'add_comment',
             'content' : this.state.comment_to_be_posted,
             'poster' : this.props.username,
-            'topic_owner' : this.props.topic_id,
+            'topic_id' : this.props.topic_id,
+            'group_code' : this.props.group_code,
             'created_time' : Date.now()
         });
         this.setState({comment_to_be_posted: ""});

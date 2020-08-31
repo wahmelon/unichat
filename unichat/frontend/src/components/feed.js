@@ -91,16 +91,26 @@ class Feed extends Component {
         username: "",
         university: "",
         faculty:"",
-        audience: "",
         topic_id_list:[],
+        user_id: "",
         //USER INPUT
-        topic_to_be_posted: ""
-
+        topic_to_be_posted: "",
+        group_codes_and_ids : []
 
         //need to store messages in state here... as a dictionary? with groups as keys... values also a dictionary with message data....
     };
 
+        this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary = {}
+
+
         this.handleChange = this.handleChange.bind(this);
+        this.sendWithFeedWebsocket = this.sendWithFeedWebsocket.bind(this);
+        this.populateFeedCallbackDictionary = this.populateFeedCallbackDictionary.bind(this);
+        
+        this.getWebSocketStatus(() => {
+            WebSocketInstance.populateCallbackDictionary(this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary);
+            } 
+        );
 
 
 
@@ -116,6 +126,64 @@ class Feed extends Component {
     //finally , add updateMessagesState method and experiment with renderMessages method to read state and group message based on keys
 
 
+
+
+    // this.getWebSocketStatus(() => {
+    //     WebSocketInstance.populateCallbackDictionary(
+    //         {
+    //             this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary
+    //         }
+
+    //     );
+    //     // WebSocketInstance.addCommentsCallback(this.updateCommentsInState.bind(this)); //ensures instance is still bound and connected to correct group on reload
+    //     // WebSocketInstance.addUpvoteCallback(this.updateUpvotesInState.bind(this));
+    //     // WebSocketInstance.addDownvoteCallback(this.updateDownvotesInState.bind(this));
+    //     // WebSocketInstance.addGroupName(this.props.topic_id)
+    //     } 
+    // );
+
+    getWebSocketStatus(callback) {
+        const user_id = this.state.user_id;
+        // WebSocketServiceInComponent.connect();
+        const component = this;
+        setTimeout(function() {
+          if (WebSocketInstance.state() === 1) {
+            //was (said .state() was not a function)
+            //          if (WebSocketService.state() === 1) {
+            console.log(`websocket for ${user_id} connected`); //was : WebsocketServiceInComponent.room_name (said not defined)
+            callback();
+            // WebSocketService.sendMessage({
+            //     'type' : 'get_last_20',
+            //     'timeid' : Date.now()
+            // }); //triggers get_last_20 function on consumer.py which returns 20 messages before timeid
+            return;
+          } else {
+            console.log(`websocket ${user_id} waiting for connection...`);//was : WebsocketServiceInComponent.room_name (said not defined)
+            component.getWebSocketStatus(callback);
+          }; 
+        }, 100);
+      };
+
+
+    populateFeedCallbackDictionary(dictionaryFromTopicLeaf) {
+        if (this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary) {
+          var old_dict = this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary,
+          new_addition = dictionaryFromTopicLeaf,
+          new_dict = Object.assign({}, old_dict, new_addition);
+          this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary = new_dict;
+          console.log('updated callback dict: ', this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary);
+        } else {
+            console.log(dictionaryFromTopicLeaf);
+          this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary = dictionaryFromTopicLeaf;
+          console.log('updated callback dict: ', this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary);
+        }
+    }
+
+    sendWithFeedWebsocket(message) {
+        WebSocketInstance.sendMessage(message);
+
+    }
+
     componentDidMount(){
         const remainingHeightForContentView = (window.innerHeight - 160); // 140 = remaining rows + gaps
         const remainingWidthForInputView = (window.innerWidth - 56); // 140 = remaining rows + gaps (in Topic and feed)
@@ -126,29 +194,51 @@ class Feed extends Component {
                     username:result.data.username,
                     university:result.data.university,
                     faculty:result.data.faculty,
-                    topic_id_list:result.data.topic_id_list
+                    group_codes_and_ids : result.data.GroupCodesAndIds,
+                    user_id : result.data.user_id
                 });
-                console.log('feed topic list: ', this.state.topic_id_list);
+                console.log('about to call connect websocket to: ', this.state.user_id);
+
+                WebSocketInstance.connect(this.state.user_id);
+
+                console.log('group codes and ids in CDM: ', this.state);
             }
         ).catch(error => {throw error;})
-    }
+    };
 
     handleChange(event) {
+
         this.setState({[event.target.name]: event.target.value});
     }
 
-    renderTopics(topicIdArray) {
-        <TopicLeaf topic_id="5" username = {this.state.username}/>
-    }
+    // renderTopics(topicIdArray) {
+    //     <TopicLeaf topic_id="5" username = {this.state.username}/>
+    // }
 
-    renderTopics = (topicIdArray) => {
+    renderTopics = (groupCodesAndTheirTopicIds) => {
+        const final_topic_array = []
         //sort comment array by comment.created_time (ascending)
-        console.log(typeof(topicIdArray));
-        return topicIdArray.map((id) => (
-            <li key={id}>
-                <TopicLeaf topic_id={id} username = {this.state.username}/>
-            </li>
-            ))
+        for (const group of groupCodesAndTheirTopicIds) {
+            const group_id = group['group_code'];
+            const topic_id_array = group['ids'];
+            for (const id of topic_id_array) {
+                final_topic_array.push(
+                <li key={id}>
+                    <TopicLeaf 
+                    topic_id={id} 
+                    username = {this.state.username}
+                    group_code = {group_id}
+                    sendWithFeedWebsocket = {this.sendWithFeedWebsocket}
+                    populateFeedCallbackDictionary = {this.populateFeedCallbackDictionary}
+                    />
+                </li>
+                )
+            };
+
+
+        };
+        return final_topic_array;
+        console.log('final topic array: ', final_topic_array);
     };
 
 
@@ -236,7 +326,9 @@ class Feed extends Component {
                 <FeedTopicInputDiv>
                 </FeedTopicInputDiv>
                 <FeedContentDiv>
-                    {this.renderTopics(this.state.topic_id_list)}
+                    <ul>
+                    {this.renderTopics(this.state.group_codes_and_ids)}
+                    </ul>
                 </FeedContentDiv>
                 <FeedNavDiv>
                     <Link className={"nav-link"} to={"/authentication/"}>Account management for {this.state.username}</Link>

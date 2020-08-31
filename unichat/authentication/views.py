@@ -38,15 +38,21 @@ class GetUserGroups(APIView): #change to "get topic ids of user groups (or somet
 	def get(self, request):
 		user = UserFromToken(request)
 		django_user = StudentUser.objects.get(username=user.username)
-		topic_id_list = []
+		payload_list = []
 		for group in django_user.current_groups.all():
+			group_code_and_topic_ids = {}
+			group_code_and_topic_ids['group_code']  = group.group_code
 			for topic in group.topics.all()[:10]:
+				topic_id_list = []
 				if topic:
 					topic_id_list.append(topic.id)
+			group_code_and_topic_ids['ids'] = topic_id_list
+
+			payload_list.append(group_code_and_topic_ids)
 					# topic_comment_list.append(topic.as_dict())
 			#topics has been set as related_name on foreign key params in Topic object referencing Group object #allowing this lookup
 		# print(topic_comment_list)
-		return Response(data={"topic_id_list":topic_id_list,"username":user.username,'faculty':user.faculty, 'university':user.university}, status=status.HTTP_200_OK)
+		return Response(data={"user_id" : django_user.id, "GroupCodesAndIds": payload_list, "topic_id_list":topic_id_list,"username":user.username,'faculty':user.faculty, 'university':user.university}, status=status.HTTP_200_OK)
 
 class GetTopicData(APIView):
 	def post (self, request):

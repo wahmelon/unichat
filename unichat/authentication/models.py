@@ -5,12 +5,14 @@ from chathandler.models import Topic, Comment
 class Group(models.Model): #should be class Group
 	group_code = models.CharField(max_length=120) 
 	group_name = models.CharField(max_length=120) 
-	parent_organisation = models.CharField(max_length=120) 
+	parent_organisation = models.CharField(max_length=120)
+
+
 	def __str__(self):
 		return self.group_code
 
 class StudentUser(AbstractUser):
-	current_groups = models.ManyToManyField(Group, related_name = "groups_list")
+	current_groups = models.ManyToManyField(Group, related_name = "student_user")
 	faculty = models.CharField(max_length=120)
 	university = models.CharField(max_length=120)
 	karma = models.PositiveSmallIntegerField(default=0)

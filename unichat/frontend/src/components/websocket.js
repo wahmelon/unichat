@@ -17,40 +17,45 @@ class WebSocketService {
     
   }
 
-  connect(topic_id) {
+  connect(user_id) {
 
-    // var path = `ws://127.0.0.1:8000/ws/chat/${this.callbackDictionary.topic_id}/`
 
-    if (!this.callbackDictionary.topic_id) { //hasn't been loaded yet
-      console.log('callbackDictionary not loaded yet')
-      this.socketRef = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${topic_id}/`); 
-    } else {
-      this.socketRef = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${this.callbackDictionary.topic_id}/`)
-    }
+    // if (!this.callbackDictionary.user_id) { //hasn't been loaded yet
+    //   console.log('callbackDictionary not loaded yet')
+    //   this.socketRef = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${user_id}/`); 
+    // } else {
+    //   this.socketRef = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${this.callbackDictionary.user_id}/`)
+    // }
+
+    this.socketRef = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${user_id}/`)
 
     // const path = `ws://127.0.0.1:8000/ws/chat/${this.callbackDictionary.topic_id}/`
     //dev django server
     
 
     this.socketRef.onopen = () => {
-      console.log(`WebSocket for ${this.callbackDictionary.topic_id} open`);
+      console.log('Websocket open');
     };
     this.socketRef.onmessage = e => {
       const parsedData = JSON.parse(e.data);
+      console.log(parsedData);
 
       // this.callbackDictionary['update_topic_data'](updatedTopic);
       // console.log(parsedData);
       if (parsedData['action'] === 'add_comment') {
-        this.callbackDictionary['add_comment'](parsedData);
+        this.callbackDictionary[`add_comment_to_${parsedData['topic_id']}`](parsedData);
         return
       } else if (parsedData['action'] === 'topic_upvote') {
-        this.callbackDictionary['update_topic_upvotes']();
+        const topic_id_in_data = parsedData['topic_id'];
+        const function_name = `update_topic_upvote_to_${topic_id_in_data}`;
+        console.log(function_name);
+        this.callbackDictionary[function_name]();
         return
       } else if (parsedData['action'] === 'topic_downvote') {
-        this.callbackDictionary['update_topic_downvotes']();
+        this.callbackDictionary[`update_topic_downvote_to_${parsedData['topic_id']}`]();
         return
       } else if (parsedData['action'] === 'comment_upvote' || parsedData['action'] === 'comment_downvote') {
-        this.callbackDictionary['update_comment'](parsedData);
+        this.callbackDictionary[`update_comment_to_${parsedData['topic_id']}`](parsedData);
       } else {
         return
       }
@@ -61,7 +66,7 @@ class WebSocketService {
       console.log(e.message);
     };
     this.socketRef.onclose = () => {
-      console.log(`WebSocket for ${this.callbackDictionary.topic_id} closed let's reopen`);
+      console.log('WebSocket closed lets reopen');
       this.connect();
     };    
 
@@ -85,9 +90,21 @@ class WebSocketService {
   }
 
   populateCallbackDictionary(dictionary) {
+    console.log('before population CBD: ', this.callbackDictionary);
     this.callbackDictionary = dictionary;
-    console.log('populated callback dictionary: ', this.callbackDictionary)
-  }
+    console.log('populated callbackDictionary: ', this.callbackDictionary);
+
+    // if (this.callbackDictionary) {
+    //   var old_dict = this.callbackDictionary,
+    //   new_addition = dictionary,
+    //   new_dict = Object.assign({}, old_dict, new_addition);
+    //   this.callbackDictionary = new_dict;
+    //   console.log('updated callback dict: ', this.callbackDictionary);
+    // } else {
+    //   this.callbackDictionary = new_dict;
+    //   console.log('updated callback dict: ', this.callbackDictionary);
+    // }
+  };
 
   // addGroupName(topic_id) {
   //   this.callbackDictionary['topic_id'] = topic_id;

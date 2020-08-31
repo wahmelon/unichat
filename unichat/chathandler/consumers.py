@@ -8,31 +8,51 @@ from authentication.models import StudentUser
 
 class ChatConsumer(WebsocketConsumer): 
 
-    def connect(self):
-        self.room_group_name = self.scope['url_route']['kwargs']['topic_id']
-        print('WS connecting to:', self.room_group_name)
+    def get_user_groups(self):
+        user_id = self.scope['url_route']['kwargs']['user_id']   
+        current_user_django_obj = StudentUser.objects.get(id=int(user_id))
+        group_queryset = current_user_django_obj.current_groups.all()
+        return [str(group) for group in group_queryset] #returns list of group name friendly UNITCODES
+        #UNITCODES MUST BE ALPHANUMERAL HYPHEN OR PERIOD
 
-        # Join room group
-        async_to_sync(self.channel_layer.group_add)(
-        self.room_group_name,
-        self.channel_name
-        )
+    def connect(self):
 
         self.accept()
 
+        user_groups = self.get_user_groups()
+        for group in user_groups:
+            print('connecting to WS: ', group)
+        #self.room_group_name = self.scope['url_route']['kwargs']['user_id']
+
+        #print('WS connecting to:', self.room_group_name)
+
+        # Join room group
+            async_to_sync(self.channel_layer.group_add)(
+            group,
+            self.channel_name
+            )
+            #do i need async?
+            #self.accept()
+
+
     def disconnect(self, close_code):
+        user_groups = self.get_user_groups()
+
         # Leave room group
-        async_to_sync(self.channel_layer.group_discard)(
-        self.room_group_name,
-        self.channel_name
-        )
+        for group in user_groups:
+            async_to_sync(self.channel_layer.group_discard)(
+            group,
+            self.channel_name
+            )
 
         # Receive message from WebSocket
     def receive(self, text_data):
         print('receiving: ', text_data)
         text_data_json = json.loads(text_data)
+        print('receiving as json: ', text_data_json)
         # Send message to room group
-        async_to_sync(self.channel_layer.group_send)(self.room_group_name, text_data_json)
+        async_to_sync(self.channel_layer.group_send)(text_data_json['group_code'], text_data_json)
+                                                #GROUP CODE SHOULD COME FROM WEBSOCKET MESSAGE
 
 
         # def get_last_20(self, event):
@@ -54,10 +74,10 @@ class ChatConsumer(WebsocketConsumer):
 
         # Receive message from room group
     def websocket_message(self, event):
-        print('id is: ', self.room_group_name)
+        print('def websocket_message, group is: ', event['group_code'])
         # Send message to WebSocket
         #save message to DB
-        topic_as_django_obj = Topic.objects.get(id=self.room_group_name)
+        topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
         if event['action'] == 'topic_upvote':
             topic_as_django_obj.upvotes += 1
             topic_as_django_obj.save()
