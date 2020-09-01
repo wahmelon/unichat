@@ -225,15 +225,20 @@ class Feed extends Component {
             const topic_id_array = group['ids'];
             for (const id of topic_id_array) {
                 final_topic_array.push(
-                <li key={id}>
-                    <TopicLeaf 
+                <ul key={id}
+                    style={{ 
+                        listStyleType: "none",
+                        margin : "0",
+                        padding: "0"
+                    }}>
+                    <TopicLeaf
                     topic_id={id} 
                     username = {this.state.username}
                     group_code = {group_id}
                     sendWithFeedWebsocket = {this.sendWithFeedWebsocket}
                     populateFeedCallbackDictionary = {this.populateFeedCallbackDictionary}
                     />
-                </li>
+                </ul>
                 )
             };
 
@@ -328,7 +333,12 @@ class Feed extends Component {
                 <FeedTopicInputDiv>
                 </FeedTopicInputDiv>
                 <FeedContentDiv>
-                    <ul>
+                    <ul style={{ 
+                        listStyleType: "none",
+                        margin : "0",
+                        padding: "0"
+                    }}
+                    >
                     {this.renderTopics(this.state.group_codes_and_ids)}
                     </ul>
                 </FeedContentDiv>

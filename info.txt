@@ -10,3 +10,6 @@ topics can also send messages over the websocket (callback to feed.js, which cal
 any message sent over websocket has group id, topic id, and if required comment id so websocket knows which of its callbacks to trigger update in the appropriate topic
 
 on the backend, the consumer takes in a parameter via URL in the path (user_id) allowing it to broadcast over the appropriate groups
+
+
+notes: unit_codes on Group model are used as group names in django consumer, which requires only alphanumerals, periods and hyphens
