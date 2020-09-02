@@ -6,6 +6,8 @@ import WebSocketInstance from './websocket'
 import TopicLeaf from './TopicLeaf';
 import sendButton from './sendbutton.png';
 import loudspeakerimage from './loudspeakerimage.png';
+import upvoteIcon from './upvote-icon.jpg';
+
 
 
 const remainingWidthForInputView = (window.innerWidth - 56); // 140 = remaining rows + gaps (in Topic and feed) 56
@@ -183,12 +185,6 @@ class Feed extends Component {
         this.populateFeedCallbackDictionary = this.populateFeedCallbackDictionary.bind(this);
         this.iterateThroughGroupCodes = this.iterateThroughGroupCodes.bind(this);
         this.toggleIdentity = this.toggleIdentity.bind(this);
-        
-
-
-        //temp
-
-        this.togglePostArea = this.togglePostArea.bind(this);
     }
 
 
@@ -273,16 +269,6 @@ class Feed extends Component {
 
     };
 
-    togglePostArea() { //this is temp method for toggling post options... should be dependant on clicking post input
-    //area
-        if (this.state.postAreaOn) {
-        this.setState({postAreaOn:false})
-        console.log('toggled to false');
-        } else {
-         this.setState({postAreaOn:true})  
-         console.log('toggled to true'); 
-        }
-    };
 
     handleChange(event) {
 
@@ -349,30 +335,40 @@ class Feed extends Component {
         return (
             <FeedGrid>
                 <FeedMenuDiv>
-                    <input 
-                    type="image" 
-                    src={sendButton}
-                    style={{
-                        // "width" : "100%",
-                        "height" : "100%"
-                    }}
-                    onClick = {(e) => this.togglePostArea()}                        
-                    />
                 </FeedMenuDiv>
                 <InputDiv>
-                    <input 
+                    <textarea 
                     name="topicpost"
                     ref="postInput"
                     placeholder="What's on your mind?"
                     type="text"                     
                     style=
-                    {{
-                        "width" : "100%",
-                        "height" : "50%",
-                        "fontSize" : "20px"
+                    {{  
+                        boxSizing : "border-box",
+                        width : "90%",
+                        height : "50%",
+                        borderRadius : "1em",
+                        fontSize : "20px",
+                        outline : "none",
+                        border : "1px solid #000"
                     }}
-                    value={this.state.topic_to_be_posted} 
-                    onChange={(e) => this.setState({ topic_to_be_posted: e.target.value })}/>
+                    onChange={(e) => this.setState({ topic_to_be_posted: e.target.value })}
+                    onFocus = {(e) => this.setState({postAreaOn:true})}
+                    >
+                    {this.state.topic_to_be_posted} 
+                    </textarea>
+                    <input 
+                    type="image" 
+                    src={upvoteIcon}
+                    style={{
+                        "width" : "10%",
+                        "height" : "100%",
+                        outline : "none"
+
+                    //     "height" : "100%",
+                    }}
+                    onClick = {(e) => this.setState({postAreaOn:false})}                        
+                    />
 
                     {this.state.postAreaOn &&
                     <InputDetailGrid>
@@ -389,6 +385,7 @@ class Feed extends Component {
                                     textAlign: "center",
                                     textDecoration: "none",
                                     display: "inline-block",
+                                    outline : "none",
                                     // padding :"1px",
                                     // margin: "1px 1px",
                                     cursor: "pointer",
@@ -414,6 +411,7 @@ class Feed extends Component {
                                 height: "100%",
                                 backgroundColor: "#ddd",
                                 border: "none",
+                                outline : "none",
                                 color: "black",
                                 textAlign: "center",
                                 textDecoration: "none",
@@ -437,6 +435,7 @@ class Feed extends Component {
                                 height: "100%",    
                                 backgroundColor: "#ddd",
                                 border: "none",
+                                outline : "none",
                                 color: "black",
                                 textAlign: "center",
                                 textDecoration: "none",

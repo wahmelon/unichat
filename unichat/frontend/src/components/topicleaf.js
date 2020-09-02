@@ -267,7 +267,9 @@ class TopicLeaf extends Component {
                     type="image" 
                     src={upvoteIcon}
                     style={{
-                        "width" : "100%"
+                        "width" : "100%",
+                        outline : "none"
+
                     //     "height" : "100%",
                     }}
                     onClick = {(e) => this.submitCommentUpvote(e, comment['comment_id'])}                        
@@ -276,7 +278,9 @@ class TopicLeaf extends Component {
                     type="image" 
                     src={downvoteIcon}
                     style={{
-                        "width" : "100%"
+                        "width" : "100%",
+                        outline : "none"
+
                     //     "height" : "100%",
                     }}
                     onClick = {(e) => this.submitCommentDownvote(e, comment['comment_id'])}                        
@@ -318,7 +322,8 @@ class TopicLeaf extends Component {
                         {{
                             "width" : "80%",
                             "height" : "50%",
-                            "fontSize" : "20px"
+                            "fontSize" : "20px",
+                            outline : "none"
                         }}
                         value={this.state.comment_to_be_posted} 
                         onChange={(e) => this.setState({ comment_to_be_posted: e.target.value })}/>
@@ -326,7 +331,8 @@ class TopicLeaf extends Component {
                         type="image" 
                         src={sendButton}
                         style={{
-                            "width" : "10%"
+                            "width" : "10%",
+                            outline : "none"
                             // "height" : "100%"
                         }}
                         onClick = {(e) => this.submitComment(e)}                        
@@ -343,7 +349,8 @@ class TopicLeaf extends Component {
                     type="image" 
                     src={upvoteIcon}
                     style={{
-                        "width" : "100%"
+                        "width" : "100%",
+                        outline : "none"
                     //     "height" : "100%",
                     }}
                     onClick = {(e) => this.submitTopicUpvote(e)}                        
@@ -353,7 +360,8 @@ class TopicLeaf extends Component {
                     type="image" 
                     src={downvoteIcon}
                     style={{
-                        "width" : "100%"
+                        "width" : "100%",
+                        outline : "none"
                     //     "height" : "100%",
                     }}
                     onClick = {(e)=>this.submitTopicDownvote(e)}                        
@@ -365,7 +373,8 @@ class TopicLeaf extends Component {
                     type="image" 
                     src={collapseIcon}
                     style={{
-                        "width" : "100%"
+                        "width" : "100%",
+                        outline : "none"
                     //     "height" : "100%",
                     }}
                     onClick = {(e) => {
