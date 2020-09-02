@@ -8,10 +8,12 @@ class Topic(models.Model):
 	created_time = models.BigIntegerField()
 	upvotes = models.PositiveSmallIntegerField(default=0)
 	downvotes = models.PositiveSmallIntegerField(default=0)
+	posted_as_anonymous = models.BooleanField(default=True)
 	#time field should be created by a Date.now() function in frontend
 	def as_dict(self):
 		return {
 		'topic_id' : self.id,
+		'posted_as_anonymous' : self.posted_as_anonymous,
 		'audience' : str(self.audience),
 		'poster' : str(self.poster),
 		'content' : self.content,

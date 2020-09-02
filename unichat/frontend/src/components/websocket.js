@@ -1,3 +1,5 @@
+import axiosInstance from "../axiosApi";
+
 class WebSocketService {
 
   callbackDictionary = {};
@@ -17,21 +19,30 @@ class WebSocketService {
     
   }
 
+  getPath(user_id) {
+    if (!user_id) {
+      axiosInstance.get('/getusergroups/')
+        .then(
+            result => {
+              console.log('user_id from feed.js bad, called got path for: ', result.data.user_id);
+              return `ws://127.0.0.1:8000/ws/chat/${result.data.user_id}/`
+            }
+        ).catch(error => {throw error;})
+      } else {
+        console.log('user_id from feed.js good, passing default path');
+        return `ws://127.0.0.1:8000/ws/chat/${user_id}/`
+
+      }
+    };
+
   connect(user_id) {
 
 
-    // if (!this.callbackDictionary.user_id) { //hasn't been loaded yet
-    //   console.log('callbackDictionary not loaded yet')
-    //   this.socketRef = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${user_id}/`); 
-    // } else {
-    //   this.socketRef = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${this.callbackDictionary.user_id}/`)
-    // }
+    // this.socketRef = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${user_id}/`) //dev django server
 
-    this.socketRef = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${user_id}/`)
+    this.socketRef = new WebSocket(this.getPath(user_id));
 
-    // const path = `ws://127.0.0.1:8000/ws/chat/${this.callbackDictionary.topic_id}/`
-    //dev django server
-    
+
 
     this.socketRef.onopen = () => {
       console.log('Websocket open');
@@ -57,8 +68,11 @@ class WebSocketService {
       } else if (parsedData['action'] === 'comment_upvote' || parsedData['action'] === 'comment_downvote') {
         console.log(`update_comment_to_${parsedData['comment_id']}`);
         this.callbackDictionary[`update_comment_to_${parsedData['topic_id']}`](parsedData);
+      } else if (parsedData['action'] === 'add_topic') {
+        console.log(`update_comment_to_${parsedData['comment_id']}`);
+        this.callbackDictionary['add_new_topic'](parsedData);
       } else {
-        return
+        //pass
       }
       //shouldn't run if dictionary hasn't been populated successfully
       //updateMessagesInStateCallback is populated in the component that imports the WS instance

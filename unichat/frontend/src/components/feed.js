@@ -167,6 +167,7 @@ class Feed extends Component {
         currently_anonymous: true,
         postAreaOn:false,
         audience: "",
+        topic_notification_data_store:[],
         
 
 
@@ -177,7 +178,9 @@ class Feed extends Component {
         //need to store messages in state here... as a dictionary? with groups as keys... values also a dictionary with message data....
     };
 
-        this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary = {}
+        this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary = {
+            'add_new_topic' : this.handleNewTopic
+        }
 
 
         this.handleChange = this.handleChange.bind(this);
@@ -185,6 +188,8 @@ class Feed extends Component {
         this.populateFeedCallbackDictionary = this.populateFeedCallbackDictionary.bind(this);
         this.iterateThroughGroupCodes = this.iterateThroughGroupCodes.bind(this);
         this.toggleIdentity = this.toggleIdentity.bind(this);
+        this.handleNewTopic = this.handleNewTopic.bind(this);
+        this.prepareNewTopicsForRender = this.prepareNewTopicsForRender.bind(this);
     }
 
 
@@ -209,6 +214,20 @@ class Feed extends Component {
           }; 
         }, 100);
       };
+
+    handleNewTopic(new_topic) { // totally new items vs under existing group code forces rerender
+        if (new_topic['user_id'] == this.state.user_id) {
+            const group_codes_array = this.state.group_codes_and_ids;
+            const new_topic_dict = {'group_code' : new_topic['group_code'],'ids':[new_topic['topic_id']]};
+            group_codes_array.push(new_topic_dict);
+            this.setState({group_codes_and_ids:group_codes_array});
+        } else {
+            const notif_data_array = this.state.topic_notification_data_store;
+            const new_topic_dict = {'group_code' : new_topic['group_code'],'ids':[new_topic['topic_id']]};
+            notif_data_array.push(new_topic_dict);
+            this.setState({topic_notification_data_store:notif_data_array})
+        }
+    }
 
 
     populateFeedCallbackDictionary(dictionaryFromTopicLeaf) {
@@ -298,6 +317,14 @@ class Feed extends Component {
         }
     };
 
+    prepareNewTopicsForRender(){
+        const array_for_render = this.state.group_codes_and_their_ids
+        for (item of this.state.topic_notification_data_store) {
+            array_for_render.push(item) // totally new items vs under existing group code forces rerender
+        }
+        this.setState({topic_notification_data_store:[]})
+    };
+
 
 
     renderTopics = (groupCodesAndTheirTopicIds) => {
@@ -335,6 +362,26 @@ class Feed extends Component {
         return (
             <FeedGrid>
                 <FeedMenuDiv>
+                    <button 
+                    style={{
+                        width: "20%",
+                        height: "100%",                 
+                        backgroundColor: "#ddd",
+                        border: "none",
+                        color: "black",
+                        textAlign: "center",
+                        textDecoration: "none",
+                        display: "inline-block",
+                        outline : "none",
+                        // padding :"1px",
+                        // margin: "1px 1px",
+                        cursor: "pointer",
+                        borderRadius: "16px"
+                        }}
+                    onClick = {(e) => this.prepareNewTopicsForRender()}
+                    >
+                      {this.state.topic_notification_data_store.length}!
+                    </button>
                 </FeedMenuDiv>
                 <InputDiv>
                     <textarea 
@@ -449,20 +496,23 @@ class Feed extends Component {
                                 (e) => {
                                     e.preventDefault();
                                     console.log('post button pressed')
-                                    console.log(Date.now())
-                                    console.log(typeof(Date.now()))
-                                    axiosInstance.post('/user/post_topic/',
-                                    {
-                                    topic_to_be_posted: this.state.topic_to_be_posted,
-                                    created_time: Date.now(),
-                                    audience: this.state.group_codes_and_ids[this.state.current_toggled_index_of_group_code_array]['group_code']
-                                    }
-                                    ).then(
-                                    result => {console.log(result)}
-                                    ).catch (error => {console.log(error.stack)})
-                                    this.setState({topic_to_be_posted: ""})
+                                    if (this.state.topic_to_be_posted) {
+                                        const message = {
+                                            'type' : 'websocket_message',
+                                            'action' : 'add_topic',
+                                            'content' : this.state.topic_to_be_posted,
+                                            'user_id' : this.state.user_id,
+                                            "created_time" : Date.now(),
+                                            "group_code" : this.state.group_codes_and_ids[this.state.current_toggled_index_of_group_code_array]['group_code'],
+                                            "posted_as_anonymous" : this.state.currently_anonymous
+                                        };
+                                        WebSocketInstance.sendMessage(message);
+                                        this.setState({topic_to_be_posted:""});
+                                    } else {
+                                        //pass
                                     }
                                 }
+                            }
                             >
                             Post
                             </button>

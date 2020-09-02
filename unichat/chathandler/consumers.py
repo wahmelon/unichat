@@ -4,7 +4,7 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 import time
 from .models import Topic, Comment
-from authentication.models import StudentUser
+from authentication.models import StudentUser, Group
 
 class ChatConsumer(WebsocketConsumer): 
 
@@ -77,13 +77,14 @@ class ChatConsumer(WebsocketConsumer):
         print('def websocket_message, group is: ', event['group_code'])
         # Send message to WebSocket
         #save message to DB
-        topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
         if event['action'] == 'topic_upvote':
+            topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
             topic_as_django_obj.upvotes += 1
             topic_as_django_obj.save()
             self.send(json.dumps(event))
 
         elif event['action'] == 'topic_downvote':
+            topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
             topic_as_django_obj.downvotes += 1
             topic_as_django_obj.save()
             self.send(json.dumps(event))
@@ -128,6 +129,26 @@ class ChatConsumer(WebsocketConsumer):
             payload.update(event)
             print('payload: ', payload)
             self.send(json.dumps(payload))
+
+        elif event['action'] == 'add_topic':
+            print('adding topic')
+            new_topic = Topic(
+                audience=Group.objects.get(group_code=event['group_code']),
+                content=event['content'],
+                created_time=event['created_time'],
+                poster=StudentUser.objects.get(id=event['user_id']),
+                anonymous = event['posted_as_anonymous'],
+                upvotes=0,
+                downvotes=0
+                )
+            new_topic.save()
+            #adding fields to event
+            event['topic_id'] = new_topic.id
+            event['downvotes'] = 0
+            event['upvotes'] = 0
+            self.send(json.dumps(event))
+            print('topic created successfully')
+
 
 
 
