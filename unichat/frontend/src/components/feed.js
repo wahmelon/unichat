@@ -142,13 +142,17 @@ class Feed extends Component {
         topic_id_list:[],
         user_id: "",
         group_codes_and_ids : [],
+        current_toggled_index_of_group_code_array: 0,
+        anonymous_user_handle : "",
+        currently_anonymous: true,
+        postAreaOn:false,
+        audience: "",
+        
+
 
         //USER INPUT
-        topic_to_be_posted: "",
-        audience: "",
-        current_toggled_index_of_group_code_array: 0,
-        currently_anonymous: true,
-        postAreaOn:false
+        topic_to_be_posted: ""
+
 
         //need to store messages in state here... as a dictionary? with groups as keys... values also a dictionary with message data....
     };
@@ -159,11 +163,17 @@ class Feed extends Component {
         this.handleChange = this.handleChange.bind(this);
         this.sendWithFeedWebsocket = this.sendWithFeedWebsocket.bind(this);
         this.populateFeedCallbackDictionary = this.populateFeedCallbackDictionary.bind(this);
+        this.iterateThroughGroupCodes = this.iterateThroughGroupCodes.bind(this);
+        this.toggleIdentity = this.toggleIdentity.bind(this);
         
         this.getWebSocketStatus(() => {
             WebSocketInstance.populateCallbackDictionary(this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary);
             } 
         );
+
+        //temp
+
+        this.togglePostArea = this.togglePostArea.bind(this);
     }
 
 
@@ -202,12 +212,11 @@ class Feed extends Component {
           this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary = dictionaryFromTopicLeaf;
           console.log('updated callback dict: ', this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary);
         }
-    }
+    };
 
     sendWithFeedWebsocket(message) {
         WebSocketInstance.sendMessage(message);
-
-    }
+    };
 
     componentDidMount(){
         const remainingHeightForContentView = (window.innerHeight - 160); // 140 = remaining rows + gaps
@@ -221,6 +230,7 @@ class Feed extends Component {
                     faculty:result.data.faculty,
                     group_codes_and_ids : result.data.GroupCodesAndIds,
                     user_id : result.data.user_id,
+                    anonymous_user_handle : 'Anon from ' + result.data.university
                 });
                 console.log('about to call connect websocket to: ', this.state.user_id);
 
@@ -229,23 +239,56 @@ class Feed extends Component {
                 console.log('group codes and ids in CDM: ', this.state);
             }
         ).catch(error => {throw error;})
-        const ReactDOM = require('react-dom')
-        if ( document.activeElement === ReactDOM.findDOMNode(this.refs.postInput) ) {
-            this.setState({postAreaOn:true})
-            console.log('toggled post area to true');
+        // const ReactDOM = require('react-dom')
+        // if ( document.activeElement === ReactDOM.findDOMNode(this.refs.postInput) ) {
+        //     this.setState({postAreaOn:true})
+        //     console.log('toggled post area to true');
+        // }
+
+
+
+    };
+
+    togglePostArea() { //this is temp method for toggling post options... should be dependant on clicking post input
+    //area
+        if (this.state.postAreaOn) {
+        this.setState({postAreaOn:false})
+        console.log('toggled to false');
+        } else {
+         this.setState({postAreaOn:true})  
+         console.log('toggled to true'); 
         }
-
-
     };
 
     handleChange(event) {
 
         this.setState({[event.target.name]: event.target.value});
-    }
+    };
 
     // renderTopics(topicIdArray) {
     //     <TopicLeaf topic_id="5" username = {this.state.username}/>
     // }
+
+    iterateThroughGroupCodes() {
+    //repeatedly iterating through group_codes_and_their_ids
+        const current_index = this.state.current_toggled_index_of_group_code_array
+        const max_possible_index = (this.state.group_codes_and_ids.length - 1)
+        if (current_index != max_possible_index) { //starting, haven't reached the max possible index
+            this.setState({current_toggled_index_of_group_code_array : current_index + 1})
+        } else { //reached max possible index, start from first index
+            this.setState({current_toggled_index_of_group_code_array : 0 })
+        }                            
+    };
+
+    toggleIdentity() {
+        if (this.state.currently_anonymous) {
+            this.setState({currently_anonymous:false})
+        } else {
+            this.setState({currently_anonymous:true})
+        }
+    };
+
+
 
     renderTopics = (groupCodesAndTheirTopicIds) => {
         const final_topic_array = []
@@ -279,10 +322,18 @@ class Feed extends Component {
     };
 
     render() {
-
         return (
             <FeedGrid>
                 <FeedMenuDiv>
+                    <input 
+                    type="image" 
+                    src={sendButton}
+                    style={{
+                        // "width" : "100%",
+                        "height" : "100%"
+                    }}
+                    onClick = {(e) => this.togglePostArea()}                        
+                    />
                 </FeedMenuDiv>
                 <InputDiv>
                     <input 
@@ -304,25 +355,20 @@ class Feed extends Component {
                         <IdentityToggleDiv>
                             <button 
                                 style={{
-                                      backgroundColor: "#ddd",
-                                      border: "none",
-                                      color: "black",
-                                      textAlign: "center",
-                                      textDecoration: "none",
-                                      display: "inline-block",
-                                      cursor: "pointer",
-                                      borderRadius: "16px"
+                                  backgroundColor: "#ddd",
+                                  border: "none",
+                                  color: "black",
+                                  textAlign: "center",
+                                  textDecoration: "none",
+                                  display: "inline-block",
+                                    padding :"1px",
+                                  margin: "1px 1px",
+                                  cursor: "pointer",
+                                  borderRadius: "16px"
                                     }}
-                                onClick = {function(){
-                                        if (this.state.currently_anonymous) {
-                                            this.setState({currently_anonymous:false})
-                                        } else {
-                                            this.setState({currently_anonymous:true})
-                                        }
-                                    }
-                                }
+                                onClick = {(e) => this.toggleIdentity()}
                                 >
-                                  {this.state.currently_anonymous ? 'Anon from '+ this.state.university : this.state.username}.
+                                  {this.state.currently_anonymous ? this.state.anonymous_user_handle : this.state.username}
                             </button>
                         </IdentityToggleDiv>
                         <LoudspeakerDiv>
@@ -337,20 +383,12 @@ class Feed extends Component {
                                   textAlign: "center",
                                   textDecoration: "none",
                                   display: "inline-block",
+                                    padding :"1px",
+                                  margin: "1px 1px",
                                   cursor: "pointer",
                                   borderRadius: "16px"
                                 }}
-                            onClick = {function() {
-                                //repeatedly iterating through group_codes_and_their_ids
-                                    const current_index = this.state.current_toggled_index_of_group_code_array
-                                    const max_possible_index = (this.state.group_codes_and_ids.length - 1)
-                                    if (current_index = 0 || current_index != max_possible_index) { //starting, haven't reached the max possible index
-                                        this.setState({current_toggled_index_of_group_code_array : current_index + 1})
-                                    } else { //reached max possible index, start from first index
-                                        this.setState({current_toggled_index_of_group_code_array : 0 })
-                                    }
-                                }
-                            }
+                            onClick = {(e) => this.iterateThroughGroupCodes()}
                             >
                             {this.state.group_codes_and_ids[this.state.current_toggled_index_of_group_code_array]['group_code']}
                             </button>
@@ -366,13 +404,15 @@ class Feed extends Component {
                                   textAlign: "center",
                                   textDecoration: "none",
                                   display: "inline-block",
+                                    padding :"1px",
+                                  margin: "1px 1px",
                                   cursor: "pointer",
                                   borderRadius: "16px"
                             }}
                             onClick = {
                                 (e) => {
                                     e.preventDefault();
-                                    console.log('test')
+                                    console.log('post button pressed')
                                     console.log(Date.now())
                                     console.log(typeof(Date.now()))
                                     axiosInstance.post('/user/post_topic/',

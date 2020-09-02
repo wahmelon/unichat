@@ -132,44 +132,6 @@ class TopicLeaf extends Component {
 
     };
 
-
-    //finally , add updateMessagesState method and experiment with renderMessages method to read state and group message based on keys
-    // getWebSocketStatus(callback) {
-    //     const topic_id = this.props.topic_id;
-    //     // WebSocketServiceInComponent.connect();
-    //     const component = this;
-    //     setTimeout(function() {
-    //       if (WebSocketInstance.state() === 1) {
-    //         //was (said .state() was not a function)
-    //         //          if (WebSocketService.state() === 1) {
-    //         console.log(`websocket for ${topic_id} connected`); //was : WebsocketServiceInComponent.room_name (said not defined)
-    //         callback();
-    //         // WebSocketService.sendMessage({
-    //         //     'type' : 'get_last_20',
-    //         //     'timeid' : Date.now()
-    //         // }); //triggers get_last_20 function on consumer.py which returns 20 messages before timeid
-    //         return;
-    //       } else {
-    //         console.log(`websocket ${topic_id} waiting for connection...`);//was : WebsocketServiceInComponent.room_name (said not defined)
-    //         component.getWebSocketStatus(callback);
-    //       }; 
-    //     }, 100);
-    //   };
-
-    // componentDidMount(){
-    //         const WebSocketServiceInComponent = new WebSocketService(room_name=this.props.room_name)
-    //         WebSocketService.connect();
-
-    //             axiosInstance.get('/getusergroups/')
-    //     .then(
-    //         result => {
-    //             this.setState({username:result.data.username,university:result.data.university,faculty:result.data.faculty});
-    //             console.log('Topic',this.state);
-    //         }
-    //     ).catch(error => {throw error;})
-    //     const groups = [this.state.university,this.state.faculty];
-    // }
-
     componentDidMount(){
         console.log('logging temp dict: ', this.tempCallbackDict);
         axiosInstance.post('/get_topic_data/', {topic_id : this.props.topic_id})
@@ -193,19 +155,7 @@ class TopicLeaf extends Component {
 
     handleChange(event) {
         this.setState({[event.target.name]: event.target.value});
-    }
-
-    // updateTopicDataInState(updatedTopic) {
-    //     this.setState({
-    //         topic_upvotes: updatedTopic['upvotes'],
-    //         topic_downvotes: updatedTopic['downvotes'],
-    //         comments: [...this.state.comments, updatedTopic['comments']]
-
-    //         // ]final_comment_array_of_dictionaries //later have a diff function which only adds on new comments? to reduce overhead?
-
-    //     });
-    //     console.log('updated topic: ', this.state);
-    // };
+    };
 
     updateCommentInState(updatedComment) {
 
