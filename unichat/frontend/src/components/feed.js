@@ -76,13 +76,15 @@ const SendButtonDiv = styled.div`
 const InputDetailGrid = styled.div` 
     display: grid;
     grid-template-columns: ${(window.innerWidth - 58)/2}px 50px ${(window.innerWidth - 58)/2}px;
-    grid-template-rows:  50px  25px 50px ;
+    grid-template-rows:  15px 50px  15px 50px 15px ;
     gap: 2px 2px;
     grid-template-areas: 
 
-    "identitytoggle" "loudspeaker" "audiencetoggle" 
-    "spacerarea" "spacerarea" "spacerarea" 
-    "postbutton" "postbutton" "postbutton" 
+    "spaceone spaceone spaceone" 
+    "identitytoggle loudspeaker audiencetoggle" 
+    "spacetwo spacetwo spacetwo" 
+    "postbutton postbutton postbutton" 
+    "spacethree spacethree spacethree"
 `;
 const IdentityToggleDiv = styled.div`
     font-size: 1.5em;
@@ -108,9 +110,25 @@ const AudienceToggleDiv = styled.div`
     
 `;
 
+const SpaceAreaOneDiv = styled.div`
+    font-size: 1.5em;
+    grid-area: spaceone;
+    background-color: #ECABFE;
+    align-items: center;            
+    
+`;
+
 const SpaceAreaDiv = styled.div`
     font-size: 1.5em;
-    grid-area: spacerarea;
+    grid-area: spacetwo;
+    background-color: #ECABFE;
+    align-items: center;            
+    
+`;
+
+const SpaceAreaThreeDiv = styled.div`
+    font-size: 1.5em;
+    grid-area: spacethree;
     background-color: #ECABFE;
     align-items: center;            
     
@@ -166,10 +184,7 @@ class Feed extends Component {
         this.iterateThroughGroupCodes = this.iterateThroughGroupCodes.bind(this);
         this.toggleIdentity = this.toggleIdentity.bind(this);
         
-        this.getWebSocketStatus(() => {
-            WebSocketInstance.populateCallbackDictionary(this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary);
-            } 
-        );
+
 
         //temp
 
@@ -218,9 +233,7 @@ class Feed extends Component {
         WebSocketInstance.sendMessage(message);
     };
 
-    componentDidMount(){
-        const remainingHeightForContentView = (window.innerHeight - 160); // 140 = remaining rows + gaps
-        const remainingWidthForInputView = (window.innerWidth - 56); // 140 = remaining rows + gaps (in Topic and feed)
+    getGroupCodesAndStartWebSocket() {
         axiosInstance.get('/getusergroups/')
         .then(
             result => {
@@ -235,10 +248,21 @@ class Feed extends Component {
                 console.log('about to call connect websocket to: ', this.state.user_id);
 
                 WebSocketInstance.connect(this.state.user_id);
+                this.getWebSocketStatus(() => {
+                    WebSocketInstance.populateCallbackDictionary(this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary);
+                    } 
+                );
 
                 console.log('group codes and ids in CDM: ', this.state);
             }
         ).catch(error => {throw error;})
+    }
+
+    componentDidMount(){
+        this.getGroupCodesAndStartWebSocket();
+        // const remainingHeightForContentView = (window.innerHeight - 160); // 140 = remaining rows + gaps
+        // const remainingWidthForInputView = (window.innerWidth - 56); // 140 = remaining rows + gaps (in Topic and feed)
+        
         // const ReactDOM = require('react-dom')
         // if ( document.activeElement === ReactDOM.findDOMNode(this.refs.postInput) ) {
         //     this.setState({postAreaOn:true})
@@ -352,19 +376,23 @@ class Feed extends Component {
 
                     {this.state.postAreaOn &&
                     <InputDetailGrid>
+                        <SpaceAreaOneDiv>
+                        </SpaceAreaOneDiv>
                         <IdentityToggleDiv>
                             <button 
                                 style={{
-                                  backgroundColor: "#ddd",
-                                  border: "none",
-                                  color: "black",
-                                  textAlign: "center",
-                                  textDecoration: "none",
-                                  display: "inline-block",
-                                    padding :"1px",
-                                  margin: "1px 1px",
-                                  cursor: "pointer",
-                                  borderRadius: "16px"
+                                    width: "100%",
+                                    height: "100%",                 
+                                    backgroundColor: "#ddd",
+                                    border: "none",
+                                    color: "black",
+                                    textAlign: "center",
+                                    textDecoration: "none",
+                                    display: "inline-block",
+                                    // padding :"1px",
+                                    // margin: "1px 1px",
+                                    cursor: "pointer",
+                                    borderRadius: "16px"
                                     }}
                                 onClick = {(e) => this.toggleIdentity()}
                                 >
@@ -372,21 +400,28 @@ class Feed extends Component {
                             </button>
                         </IdentityToggleDiv>
                         <LoudspeakerDiv>
-                            <img src={loudspeakerimage}/>
+                            <img src={loudspeakerimage}
+                                style={{
+                                    width: "100%",
+                                    maxHeight: "100%"
+                                }}
+                            />
                         </LoudspeakerDiv>
                         <AudienceToggleDiv>
                             <button 
                             style={{
-                                  backgroundColor: "#ddd",
-                                  border: "none",
-                                  color: "black",
-                                  textAlign: "center",
-                                  textDecoration: "none",
-                                  display: "inline-block",
-                                    padding :"1px",
-                                  margin: "1px 1px",
-                                  cursor: "pointer",
-                                  borderRadius: "16px"
+                                width: "100%",
+                                height: "100%",
+                                backgroundColor: "#ddd",
+                                border: "none",
+                                color: "black",
+                                textAlign: "center",
+                                textDecoration: "none",
+                                display: "inline-block",
+                                // padding :"1px",
+                                // margin: "1px 1px",
+                                cursor: "pointer",
+                                borderRadius: "16px"
                                 }}
                             onClick = {(e) => this.iterateThroughGroupCodes()}
                             >
@@ -398,16 +433,18 @@ class Feed extends Component {
                         <PostButtonDiv>
                             <button 
                             style={{
-                                  backgroundColor: "#ddd",
-                                  border: "none",
-                                  color: "black",
-                                  textAlign: "center",
-                                  textDecoration: "none",
-                                  display: "inline-block",
-                                    padding :"1px",
-                                  margin: "1px 1px",
-                                  cursor: "pointer",
-                                  borderRadius: "16px"
+                                width: "100%",
+                                height: "100%",    
+                                backgroundColor: "#ddd",
+                                border: "none",
+                                color: "black",
+                                textAlign: "center",
+                                textDecoration: "none",
+                                display: "inline-block",
+                                // padding :"1px",
+                                // margin: "1px 1px",
+                                cursor: "pointer",
+                                borderRadius: "16px"
                             }}
                             onClick = {
                                 (e) => {
@@ -431,6 +468,8 @@ class Feed extends Component {
                             Post
                             </button>
                         </PostButtonDiv>
+                        <SpaceAreaThreeDiv>
+                        </SpaceAreaThreeDiv>
                     </InputDetailGrid>
                     }
                 </InputDiv>
