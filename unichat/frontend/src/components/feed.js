@@ -305,8 +305,8 @@ class Feed extends Component {
 
     transitionNotificationsToFeed(){
         const array_for_render = this.state.topic_data
-        for (item of this.state.topic_notification_data_store) {
-            array_for_render.push(item) // totally new items vs under existing group code forces rerender
+        for (const topic of this.state.topic_notification_data_store) {
+            array_for_render.push(topic) // totally new items vs under existing group code forces rerender
         }
         this.setState({topic_notification_data_store:[]})
     };
