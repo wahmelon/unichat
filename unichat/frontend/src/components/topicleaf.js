@@ -108,6 +108,7 @@ class TopicLeaf extends Component {
         topic_upvotes: 0,
         topic_downvotes: 0,
         comments: [],
+        posted_as_anonymous: true,
         //USER INPUT
         comment_to_be_posted :"",
         //TOGGLE COMMENTS
@@ -140,6 +141,7 @@ class TopicLeaf extends Component {
                 this.setState({
                     topic_content : result.data.topic_data.content,
                     topic_poster : result.data.topic_data.poster,
+                    posted_as_anonymous : result.data.topic_data.posted_as_anonymous,
                     topic_title : result.data.topic_data.content,
                     topic_audience : result.data.topic_data.audience,
                     topic_created_time : result.data.topic_data.created_time,
@@ -299,7 +301,7 @@ class TopicLeaf extends Component {
         return (
             <TopicLeafGrid>
                 <UserAndAudience>
-                {this.state.topic_poster} => {this.state.topic_audience}
+                {this.state.posted_as_anonymous ? this.props.anonymous_user_handle : this.state.topic_poster} => {this.state.topic_audience}
                 </UserAndAudience>
                 <Content>
                 {this.state.topic_content}

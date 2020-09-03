@@ -327,7 +327,8 @@ class Feed extends Component {
                         padding: "0"
                     }}>
                     <TopicLeaf
-                    topic_id={topic['id']} 
+                    topic_id={topic['id']}
+                    anonymous_user_handle = {this.state.anonymous_user_handle} 
                     username = {this.state.username}
                     sendWithFeedWebsocket = {this.sendWithFeedWebsocket}
                     populateFeedCallbackDictionary = {this.populateFeedCallbackDictionary}
@@ -477,7 +478,6 @@ class Feed extends Component {
                             onClick = {
                                 (e) => {
                                     e.preventDefault();
-                                    console.log('post button pressed')
                                     if (this.state.topic_to_be_posted) {
                                         const message = {
                                             'type' : 'websocket_message',
@@ -489,8 +489,12 @@ class Feed extends Component {
                                             "posted_as_anonymous" : this.state.currently_anonymous
                                         };
                                         WebSocketInstance.sendMessage(message);
+                                        console.log('posted topic');
+
                                         this.setState({topic_to_be_posted:""});
                                     } else {
+                                        console.log('topic not posted');
+
                                         //pass
                                     }
                                 }
