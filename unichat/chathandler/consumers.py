@@ -86,6 +86,8 @@ class ChatConsumer(WebsocketConsumer):
 
         elif event['action'] == 'add_comment':
             poster = StudentUser.objects.get(username=event['poster'])
+            topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
+
             new_comment = Comment(
                 poster=poster,
                 content=event['content'],

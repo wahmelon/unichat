@@ -160,20 +160,21 @@ class Feed extends Component {
         username: "",
         university: "",
         faculty:"",
-        topic_id_list:[],
         user_id: "",
-        group_codes_and_ids : [],
+        topic_data : [],
         current_toggled_index_of_group_code_array: 0,
+        user_groups:[],
         anonymous_user_handle : "",
         currently_anonymous: true,
         postAreaOn:false,
-        audience: "",
         topic_notification_data_store:[],
         
 
 
         //USER INPUT
-        topic_to_be_posted: ""
+        topic_to_be_posted: "",
+        audience: "" //toggle
+
 
 
         //need to store messages in state here... as a dictionary? with groups as keys... values also a dictionary with message data....
@@ -185,7 +186,7 @@ class Feed extends Component {
         this.iterateThroughGroupCodes = this.iterateThroughGroupCodes.bind(this);
         this.toggleIdentity = this.toggleIdentity.bind(this);
         this.handleNewTopic = this.handleNewTopic.bind(this);
-        this.prepareNewTopicsForRender = this.prepareNewTopicsForRender.bind(this);
+        this.transitionNotificationsToFeed = this.transitionNotificationsToFeed.bind(this);
 
         this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary = {
             'add_new_topic' : this.handleNewTopic
@@ -216,19 +217,17 @@ class Feed extends Component {
       };
 
     handleNewTopic(new_topic) { // totally new items vs under existing group code forces rerender
-        console.log(this.state);
-        console.log(new_topic['user_id'],this.state.user_id);
+ 
 
         if (new_topic['user_id'] == this.state.user_id) {
-            console.log('before: ', this.state.group_codes_and_ids);
-            const group_codes_array = this.state.group_codes_and_ids;
-            const new_topic_dict = {'group_code' : new_topic['group_code'],'ids':[new_topic['topic_id']]};
-            group_codes_array.push(new_topic_dict);
-            this.setState({group_codes_and_ids:group_codes_array});
-            console.log('after: ', this.state.group_codes_and_ids);
+            const topic_data_array = this.state.topic_data;
+            const new_topic_dict = {'id' : new_topic['topic_id'],'created_time':[new_topic['created_time']]};
+            topic_data_array.push(new_topic_dict);
+            this.setState({topic_data:topic_data_array});
+
         } else {
             const notif_data_array = this.state.topic_notification_data_store;
-            const new_topic_dict = {'group_code' : new_topic['group_code'],'ids':[new_topic['topic_id']]};
+            const new_topic_dict = {'id' : new_topic['topic_id'],'created_time':[new_topic['created_time']]};
             notif_data_array.push(new_topic_dict);
             this.setState({topic_notification_data_store:notif_data_array})
         }
@@ -261,8 +260,9 @@ class Feed extends Component {
                     username:result.data.username,
                     university:result.data.university,
                     faculty:result.data.faculty,
-                    group_codes_and_ids : result.data.GroupCodesAndIds,
+                    topic_data : result.data.topic_data,
                     user_id : result.data.user_id,
+                    user_groups : result.data.user_groups,
                     anonymous_user_handle : 'Anon from ' + result.data.university
                 });
 
@@ -286,9 +286,8 @@ class Feed extends Component {
     };
 
     iterateThroughGroupCodes() {
-    //repeatedly iterating through group_codes_and_their_ids
         const current_index = this.state.current_toggled_index_of_group_code_array
-        const max_possible_index = (this.state.group_codes_and_ids.length - 1)
+        const max_possible_index = (this.state.user_groups.length - 1)
         if (current_index != max_possible_index) { //starting, haven't reached the max possible index
             this.setState({current_toggled_index_of_group_code_array : current_index + 1})
         } else { //reached max possible index, start from first index
@@ -304,8 +303,8 @@ class Feed extends Component {
         }
     };
 
-    prepareNewTopicsForRender(){
-        const array_for_render = this.state.group_codes_and_their_ids
+    transitionNotificationsToFeed(){
+        const array_for_render = this.state.topic_data
         for (item of this.state.topic_notification_data_store) {
             array_for_render.push(item) // totally new items vs under existing group code forces rerender
         }
@@ -314,35 +313,31 @@ class Feed extends Component {
 
 
 
-    renderTopics = (groupCodesAndTheirTopicIds) => {
-        const final_topic_array = []
-        //sort comment array by comment.created_time (ascending)
-        for (const group of groupCodesAndTheirTopicIds) {
-            const group_id = group['group_code'];
-            const topic_id_array = group['ids'];
-            for (const id of topic_id_array) {
-                final_topic_array.push(
-                <ul key={id}
+    renderTopics = (topic_data_array) => {
+        topic_data_array.sort(function(a,b) {
+            return b['created_time'] - a['created_time'];
+        })
+        const array_of_rendered_topics = [];
+        for (const topic of topic_data_array) {
+                array_of_rendered_topics.push(
+                <ul key={topic['id']}
                     style={{ 
                         listStyleType: "none",
                         margin : "0",
                         padding: "0"
                     }}>
                     <TopicLeaf
-                    topic_id={id} 
+                    topic_id={topic['id']} 
                     username = {this.state.username}
-                    group_code = {group_id}
                     sendWithFeedWebsocket = {this.sendWithFeedWebsocket}
                     populateFeedCallbackDictionary = {this.populateFeedCallbackDictionary}
                     />
                 </ul>
                 )
-            };
 
 
         };
-        return final_topic_array;
-        console.log('final topic array: ', final_topic_array);
+        return array_of_rendered_topics;
     };
 
     render() {
@@ -365,7 +360,7 @@ class Feed extends Component {
                         cursor: "pointer",
                         borderRadius: "16px"
                         }}
-                    onClick = {(e) => this.prepareNewTopicsForRender()}
+                    onClick = {(e) => this.transitionNotificationsToFeed()}
                     >
                       {this.state.topic_notification_data_store.length}!
                     </button>
@@ -457,7 +452,7 @@ class Feed extends Component {
                                 }}
                             onClick = {(e) => this.iterateThroughGroupCodes()}
                             >
-                            {this.state.group_codes_and_ids[this.state.current_toggled_index_of_group_code_array]['group_code']}
+                            {this.state.user_groups[this.state.current_toggled_index_of_group_code_array]}
                             </button>
                         </AudienceToggleDiv>
                         <SpaceAreaDiv>
@@ -490,7 +485,7 @@ class Feed extends Component {
                                             'content' : this.state.topic_to_be_posted,
                                             'user_id' : this.state.user_id,
                                             "created_time" : Date.now(),
-                                            "group_code" : this.state.group_codes_and_ids[this.state.current_toggled_index_of_group_code_array]['group_code'],
+                                            "group_code" : this.state.user_groups[this.state.current_toggled_index_of_group_code_array],
                                             "posted_as_anonymous" : this.state.currently_anonymous
                                         };
                                         WebSocketInstance.sendMessage(message);
@@ -517,7 +512,7 @@ class Feed extends Component {
                         padding: "0"
                     }}
                     >
-                    {this.renderTopics(this.state.group_codes_and_ids)}
+                    {this.renderTopics(this.state.topic_data)}
                     </ul>
                 </FeedContentDiv>
                 <FeedNavDiv>

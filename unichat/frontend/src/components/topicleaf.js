@@ -193,7 +193,7 @@ class TopicLeaf extends Component {
         this.props.sendWithFeedWebsocket({
             'type':'websocket_message',
             'action':'topic_upvote',
-            'group_code' : this.props.group_code,
+            'group_code' : this.state.topic_audience,
             'topic_id' :  this.props.topic_id            
         });
     };
@@ -203,7 +203,7 @@ class TopicLeaf extends Component {
         this.props.sendWithFeedWebsocket({
             'type':'websocket_message',
             'action':'topic_downvote',
-            'group_code' : this.props.group_code,
+            'group_code' : this.state.topic_audience,
             'topic_id' :  this.props.topic_id
         });
     };
@@ -213,7 +213,7 @@ class TopicLeaf extends Component {
         this.props.sendWithFeedWebsocket({
             'type':'websocket_message',
             'action':'comment_downvote',
-            'group_code' :  this.props.group_code,
+            'group_code' :  this.state.topic_audience,
             'topic_id' :  this.props.topic_id,
             'comment_id' : comment_id
 
@@ -225,7 +225,7 @@ class TopicLeaf extends Component {
         this.props.sendWithFeedWebsocket({
             'type':'websocket_message',
             'action':'comment_upvote',
-            'group_code' :  this.props.group_code,
+            'group_code' :  this.state.topic_audience,
             'topic_id' :  this.props.topic_id,            
             'comment_id' : comment_id
         });
@@ -242,7 +242,7 @@ class TopicLeaf extends Component {
             'content' : this.state.comment_to_be_posted,
             'poster' : this.props.username,
             'topic_id' : this.props.topic_id,
-            'group_code' : this.props.group_code,
+            'group_code' : this.state.topic_audience,
             'created_time' : Date.now()
         });
         this.setState({comment_to_be_posted: ""});
