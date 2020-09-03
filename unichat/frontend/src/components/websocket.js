@@ -1,4 +1,6 @@
 import axiosInstance from "../axiosApi";
+import * as jwt_decode from 'jwt-decode';
+
 
 class WebSocketService {
 
@@ -19,30 +21,33 @@ class WebSocketService {
     
   }
 
-  getPath(user_id) {
-    if (!user_id) {
-      axiosInstance.get('/getusergroups/')
-        .then(
-            result => {
-              console.log('user_id from feed.js bad, called got path for: ', result.data.user_id);
-              return `ws://127.0.0.1:8000/ws/chat/${result.data.user_id}/`
-            }
-        ).catch(error => {throw error;})
-      } else {
-        console.log('user_id from feed.js good, passing default path');
-        return `ws://127.0.0.1:8000/ws/chat/${user_id}/`
+  // getPath(user_id) {
+  //   if (!user_id) {
+  //     axiosInstance.get('/getusergroups/')
+  //       .then(
+  //           result => {
+  //             console.log('user_id from feed.js bad, called got path for: ', result.data.user_id);
+  //             return `ws://127.0.0.1:8000/ws/chat/${result.data.user_id}/`
+  //           }
+  //       ).catch(error => {throw error;})
+  //     } else {
+  //       console.log('user_id from feed.js good, passing default path');
+  //       return `ws://127.0.0.1:8000/ws/chat/${user_id}/`
 
-      }
-    };
+  //     }
+  //   };
+
+  getPath() {
+    const accessToken = localStorage.getItem('access_token')
+    const decodedToken = jwt_decode(accessToken);
+    const currentUserId = decodedToken.user_id;
+    return `ws://127.0.0.1:8000/ws/chat/${currentUserId}/` //dev django server
+  }
 
   connect(user_id) {
 
 
-    // this.socketRef = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${user_id}/`) //dev django server
-
-    this.socketRef = new WebSocket(this.getPath(user_id));
-
-
+    this.socketRef = new WebSocket(this.getPath()) 
 
     this.socketRef.onopen = () => {
       console.log('Websocket open');
@@ -55,21 +60,24 @@ class WebSocketService {
       // console.log(parsedData);
       if (parsedData['action'] === 'add_comment') {
         this.callbackDictionary[`add_comment_to_${parsedData['topic_id']}`](parsedData);
-        return
+        
+
       } else if (parsedData['action'] === 'topic_upvote') {
         const topic_id_in_data = parsedData['topic_id'];
         const function_name = `update_topic_upvote_to_${topic_id_in_data}`;
-        console.log(function_name);
         this.callbackDictionary[function_name]();
-        return
+        
+
       } else if (parsedData['action'] === 'topic_downvote') {
         this.callbackDictionary[`update_topic_downvote_to_${parsedData['topic_id']}`]();
-        return
+        
+
+
       } else if (parsedData['action'] === 'comment_upvote' || parsedData['action'] === 'comment_downvote') {
-        console.log(`update_comment_to_${parsedData['comment_id']}`);
         this.callbackDictionary[`update_comment_to_${parsedData['topic_id']}`](parsedData);
+
+
       } else if (parsedData['action'] === 'add_topic') {
-        console.log(`update_comment_to_${parsedData['comment_id']}`);
         this.callbackDictionary['add_new_topic'](parsedData);
       } else {
         //pass

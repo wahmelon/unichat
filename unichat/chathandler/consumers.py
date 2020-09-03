@@ -7,7 +7,7 @@ from .models import Topic, Comment
 from authentication.models import StudentUser, Group
 
 class ChatConsumer(WebsocketConsumer): 
-
+    #
     def get_user_groups(self):
         user_id = self.scope['url_route']['kwargs']['user_id']   
         current_user_django_obj = StudentUser.objects.get(id=int(user_id))
@@ -21,10 +21,8 @@ class ChatConsumer(WebsocketConsumer):
 
         user_groups = self.get_user_groups()
         for group in user_groups:
-            print('connecting to WS: ', group)
         #self.room_group_name = self.scope['url_route']['kwargs']['user_id']
 
-        #print('WS connecting to:', self.room_group_name)
 
         # Join room group
             async_to_sync(self.channel_layer.group_add)(
@@ -47,9 +45,7 @@ class ChatConsumer(WebsocketConsumer):
 
         # Receive message from WebSocket
     def receive(self, text_data):
-        print('receiving: ', text_data)
         text_data_json = json.loads(text_data)
-        print('receiving as json: ', text_data_json)
         # Send message to room group
         async_to_sync(self.channel_layer.group_send)(text_data_json['group_code'], text_data_json)
                                                 #GROUP CODE SHOULD COME FROM WEBSOCKET MESSAGE
@@ -74,7 +70,6 @@ class ChatConsumer(WebsocketConsumer):
 
         # Receive message from room group
     def websocket_message(self, event):
-        print('def websocket_message, group is: ', event['group_code'])
         # Send message to WebSocket
         #save message to DB
         if event['action'] == 'topic_upvote':
@@ -90,7 +85,6 @@ class ChatConsumer(WebsocketConsumer):
             self.send(json.dumps(event))
 
         elif event['action'] == 'add_comment':
-            print('got comment')
             poster = StudentUser.objects.get(username=event['poster'])
             new_comment = Comment(
                 poster=poster,
@@ -106,38 +100,32 @@ class ChatConsumer(WebsocketConsumer):
             event['downvotes'] = 0
             event['upvotes'] = 0
             self.send(json.dumps(event))
-            print('comment created successfully')
 
         elif event['action'] == 'comment_upvote':
-            print('upvoting comment')
             comment_django_obj = Comment.objects.get(id=event['comment_id'])
             comment_django_obj.upvotes += 1
             comment_django_obj.save()
             payload = comment_django_obj.as_dict()
             payload['action'] = 'comment_upvote'
             payload.update(event)
-            print('payload: ', payload)
             self.send(json.dumps(payload))
 
         elif event['action'] == 'comment_downvote':
-            print('downvoting comment')
             comment_django_obj = Comment.objects.get(id=event['comment_id'])
             comment_django_obj.downvotes += 1
             comment_django_obj.save()
             payload = comment_django_obj.as_dict()
             payload['action'] = 'comment_downvote'
             payload.update(event)
-            print('payload: ', payload)
             self.send(json.dumps(payload))
 
         elif event['action'] == 'add_topic':
-            print('adding topic')
             new_topic = Topic(
                 audience=Group.objects.get(group_code=event['group_code']),
                 content=event['content'],
                 created_time=event['created_time'],
                 poster=StudentUser.objects.get(id=event['user_id']),
-                anonymous = event['posted_as_anonymous'],
+                posted_as_anonymous = event['posted_as_anonymous'],
                 upvotes=0,
                 downvotes=0
                 )
@@ -147,7 +135,6 @@ class ChatConsumer(WebsocketConsumer):
             event['downvotes'] = 0
             event['upvotes'] = 0
             self.send(json.dumps(event))
-            print('topic created successfully')
 
 
 

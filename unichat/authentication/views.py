@@ -42,13 +42,16 @@ class GetUserGroups(APIView): #change to "get topic ids of user groups (or somet
 		for group in django_user.current_groups.all():
 			group_code_and_topic_ids = {}
 			group_code_and_topic_ids['group_code']  = group.group_code
-			for topic in group.topics.all()[:10]:
-				topic_id_list = []
+
+			topic_id_list = []
+			for topic in group.topics.all():
 				if topic:
 					topic_id_list.append(topic.id)
+
 			group_code_and_topic_ids['ids'] = topic_id_list
 
 			payload_list.append(group_code_and_topic_ids)
+		print(payload_list)
 					# topic_comment_list.append(topic.as_dict())
 			#topics has been set as related_name on foreign key params in Topic object referencing Group object #allowing this lookup
 		# print(topic_comment_list)

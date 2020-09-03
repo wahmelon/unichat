@@ -7,6 +7,7 @@ import TopicLeaf from './TopicLeaf';
 import sendButton from './sendbutton.png';
 import loudspeakerimage from './loudspeakerimage.png';
 import upvoteIcon from './upvote-icon.jpg';
+import * as jwt_decode from 'jwt-decode';
 
 
 
@@ -178,11 +179,6 @@ class Feed extends Component {
         //need to store messages in state here... as a dictionary? with groups as keys... values also a dictionary with message data....
     };
 
-        this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary = {
-            'add_new_topic' : this.handleNewTopic
-        }
-
-
         this.handleChange = this.handleChange.bind(this);
         this.sendWithFeedWebsocket = this.sendWithFeedWebsocket.bind(this);
         this.populateFeedCallbackDictionary = this.populateFeedCallbackDictionary.bind(this);
@@ -190,6 +186,10 @@ class Feed extends Component {
         this.toggleIdentity = this.toggleIdentity.bind(this);
         this.handleNewTopic = this.handleNewTopic.bind(this);
         this.prepareNewTopicsForRender = this.prepareNewTopicsForRender.bind(this);
+
+        this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary = {
+            'add_new_topic' : this.handleNewTopic
+        }
     }
 
 
@@ -201,7 +201,7 @@ class Feed extends Component {
           if (WebSocketInstance.state() === 1) {
             //was (said .state() was not a function)
             //          if (WebSocketService.state() === 1) {
-            console.log(`websocket for ${user_id} connected`); //was : WebsocketServiceInComponent.room_name (said not defined)
+            console.log(`websocket connected`); //was : WebsocketServiceInComponent.room_name (said not defined)
             callback();
             // WebSocketService.sendMessage({
             //     'type' : 'get_last_20',
@@ -209,18 +209,23 @@ class Feed extends Component {
             // }); //triggers get_last_20 function on consumer.py which returns 20 messages before timeid
             return;
           } else {
-            console.log(`websocket ${user_id} waiting for connection...`);//was : WebsocketServiceInComponent.room_name (said not defined)
+            console.log(`websocket waiting for connection...`);//was : WebsocketServiceInComponent.room_name (said not defined)
             component.getWebSocketStatus(callback);
           }; 
         }, 100);
       };
 
     handleNewTopic(new_topic) { // totally new items vs under existing group code forces rerender
+        console.log(this.state);
+        console.log(new_topic['user_id'],this.state.user_id);
+
         if (new_topic['user_id'] == this.state.user_id) {
+            console.log('before: ', this.state.group_codes_and_ids);
             const group_codes_array = this.state.group_codes_and_ids;
             const new_topic_dict = {'group_code' : new_topic['group_code'],'ids':[new_topic['topic_id']]};
             group_codes_array.push(new_topic_dict);
             this.setState({group_codes_and_ids:group_codes_array});
+            console.log('after: ', this.state.group_codes_and_ids);
         } else {
             const notif_data_array = this.state.topic_notification_data_store;
             const new_topic_dict = {'group_code' : new_topic['group_code'],'ids':[new_topic['topic_id']]};
@@ -248,7 +253,7 @@ class Feed extends Component {
         WebSocketInstance.sendMessage(message);
     };
 
-    getGroupCodesAndStartWebSocket() {
+    componentDidMount(){
         axiosInstance.get('/getusergroups/')
         .then(
             result => {
@@ -260,32 +265,18 @@ class Feed extends Component {
                     user_id : result.data.user_id,
                     anonymous_user_handle : 'Anon from ' + result.data.university
                 });
-                console.log('about to call connect websocket to: ', this.state.user_id);
 
-                WebSocketInstance.connect(this.state.user_id);
-                this.getWebSocketStatus(() => {
-                    WebSocketInstance.populateCallbackDictionary(this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary);
-                    } 
-                );
-
-                console.log('group codes and ids in CDM: ', this.state);
+                console.log('axios updated state: ', this.state);
             }
-        ).catch(error => {throw error;})
-    }
+        ).catch(error => {throw error})
 
-    componentDidMount(){
-        this.getGroupCodesAndStartWebSocket();
-        // const remainingHeightForContentView = (window.innerHeight - 160); // 140 = remaining rows + gaps
-        // const remainingWidthForInputView = (window.innerWidth - 56); // 140 = remaining rows + gaps (in Topic and feed)
-        
-        // const ReactDOM = require('react-dom')
-        // if ( document.activeElement === ReactDOM.findDOMNode(this.refs.postInput) ) {
-        //     this.setState({postAreaOn:true})
-        //     console.log('toggled post area to true');
-        // }
-
-
-
+        const accessToken = localStorage.getItem('access_token')
+        const decodedToken = jwt_decode(accessToken);
+        WebSocketInstance.connect(decodedToken.user_id);
+        this.getWebSocketStatus(() => {
+            WebSocketInstance.populateCallbackDictionary(this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary);
+            } 
+        );
     };
 
 
@@ -293,10 +284,6 @@ class Feed extends Component {
 
         this.setState({[event.target.name]: event.target.value});
     };
-
-    // renderTopics(topicIdArray) {
-    //     <TopicLeaf topic_id="5" username = {this.state.username}/>
-    // }
 
     iterateThroughGroupCodes() {
     //repeatedly iterating through group_codes_and_their_ids
