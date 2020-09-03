@@ -252,6 +252,9 @@ class TopicLeaf extends Component {
     };
 
     renderComments = (commentArray) => {
+        commentArray.sort(function(a,b) {
+            return a['created_time'] - b['created_time']; //comments are rendered with more recent ones at the bottom
+        })
         //sort comment array by comment.created_time (ascending)
         return commentArray.map((comment) => (
             <li
