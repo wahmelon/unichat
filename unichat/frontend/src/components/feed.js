@@ -330,6 +330,7 @@ class Feed extends Component {
                     topic_id={topic['id']}
                     anonymous_user_handle = {this.state.anonymous_user_handle} 
                     username = {this.state.username}
+                    user_id = {this.state.user_id}
                     sendWithFeedWebsocket = {this.sendWithFeedWebsocket}
                     populateFeedCallbackDictionary = {this.populateFeedCallbackDictionary}
                     />

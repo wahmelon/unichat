@@ -100,6 +100,7 @@ class TopicLeaf extends Component {
     constructor(props){
         super(props);
         this.state = {
+        logged_user_id : "",
         topic_poster : "",
         topic_content : "",
         topic_title: "",
@@ -134,6 +135,7 @@ class TopicLeaf extends Component {
     };
 
     componentDidMount(){
+        this.setState({logged_user_id:this.props.user_id})
         console.log('logging temp dict: ', this.tempCallbackDict);
         axiosInstance.post('/get_topic_data/', {topic_id : this.props.topic_id})
         .then(
@@ -147,7 +149,7 @@ class TopicLeaf extends Component {
                     topic_created_time : result.data.topic_data.created_time,
                     topic_upvotes : result.data.topic_data.upvotes,
                     topic_downvotes : result.data.topic_data.downvotes,
-                    comments : result.data.topic_data.comments  
+                    comments : result.data.topic_data.comments,  
                 });
                 console.log('topic data in state initially updated as: ', this.state);
 
@@ -193,6 +195,7 @@ class TopicLeaf extends Component {
     submitTopicUpvote(e) {
         e.preventDefault();
         this.props.sendWithFeedWebsocket({
+            'logged_user_id' : this.state.logged_user_id,
             'type':'websocket_message',
             'action':'topic_upvote',
             'group_code' : this.state.topic_audience,
@@ -203,6 +206,7 @@ class TopicLeaf extends Component {
     submitTopicDownvote(e) {
         e.preventDefault();
         this.props.sendWithFeedWebsocket({
+            'logged_user_id' : this.state.logged_user_id,
             'type':'websocket_message',
             'action':'topic_downvote',
             'group_code' : this.state.topic_audience,
@@ -213,6 +217,7 @@ class TopicLeaf extends Component {
     submitCommentDownvote(e, comment_id) {
         e.preventDefault();
         this.props.sendWithFeedWebsocket({
+            'logged_user_id' : this.state.logged_user_id,
             'type':'websocket_message',
             'action':'comment_downvote',
             'group_code' :  this.state.topic_audience,
@@ -225,6 +230,7 @@ class TopicLeaf extends Component {
     submitCommentUpvote(e, comment_id) {
         e.preventDefault();
         this.props.sendWithFeedWebsocket({
+            'logged_user_id' : this.state.logged_user_id,
             'type':'websocket_message',
             'action':'comment_upvote',
             'group_code' :  this.state.topic_audience,
@@ -238,7 +244,9 @@ class TopicLeaf extends Component {
 
     submitComment(e) {
         e.preventDefault();
+        if (this.state.comment_to_be_posted) {
         this.props.sendWithFeedWebsocket({
+            'logged_user_id' : this.state.logged_user_id,
             'type' : 'websocket_message',
             'action' : 'add_comment',
             'content' : this.state.comment_to_be_posted,
@@ -249,6 +257,9 @@ class TopicLeaf extends Component {
         });
         this.setState({comment_to_be_posted: ""});
         console.log(this.state.comment_to_be_posted)
+        } else {
+            //pass
+        };
     };
 
     renderComments = (commentArray) => {

@@ -73,20 +73,25 @@ class ChatConsumer(WebsocketConsumer):
         # Send message to WebSocket
         #save message to DB
         if event['action'] == 'topic_upvote':
+            upvoter = StudentUser.objects.get(id=event['logged_user_id'])
             topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
             topic_as_django_obj.upvotes += 1
+            topic_as_django_obj.followed_by.add(upvoter)
             topic_as_django_obj.save()
             self.send(json.dumps(event))
 
         elif event['action'] == 'topic_downvote':
+            downvoter = StudentUser.objects.get(id=event['logged_user_id'])
             topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
             topic_as_django_obj.downvotes += 1
+            topic_as_django_obj.followed_by.add(downvoter)
             topic_as_django_obj.save()
             self.send(json.dumps(event))
 
         elif event['action'] == 'add_comment':
             poster = StudentUser.objects.get(username=event['poster'])
             topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
+            topic_as_django_obj.followed_by.add(poster)
 
             new_comment = Comment(
                 poster=poster,
@@ -104,8 +109,11 @@ class ChatConsumer(WebsocketConsumer):
             self.send(json.dumps(event))
 
         elif event['action'] == 'comment_upvote':
+            upvoter = StudentUser.objects.get(id=event['logged_user_id'])
             comment_django_obj = Comment.objects.get(id=event['comment_id'])
             comment_django_obj.upvotes += 1
+            topic_owner = comment_django_obj.topic_owner
+            topic_owner.followed_by.add(downvoter)
             comment_django_obj.save()
             payload = comment_django_obj.as_dict()
             payload['action'] = 'comment_upvote'
@@ -113,8 +121,11 @@ class ChatConsumer(WebsocketConsumer):
             self.send(json.dumps(payload))
 
         elif event['action'] == 'comment_downvote':
+            downvoter = StudentUser.objects.get(id=event['logged_user_id'])            
             comment_django_obj = Comment.objects.get(id=event['comment_id'])
             comment_django_obj.downvotes += 1
+            topic_owner = comment_django_obj.topic_owner
+            topic_owner.followed_by.add(downvoter)
             comment_django_obj.save()
             payload = comment_django_obj.as_dict()
             payload['action'] = 'comment_downvote'
@@ -122,16 +133,18 @@ class ChatConsumer(WebsocketConsumer):
             self.send(json.dumps(payload))
 
         elif event['action'] == 'add_topic':
+            topic_poster = StudentUser.objects.get(id=event['user_id'])
             new_topic = Topic(
                 audience=Group.objects.get(group_code=event['group_code']),
                 content=event['content'],
                 created_time=event['created_time'],
-                poster=StudentUser.objects.get(id=event['user_id']),
+                poster=topic_poster,
                 posted_as_anonymous = event['posted_as_anonymous'],
                 upvotes=0,
                 downvotes=0
                 )
             new_topic.save()
+            new_topic.followed_by.add(topic_poster)
             #adding fields to event
             event['topic_id'] = new_topic.id
             event['downvotes'] = 0
