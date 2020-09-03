@@ -240,10 +240,12 @@ class Feed extends Component {
           new_addition = dictionaryFromTopicLeaf,
           new_dict = Object.assign({}, old_dict, new_addition);
           this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary = new_dict;
+          WebSocketInstance.populateCallbackDictionary(this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary)
           console.log('updated callback dict: ', this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary);
         } else {
             console.log(dictionaryFromTopicLeaf);
           this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary = dictionaryFromTopicLeaf;
+          WebSocketInstance.populateCallbackDictionary(this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary)
           console.log('updated callback dict: ', this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary);
         }
     };

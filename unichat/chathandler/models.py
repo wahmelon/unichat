@@ -31,7 +31,7 @@ class Topic(models.Model):
 		return self.content
 
 	class Meta:
-		ordering = ['created_time']
+		ordering = ['-created_time']
 
 class Comment(models.Model):
 	poster = models.ForeignKey("authentication.StudentUser", on_delete=models.CASCADE)

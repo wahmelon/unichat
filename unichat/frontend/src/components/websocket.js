@@ -55,6 +55,8 @@ class WebSocketService {
     this.socketRef.onmessage = e => {
       const parsedData = JSON.parse(e.data);
       console.log(parsedData);
+      console.log(parsedData.topic_id);
+      console.log(this.callbackDictionary['update_topic_downvote_to_46']);
 
       // this.callbackDictionary['update_topic_data'](updatedTopic);
       // console.log(parsedData);
@@ -63,9 +65,7 @@ class WebSocketService {
         
 
       } else if (parsedData['action'] === 'topic_upvote') {
-        const topic_id_in_data = parsedData['topic_id'];
-        const function_name = `update_topic_upvote_to_${topic_id_in_data}`;
-        this.callbackDictionary[function_name]();
+        this.callbackDictionary[`update_topic_upvote_to_${parsedData['topic_id']}`]();
         
 
       } else if (parsedData['action'] === 'topic_downvote') {
