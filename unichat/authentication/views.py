@@ -41,18 +41,37 @@ class GetUserGroups(APIView): #change to "get topic ids of user groups (or somet
 		payload_list = []
 		user_groups = [str(group) for group in django_user.current_groups.all()]
 		for group in django_user.current_groups.all():
-			for topic in group.topics.all()[:10]:
+			for topic in group.topics.all()[:9]: #first 10 topics of each
 				if topic: #not no topics
 					topic_id_and_when_created_dict = {}
 					topic_id_and_when_created_dict['id'] = topic.id
 					topic_id_and_when_created_dict['created_time'] = topic.created_time
 					payload_list.append(topic_id_and_when_created_dict)
-
-		print(payload_list)
 					# topic_comment_list.append(topic.as_dict())
 			#topics has been set as related_name on foreign key params in Topic object referencing Group object #allowing this lookup
 		# print(topic_comment_list)
 		return Response(data={"user_id" : django_user.id, "user_groups" : user_groups, "topic_data": payload_list, "username":user.username,'faculty':user.faculty, 'university':user.university}, status=status.HTTP_200_OK)
+
+class GetMoreTopics(APIView): #change to "get topic ids of user groups (or something similar)"
+	def get(self, request):
+		user = UserFromToken(request)
+		django_user = StudentUser.objects.get(username=user.username)
+		payload_list = []
+		page = request.data['page'] #corresponds to page requirement for react-infinite-scroller
+		user_groups = [str(group) for group in django_user.current_groups.all()]
+		for group in django_user.current_groups.all():
+			for topic in group.topics.all()[(page*10):((page*10)+9)]: #returns 10 items at a time 
+				if topic: #not no topics
+					topic_id_and_when_created_dict = {}
+					topic_id_and_when_created_dict['id'] = topic.id
+					topic_id_and_when_created_dict['created_time'] = topic.created_time
+					payload_list.append(topic_id_and_when_created_dict)
+					# topic_comment_list.append(topic.as_dict())
+			#topics has been set as related_name on foreign key params in Topic object referencing Group object #allowing this lookup
+		# print(topic_comment_list)
+		return Response(data={"topic_data": payload_list}, status=status.HTTP_200_OK)
+
+
 
 class GetTopicData(APIView):
 	def post (self, request):
@@ -83,7 +102,6 @@ class SetUniInfo(APIView):
 		return Response(data={"test response set_uni_info":"ok"}, status=status.HTTP_200_OK)
 
 
-
 class LogoutAndBlacklistRefreshTokenForUserView(APIView):
     permission_classes = (permissions.AllowAny,)
     authentication_classes = ()
@@ -97,7 +115,7 @@ class LogoutAndBlacklistRefreshTokenForUserView(APIView):
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-class PostTopic(APIView):
+class PostTopic(APIView): #not being used anymore, sent over websocket
 	def post(self, request):
 		try:
 			poster = UserFromToken(request)

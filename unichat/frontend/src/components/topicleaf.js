@@ -136,7 +136,6 @@ class TopicLeaf extends Component {
 
     componentDidMount(){
         this.setState({logged_user_id:this.props.user_id})
-        console.log('logging temp dict: ', this.tempCallbackDict);
         axiosInstance.post('/get_topic_data/', {topic_id : this.props.topic_id})
         .then(
             result => {
@@ -151,7 +150,6 @@ class TopicLeaf extends Component {
                     topic_downvotes : result.data.topic_data.downvotes,
                     comments : result.data.topic_data.comments,  
                 });
-                console.log('topic data in state initially updated as: ', this.state);
 
             }
         ).catch(error => {throw error;})

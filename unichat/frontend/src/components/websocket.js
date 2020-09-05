@@ -54,9 +54,6 @@ class WebSocketService {
     };
     this.socketRef.onmessage = e => {
       const parsedData = JSON.parse(e.data);
-      console.log(parsedData);
-      console.log(parsedData.topic_id);
-      console.log(this.callbackDictionary['update_topic_downvote_to_46']);
 
       // this.callbackDictionary['update_topic_data'](updatedTopic);
       // console.log(parsedData);
@@ -113,9 +110,7 @@ class WebSocketService {
   }
 
   populateCallbackDictionary(dictionary) {
-    console.log('before population CBD: ', this.callbackDictionary);
     this.callbackDictionary = dictionary;
-    console.log('populated callbackDictionary: ', this.callbackDictionary);
 
     // if (this.callbackDictionary) {
     //   var old_dict = this.callbackDictionary,

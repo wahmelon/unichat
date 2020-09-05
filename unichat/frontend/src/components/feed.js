@@ -8,6 +8,7 @@ import sendButton from './sendbutton.png';
 import loudspeakerimage from './loudspeakerimage.png';
 import upvoteIcon from './upvote-icon.jpg';
 import * as jwt_decode from 'jwt-decode';
+import InfiniteScroll from 'react-infinite-scroll';
 
 
 
@@ -168,6 +169,7 @@ class Feed extends Component {
         currently_anonymous: true,
         postAreaOn:false,
         topic_notification_data_store:[],
+        hasMoreItems : true,
         
 
 
@@ -241,12 +243,9 @@ class Feed extends Component {
           new_dict = Object.assign({}, old_dict, new_addition);
           this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary = new_dict;
           WebSocketInstance.populateCallbackDictionary(this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary)
-          console.log('updated callback dict: ', this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary);
         } else {
-            console.log(dictionaryFromTopicLeaf);
           this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary = dictionaryFromTopicLeaf;
           WebSocketInstance.populateCallbackDictionary(this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary)
-          console.log('updated callback dict: ', this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary);
         }
     };
 
@@ -313,6 +312,23 @@ class Feed extends Component {
         this.setState({topic_notification_data_store:[]})
     };
 
+    loadMoreTopics(page) {
+        var self = this;
+        axiosInstance.get('/getmoretopics/', {page:page})
+        .then(
+            result => {
+                topics_array = this.state.topic_data;
+                for (const topic of result.topic_data) {
+                    topics_array.push(topic)
+                    }
+                this.setState({topic_data:topics_array});
+                if (topics_array.length < 10) {
+                    console.log('no more topics to be loaded (loadItems)');
+                    this.setState({hasMoreItems:false});
+                    }
+                }
+                ).catch(error => {throw error})    
+        };
 
 
     renderTopics = (topic_data_array) => {
@@ -345,6 +361,9 @@ class Feed extends Component {
     };
 
     render() {
+
+        const loader = <div className="loader">Loading ...</div>;
+
         return (
             <FeedGrid>
                 <FeedMenuDiv>
@@ -511,7 +530,11 @@ class Feed extends Component {
                     </InputDetailGrid>
                     }
                 </InputDiv>
-
+        <InfiniteScroll
+                    pageStart={0}
+                    loadMore={this.loadMoreTopics.bind(this)}
+                    hasMore={this.state.hasMoreItems}
+                    loader={loader}>
                 <FeedContentDiv>
                     <ul style={{ 
                         listStyleType: "none",
@@ -522,6 +545,7 @@ class Feed extends Component {
                     {this.renderTopics(this.state.topic_data)}
                     </ul>
                 </FeedContentDiv>
+        </InfiniteScroll>
                 <FeedNavDiv>
                     <Link className={"nav-link"} to={"/authentication/"}>Account management for {this.state.username}</Link>
                 </FeedNavDiv>
