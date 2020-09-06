@@ -41,7 +41,8 @@ class GetUserGroups(APIView): #change to "get topic ids of user groups (or somet
 		payload_list = []
 		user_groups = [str(group) for group in django_user.current_groups.all()]
 		for group in django_user.current_groups.all():
-			for topic in group.topics.all()[:9]: #first 10 topics of each
+			for topic in group.topics.all()[:9]: #first 10 topics of each (BEFORE :9)
+
 				if topic: #not no topics
 					topic_id_and_when_created_dict = {}
 					topic_id_and_when_created_dict['id'] = topic.id
@@ -53,14 +54,17 @@ class GetUserGroups(APIView): #change to "get topic ids of user groups (or somet
 		return Response(data={"user_id" : django_user.id, "user_groups" : user_groups, "topic_data": payload_list, "username":user.username,'faculty':user.faculty, 'university':user.university}, status=status.HTTP_200_OK)
 
 class GetMoreTopics(APIView): #change to "get topic ids of user groups (or something similar)"
-	def get(self, request):
+	def post(self, request):
 		user = UserFromToken(request)
 		django_user = StudentUser.objects.get(username=user.username)
 		payload_list = []
+		print(request)
+		print(request.data)
 		page = request.data['page'] #corresponds to page requirement for react-infinite-scroller
 		user_groups = [str(group) for group in django_user.current_groups.all()]
 		for group in django_user.current_groups.all():
-			for topic in group.topics.all()[(page*10):((page*10)+9)]: #returns 10 items at a time 
+			for topic in group.topics.all()[(page*10):((page*10)+9)]: #returns 10 items at a time BEFORE page*10,(page*10)+9
+
 				if topic: #not no topics
 					topic_id_and_when_created_dict = {}
 					topic_id_and_when_created_dict['id'] = topic.id

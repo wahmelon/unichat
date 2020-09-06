@@ -8,7 +8,7 @@ import sendButton from './sendbutton.png';
 import loudspeakerimage from './loudspeakerimage.png';
 import upvoteIcon from './upvote-icon.jpg';
 import * as jwt_decode from 'jwt-decode';
-import InfiniteScroll from 'react-infinite-scroll';
+import InfiniteScroll from 'react-infinite-scroller';
 
 
 
@@ -169,7 +169,10 @@ class Feed extends Component {
         currently_anonymous: true,
         postAreaOn:false,
         topic_notification_data_store:[],
+
+        //infinite scroll
         hasMoreItems : true,
+        functionCallTracker:1, //multiplier for loadMoreTopics - specifies which 10 topics should be returned
         
 
 
@@ -313,16 +316,27 @@ class Feed extends Component {
     };
 
     loadMoreTopics(page) {
+        console.log('topic state loadmore: ', this.state.topic_data);
         var self = this;
-        axiosInstance.get('/getmoretopics/', {page:page})
+        axiosInstance.post('/getmoretopics/', {page:this.state.functionCallTracker})
         .then(
             result => {
-                topics_array = this.state.topic_data;
-                for (const topic of result.topic_data) {
-                    topics_array.push(topic)
-                    }
+                console.log(result.data.topic_data);
+                const topics_array = this.state.topic_data;
+                if (result.data.topic_data) {
+                    for (const topic of result.data.topic_data) {
+                        topics_array.push(topic)
+                        }
+                    console.log('topic state loadmore: ', this.state.topic_data);
+                    };
+
+                console.log('finished iterating');
                 this.setState({topic_data:topics_array});
-                if (topics_array.length < 10) {
+                const timesFunctionCalled = this.state.functionCallTracker;
+                this.setState({functionCallTracker:timesFunctionCalled+1});
+                // if (topics_array.length < 10) {
+                if (result.data.topic_data.length < 10) { //before 10
+
                     console.log('no more topics to be loaded (loadItems)');
                     this.setState({hasMoreItems:false});
                     }
@@ -330,8 +344,25 @@ class Feed extends Component {
                 ).catch(error => {throw error})    
         };
 
+    removeDuplicatesByID(array) { //required in relation to infinite scroll
+      let cloned_array = array.slice(); // You can define the comparing function here. 
+      // JS by default uses a crappy string compare.
+      // (we use slice to clone the array so the
+      // original array won't be modified)
+      let results = [];
+      for (let i = 0; i < cloned_array.length - 1; i++) {
+        if (cloned_array[i + 1].id != cloned_array[i].id) {
+          results.push(cloned_array[i]);
+        }
+      }
+      return results;
+    }
 
-    renderTopics = (topic_data_array) => {
+
+    renderTopics = (topic_array) => {
+        const topic_data_array = this.removeDuplicatesByID(topic_array); //required due to infinite scroll component
+        //somehow creating multiple topic components ...
+
         topic_data_array.sort(function(a,b) {
             return b['created_time'] - a['created_time'];
         })
@@ -362,7 +393,7 @@ class Feed extends Component {
 
     render() {
 
-        const loader = <div className="loader">Loading ...</div>;
+        const loader = <div className="loader" key={1000000}>Loading ...</div>;
 
         return (
             <FeedGrid>
