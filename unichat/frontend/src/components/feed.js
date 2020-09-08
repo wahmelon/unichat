@@ -169,7 +169,8 @@ class Feed extends Component {
         anonymous_user_handle : "",
         currently_anonymous: true,
         postAreaOn:false,
-        topic_notification_data_store:[],
+        notification_data_store:[],
+        new_topics:[],
 
         //infinite scroll
         hasMoreItems : true,
@@ -192,10 +193,12 @@ class Feed extends Component {
         this.iterateThroughGroupCodes = this.iterateThroughGroupCodes.bind(this);
         this.toggleIdentity = this.toggleIdentity.bind(this);
         this.handleNewTopic = this.handleNewTopic.bind(this);
-        this.transitionNotificationsToFeed = this.transitionNotificationsToFeed.bind(this);
+        this.transitionNotificationToFeed = this.transitionNotificationToFeed.bind(this);
+        this.handleNotification = this.handleNotification.bind(this);
 
         this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary = {
-            'add_new_topic' : this.handleNewTopic
+            'add_new_topic' : this.handleNewTopic,
+            'new_notification' : this.handleNotification
         }
     }
 
@@ -223,7 +226,7 @@ class Feed extends Component {
       };
 
     handleNewTopic(new_topic) { // totally new items vs under existing group code forces rerender
- 
+    //for spinner to load new topics
 
         if (new_topic['user_id'] == this.state.user_id) {
             const topic_data_array = this.state.topic_data;
@@ -232,12 +235,70 @@ class Feed extends Component {
             this.setState({topic_data:topic_data_array});
 
         } else {
-            const notif_data_array = this.state.topic_notification_data_store;
+            const topics_data_array = this.state.new_topics;
             const new_topic_dict = {'id' : new_topic['topic_id'],'created_time':[new_topic['created_time']]};
-            notif_data_array.push(new_topic_dict);
-            this.setState({topic_notification_data_store:notif_data_array})
+            topics_data_array.push(new_topic_dict);
+            this.setState({new_topics:topics_data_array})
         }
-    }
+    };
+
+    handleNotification(new_item) { // totally new items vs under existing group code forces rerender
+        // add logic for what it says and what function to run
+        const format;
+        if (new_item.poster == user_id) {
+            format = 1
+        } else if ()
+
+            X (has)/(and X others have) (commented)/(and voted) on (your)/(users) (topic)/(comment)
+
+            if (action_value > 1) {
+                const variable1 = 'has'
+            } else {variable1 = `and ${action_value - 1} have`}
+
+            if (only_comments) {
+                const variable2 = 'commented'
+            } else if (only_votes) {
+                const variable2 = 'voted'
+            } else { //both comments and votes
+                const variable2 = 'commented and voted'
+            } 
+
+            if (logged_user_owns) {
+                const variable3 = 'your'
+            } else {
+                const variable3 = `${topic_or_comment_owners}'s`
+            } 
+
+            if (concerns_topic) {
+                variable4 = 'topic'
+            } else { //concernts comment
+                variable4 = 'comment'
+            } 
+
+
+
+        const message = `${last_poster} ${variable1} ${variable2} on ${variable3} ${variable4}`
+
+
+        const notif_data_array = this.state.notification_data_store;
+        const new_item_dict = {'id' : new_item['topic_id'],'message':message};
+        notif_data_array.push(new_topic_dict);
+        this.setState({notification_data_store:notif_data_array}); //to be passed to menulist as prop, alongside transition notification to feed for all onClicks
+    };
+
+    transitionNotificationToFeed(event){ //for clicking on a notification
+        const new_topic_array = this.state.topic_data
+        new_topic_array.push(event.topic) //somehow append topic data in correct format. will create a duplicate but removeDuplicatesByID should remove in render msg
+        //have an extra field for render method to indicate that topic has been reloaded out of the proper chron sorted order? ... extra field needs to be handled by render msg
+        //displayed time should be original topic creation, time in render should be time the topic was last replaced in feed.......? 
+        this.setState({topic_data:new_topic_array}) //triggers re-render
+        new_notification_array = this.state.notification_data_store
+        const notification_array_without_justrendered_topic = new_notification_array.filter(topic => topic.id != event.topic.id);
+        this.setState({notification_data_store:notification_array_without_justrendered_topic})
+    };
+
+
+
 
 
     populateFeedCallbackDictionary(dictionaryFromTopicLeaf) {
@@ -308,15 +369,9 @@ class Feed extends Component {
         }
     };
 
-    transitionNotificationsToFeed(){
-        const array_for_render = this.state.topic_data
-        for (const topic of this.state.topic_notification_data_store) {
-            array_for_render.push(topic) // totally new items vs under existing group code forces rerender
-        }
-        this.setState({topic_notification_data_store:[]})
-    };
 
-    loadMoreTopics(page) {
+
+    loadMoreTopics(page) { //interacts with infinite scroll
         console.log('topic state loadmore: ', this.state.topic_data);
         var self = this;
         axiosInstance.post('/getmoretopics/', {page:this.state.functionCallTracker})
@@ -419,7 +474,7 @@ class Feed extends Component {
                         }}
                     onClick = {(e) => this.transitionNotificationsToFeed()}
                     >
-                      {this.state.topic_notification_data_store.length}!
+                      {this.state.notification_data_store.length}!
                     </button>
                 </FeedMenuDiv>
                 <InputDiv>

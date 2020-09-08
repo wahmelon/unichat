@@ -4,7 +4,7 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 import time
 from .models import Topic, Comment
-from authentication.models import StudentUser, Group
+from authentication.models import StudentUser, Group, NotificationItem
 
 class ChatConsumer(WebsocketConsumer): 
     #
@@ -79,6 +79,20 @@ class ChatConsumer(WebsocketConsumer):
             topic_as_django_obj.followed_by.add(upvoter)
             topic_as_django_obj.save()
             self.send(json.dumps(event))
+            if NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_upvote'): #true if it exists
+                existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_upvote')
+                existing_item.action_value += 1
+                existing_item.action_time = event['time']
+                existing_item.action_time = event['logged_user_id']
+            else:
+                new_notification = NotificationItem(
+                    topic_id = event['topic_id'],
+                    #comment_id = models.PositiveSmallIntegerField(blank=True)
+                    action_type = 'topic_upvote',
+                    action_value = 1,
+                    action_time = event['time'],
+                    last_actor = event['logged_user_id']
+                    )
 
         elif event['action'] == 'topic_downvote':
             downvoter = StudentUser.objects.get(id=event['logged_user_id'])
@@ -87,6 +101,20 @@ class ChatConsumer(WebsocketConsumer):
             topic_as_django_obj.followed_by.add(downvoter)
             topic_as_django_obj.save()
             self.send(json.dumps(event))
+            if NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_downvote'): #true if it exists
+                existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_downvote')
+                existing_item.action_value += 1
+                existing_item.action_time = event['time']
+                existing_item.action_time = event['logged_user_id']
+            else:
+                new_notification = NotificationItem(
+                    topic_id = event['topic_id'],
+                    #comment_id = models.PositiveSmallIntegerField(blank=True)
+                    action_type = 'topic_downvote',
+                    action_value = 1,
+                    action_time = event['time'],
+                    last_actor = event['logged_user_id']
+                    )            
 
         elif event['action'] == 'add_comment':
             poster = StudentUser.objects.get(username=event['poster'])
@@ -108,17 +136,47 @@ class ChatConsumer(WebsocketConsumer):
             event['upvotes'] = 0
             self.send(json.dumps(event))
 
+            if NotificationItem.objects.get(topic_id=event['topic_id'], action_type='add_comment'): #true if it exists
+                existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='add_comment')
+                existing_item.action_value += 1
+                existing_item.action_time = event['time']
+                existing_item.action_time = event['logged_user_id']
+            else:
+                new_notification = NotificationItem(
+                    topic_id = event['topic_id'],
+                    #comment_id = models.PositiveSmallIntegerField(blank=True)
+                    action_type = 'add_comment',
+                    action_value = 1,
+                    action_time = event['time'],
+                    last_actor = event['logged_user_id']
+                    )
+
         elif event['action'] == 'comment_upvote':
             upvoter = StudentUser.objects.get(id=event['logged_user_id'])
             comment_django_obj = Comment.objects.get(id=event['comment_id'])
             comment_django_obj.upvotes += 1
             topic_owner = comment_django_obj.topic_owner
-            topic_owner.followed_by.add(downvoter)
+            topic_owner.followed_by.add(upvoter)
             comment_django_obj.save()
             payload = comment_django_obj.as_dict()
             payload['action'] = 'comment_upvote'
             payload.update(event)
             self.send(json.dumps(payload))
+
+            if NotificationItem.objects.get(topic_id=event['topic_id'], action_type='comment_upvote'): #true if it exists
+                existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='comment_upvote')
+                existing_item.action_value += 1
+                existing_item.action_time = event['time']
+                existing_item.action_time = event['logged_user_id']
+            else:
+                new_notification = NotificationItem(
+                    topic_id = event['topic_id'],
+                    #comment_id = models.PositiveSmallIntegerField(blank=True)
+                    action_type = 'comment_upvote',
+                    action_value = 1,
+                    action_time = event['time'],
+                    last_actor = event['logged_user_id']
+                    )            
 
         elif event['action'] == 'comment_downvote':
             downvoter = StudentUser.objects.get(id=event['logged_user_id'])            
@@ -131,6 +189,21 @@ class ChatConsumer(WebsocketConsumer):
             payload['action'] = 'comment_downvote'
             payload.update(event)
             self.send(json.dumps(payload))
+            if NotificationItem.objects.get(topic_id=event['topic_id'], action_type='comment_downvote'): #true if it exists
+                existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='comment_downvote')
+                existing_item.action_value += 1
+                existing_item.action_time = event['time']
+                existing_item.action_time = event['logged_user_id']
+            else:
+                new_notification = NotificationItem(
+                    topic_id = event['topic_id'],
+                    #comment_id = models.PositiveSmallIntegerField(blank=True)
+                    action_type = 'comment_downvote',
+                    action_value = 1,
+                    action_time = event['time'],
+                    last_actor = event['logged_user_id']
+                    )            
+
 
         elif event['action'] == 'add_topic':
             topic_poster = StudentUser.objects.get(id=event['user_id'])

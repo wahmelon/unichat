@@ -11,6 +11,22 @@ class Group(models.Model): #should be class Group
 	def __str__(self):
 		return self.group_code
 
+
+
+class NotificationItem(models.Model):
+	topic_id = models.PositiveSmallIntegerField()
+	comment_id = models.PositiveSmallIntegerField(blank=True)
+	action_type = models.CharField(max_length=120) #commented on topic, upvoted topic, downvoted topic, upvoted comment, downvoted comment
+	action_value = models.PositiveSmallIntegerField(default=0) #how many people have performed this action
+	action_time = models.BigIntegerField()
+	last_actor = models.CharField(max_length=120) #for adding to the notification text: Laura and 12 others upvoted your comment
+
+	def __str__(self):
+		return self.action
+	class Meta:
+		ordering = ['-action_time']
+
+
 class StudentUser(AbstractUser):
 	current_groups = models.ManyToManyField(Group, related_name = "student_user")
 	faculty = models.CharField(max_length=120)
@@ -18,6 +34,7 @@ class StudentUser(AbstractUser):
 	karma = models.PositiveSmallIntegerField(default=0)
 	topics_posted = models.ManyToManyField(Topic, blank=True)
 	comments_posted = models.ManyToManyField(Comment, blank=True)
+	notification_history = models.ManyToManyField(NotificationItem, related_name = "subscribed_users")
 
 	def __str__(self):
 		return self.username

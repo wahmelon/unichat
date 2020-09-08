@@ -8,7 +8,7 @@ import MenuList from '@material-ui/core/MenuList';
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 
-
+// needs to take in as props: user id, notification array, callback to modify topic_state (making new appear)
 const useStyles = makeStyles((theme) => ({
   root: {
     display: 'flex',
@@ -18,7 +18,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function MenuListComposition() {
+export default function MenuListComposition(props) {
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
   const anchorRef = React.useRef(null);
@@ -39,6 +39,15 @@ export default function MenuListComposition() {
     if (event.key === 'Tab') {
       event.preventDefault();
       setOpen(false);
+    }
+  }
+
+  function makeNotificationText(notification_array) {
+    const new_array = [];
+    for (const notif of notification_array) {
+      if (notif.type == interacted_with_own_topic) {
+        new_array.push({'id'})
+      }
     }
   }
 

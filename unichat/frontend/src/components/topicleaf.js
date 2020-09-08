@@ -197,7 +197,8 @@ class TopicLeaf extends Component {
             'type':'websocket_message',
             'action':'topic_upvote',
             'group_code' : this.state.topic_audience,
-            'topic_id' :  this.props.topic_id            
+            'topic_id' :  this.props.topic_id,
+            'time' : Date.now()           
         });
     };
 
@@ -208,7 +209,8 @@ class TopicLeaf extends Component {
             'type':'websocket_message',
             'action':'topic_downvote',
             'group_code' : this.state.topic_audience,
-            'topic_id' :  this.props.topic_id
+            'topic_id' :  this.props.topic_id,
+            'time' : Date.now()
         });
     };
 
@@ -220,7 +222,8 @@ class TopicLeaf extends Component {
             'action':'comment_downvote',
             'group_code' :  this.state.topic_audience,
             'topic_id' :  this.props.topic_id,
-            'comment_id' : comment_id
+            'comment_id' : comment_id,
+            'time' : Date.now()
 
         });
     };
@@ -233,7 +236,8 @@ class TopicLeaf extends Component {
             'action':'comment_upvote',
             'group_code' :  this.state.topic_audience,
             'topic_id' :  this.props.topic_id,            
-            'comment_id' : comment_id
+            'comment_id' : comment_id,
+            'time' : Date.now()
         });
     };
 
