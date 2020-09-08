@@ -78,6 +78,7 @@ class ChatConsumer(WebsocketConsumer):
             topic_as_django_obj.upvotes += 1
             topic_as_django_obj.followed_by.add(upvoter)
             topic_as_django_obj.save()
+            event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
             self.send(json.dumps(event))
             if NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_upvote'): #true if it exists
                 existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_upvote')
@@ -100,6 +101,7 @@ class ChatConsumer(WebsocketConsumer):
             topic_as_django_obj.downvotes += 1
             topic_as_django_obj.followed_by.add(downvoter)
             topic_as_django_obj.save()
+            event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
             self.send(json.dumps(event))
             if NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_downvote'): #true if it exists
                 existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_downvote')
@@ -120,6 +122,7 @@ class ChatConsumer(WebsocketConsumer):
             poster = StudentUser.objects.get(username=event['poster'])
             topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
             topic_as_django_obj.followed_by.add(poster)
+            topic_as_django_obj.save()
 
             new_comment = Comment(
                 poster=poster,
@@ -134,6 +137,7 @@ class ChatConsumer(WebsocketConsumer):
             event['comment_id'] = new_comment.id
             event['downvotes'] = 0
             event['upvotes'] = 0
+            event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
             self.send(json.dumps(event))
 
             if NotificationItem.objects.get(topic_id=event['topic_id'], action_type='add_comment'): #true if it exists
@@ -157,9 +161,11 @@ class ChatConsumer(WebsocketConsumer):
             comment_django_obj.upvotes += 1
             topic_owner = comment_django_obj.topic_owner
             topic_owner.followed_by.add(upvoter)
+            topic_owner.save()
             comment_django_obj.save()
             payload = comment_django_obj.as_dict()
             payload['action'] = 'comment_upvote'
+            payload['followers'] = [user.id for user in topic_owner.followed_by.all()]            
             payload.update(event)
             self.send(json.dumps(payload))
 
@@ -184,9 +190,11 @@ class ChatConsumer(WebsocketConsumer):
             comment_django_obj.downvotes += 1
             topic_owner = comment_django_obj.topic_owner
             topic_owner.followed_by.add(downvoter)
+            topic_owner.save()
             comment_django_obj.save()
             payload = comment_django_obj.as_dict()
             payload['action'] = 'comment_downvote'
+            payload['followers'] = [user.id for user in topic_owner.followed_by.all()] 
             payload.update(event)
             self.send(json.dumps(payload))
             if NotificationItem.objects.get(topic_id=event['topic_id'], action_type='comment_downvote'): #true if it exists
@@ -218,6 +226,7 @@ class ChatConsumer(WebsocketConsumer):
                 )
             new_topic.save()
             new_topic.followed_by.add(topic_poster)
+            new_topic.save()
             #adding fields to event
             event['topic_id'] = new_topic.id
             event['downvotes'] = 0

@@ -55,29 +55,37 @@ class WebSocketService {
     this.socketRef.onmessage = e => {
       const parsedData = JSON.parse(e.data);
 
+      this.callbackDictionary['new_notification'](parsedData);
+
+
       // this.callbackDictionary['update_topic_data'](updatedTopic);
       // console.log(parsedData);
-      if (parsedData['action'] === 'add_comment') {
-        this.callbackDictionary[`add_comment_to_${parsedData['topic_id']}`](parsedData);
-        
+      try {
 
-      } else if (parsedData['action'] === 'topic_upvote') {
-        this.callbackDictionary[`update_topic_upvote_to_${parsedData['topic_id']}`]();
-        
+          if (parsedData['action'] === 'add_comment') {
+            this.callbackDictionary[`add_comment_to_${parsedData['topic_id']}`](parsedData);
+            
 
-      } else if (parsedData['action'] === 'topic_downvote') {
-        this.callbackDictionary[`update_topic_downvote_to_${parsedData['topic_id']}`]();
-        
+          } else if (parsedData['action'] === 'topic_upvote') {
+            this.callbackDictionary[`update_topic_upvote_to_${parsedData['topic_id']}`]();
+            
 
-
-      } else if (parsedData['action'] === 'comment_upvote' || parsedData['action'] === 'comment_downvote') {
-        this.callbackDictionary[`update_comment_to_${parsedData['topic_id']}`](parsedData);
+          } else if (parsedData['action'] === 'topic_downvote') {
+            this.callbackDictionary[`update_topic_downvote_to_${parsedData['topic_id']}`]();
+            
 
 
-      } else if (parsedData['action'] === 'add_topic') {
-        this.callbackDictionary['add_new_topic'](parsedData);
-      } else {
-        //pass
+          } else if (parsedData['action'] === 'comment_upvote' || parsedData['action'] === 'comment_downvote') {
+            this.callbackDictionary[`update_comment_to_${parsedData['topic_id']}`](parsedData);
+
+
+          } else if (parsedData['action'] === 'add_topic') {
+            this.callbackDictionary['add_new_topic'](parsedData);
+          } else {
+            //pass
+          }
+      } catch(err) {
+        console.log('error running callbackdict functions: ', err);
       }
       //shouldn't run if dictionary hasn't been populated successfully
       //updateMessagesInStateCallback is populated in the component that imports the WS instance

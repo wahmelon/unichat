@@ -225,8 +225,15 @@ class Feed extends Component {
         }, 100);
       };
 
+
+
+///////////////////////////////////////////////////////////
+
+
+
+
     handleNewTopic(new_topic) { // totally new items vs under existing group code forces rerender
-    //for spinner to load new topics
+    //for spinner up top to load new topics
 
         if (new_topic['user_id'] == this.state.user_id) {
             const topic_data_array = this.state.topic_data;
@@ -242,14 +249,49 @@ class Feed extends Component {
         }
     };
 
-    handleNotification(new_item) { // totally new items vs under existing group code forces rerender
-        // add logic for what it says and what function to run
+    handleNotification(parsedData) { //for allowing websocket.js to alter state of feed.js - move websocket messages to notification data arrays 
+        //built to handle fields of notification_item - used in initial getnotificationItems
+
+        const new_notif = {
+            'topic_id' = parsedData.parent_topic,
+            'action_type' = parsedData.action,
+            'action_time' = 
+        }
+
+
+            //        topic_id = models.PositiveSmallIntegerField()
+    //       comment_id = models.PositiveSmallIntegerField(blank=True)
+    //      action_type = models.CharField(max_length=120) #commented on topic, upvoted topic, downvoted topic, upvoted comment, downvoted comment
+    //     action_value = models.PositiveSmallIntegerField(default=0) #how many people have performed this action
+    //    action_time = models.BigIntegerField()
+    //    last_actor = models.CharField(max_length=120) #for adding to the notification text: Laura and 12 others upvoted your comment
+
+
+        const new 
+        const new_array = this.state.notification_data_store;
+        new_array.push(new_item);
+        this.setState({notification_data_store:new_array})
+    }
+
+    transformRawNotifications() { // transforming raw array into user-specific notifications for the drop down menu
+        const raw_array = this.state.raw_notifications;
+        for (const item of raw_array) {
+
+        }
+// $$$$$$$$$$$$$$$$
+        //when sent over websocket, data includes a list of all ids following, for the purposes ->
+//$$$$$$$$$$$$$$$
+        if you are topic owner (check user id against topic id?): you want to combine, if available, notification_items for commented on topic, upvoted topic, or downvoted topic
+        if you are comment owner (check user id against comment id?): you want to combine, if available, notificaion_items for upvoted comment or downvoted comment
+        if you either commented or voted on the post (everything else): you want to view notification items for commented on topic
+
+
         const format;
         if (new_item.poster == user_id) {
             format = 1
         } else if ()
 
-            X (has)/(and X others have) (commented)/(and voted) on (your)/(users) (topic)/(comment)
+            //  X (has)/(and X others have) (commented)/(and voted) on (your)/(users) (topic)/(comment)
 
             if (action_value > 1) {
                 const variable1 = 'has'
@@ -286,7 +328,7 @@ class Feed extends Component {
         this.setState({notification_data_store:notif_data_array}); //to be passed to menulist as prop, alongside transition notification to feed for all onClicks
     };
 
-    transitionNotificationToFeed(event){ //for clicking on a notification
+    transitionNotificationToFeed(event){ //for clicking on a notification in drop down notification list, which will add the related topic to the top of the feed
         const new_topic_array = this.state.topic_data
         new_topic_array.push(event.topic) //somehow append topic data in correct format. will create a duplicate but removeDuplicatesByID should remove in render msg
         //have an extra field for render method to indicate that topic has been reloaded out of the proper chron sorted order? ... extra field needs to be handled by render msg
@@ -297,6 +339,24 @@ class Feed extends Component {
         this.setState({notification_data_store:notification_array_without_justrendered_topic})
     };
 
+    getNotifications() { // get most recent notification_items created, probably while user was away....
+        axiosInstance.get('/getnotifications/')
+        .then(
+            result => {
+                this.setState({
+                    notification_data_store:result.data.notification_array
+                });
+
+                console.log('axios updated state: ', this.state);
+            }
+        ).catch(error => {throw error})
+    }
+
+
+
+
+
+////////////////////////////////////////////
 
 
 
