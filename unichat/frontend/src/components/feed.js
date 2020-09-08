@@ -9,6 +9,7 @@ import loudspeakerimage from './loudspeakerimage.png';
 import upvoteIcon from './upvote-icon.jpg';
 import * as jwt_decode from 'jwt-decode';
 import InfiniteScroll from 'react-infinite-scroller';
+import MenuListComposition from './menulist';
 
 
 
@@ -398,6 +399,8 @@ class Feed extends Component {
         return (
             <FeedGrid>
                 <FeedMenuDiv>
+                    <MenuListComposition>
+                    </MenuListComposition>
                     <button 
                     style={{
                         width: "20%",
