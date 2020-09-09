@@ -55,9 +55,10 @@ class WebSocketService {
     this.socketRef.onmessage = e => {
       const parsedData = JSON.parse(e.data);
 
-      this.callbackDictionary['new_notification'](parsedData);
+      if(parsedData['action'] != 'add_topic') { // no notif handling for add topic
+        this.callbackDictionary['new_notification'](parsedData);
 
-
+      };
       // this.callbackDictionary['update_topic_data'](updatedTopic);
       // console.log(parsedData);
       try {

@@ -11,11 +11,22 @@ class Group(models.Model): #should be class Group
 	def __str__(self):
 		return self.group_code
 
+class StudentUser(AbstractUser):
+	current_groups = models.ManyToManyField(Group, related_name = "student_user")
+	faculty = models.CharField(max_length=120)
+	university = models.CharField(max_length=120)
+	karma = models.PositiveSmallIntegerField(default=0)
+	topics_posted = models.ManyToManyField(Topic, blank=True)
+	comments_posted = models.ManyToManyField(Comment, blank=True)
 
+	def __str__(self):
+		return self.username
 
 class NotificationItem(models.Model):
 	topic_id = models.PositiveSmallIntegerField()
+	og_topic_owner = models.ForeignKey(StudentUser, related_name = 'topic_notifications')
 	comment_id = models.PositiveSmallIntegerField(blank=True)
+	og_comment_owner = models.ForeignKey(StudentUser, blank=True, null=True, related_name = 'comment_notification')
 	action_type = models.CharField(max_length=120) #commented on topic, upvoted topic, downvoted topic, upvoted comment, downvoted comment
 	action_value = models.PositiveSmallIntegerField(default=0) #how many people have performed this action
 	action_time = models.BigIntegerField()
@@ -25,19 +36,4 @@ class NotificationItem(models.Model):
 		return self.action
 	class Meta:
 		ordering = ['-action_time']
-
-
-class StudentUser(AbstractUser):
-	current_groups = models.ManyToManyField(Group, related_name = "student_user")
-	faculty = models.CharField(max_length=120)
-	university = models.CharField(max_length=120)
-	karma = models.PositiveSmallIntegerField(default=0)
-	topics_posted = models.ManyToManyField(Topic, blank=True)
-	comments_posted = models.ManyToManyField(Comment, blank=True)
-	notification_history = models.ManyToManyField(NotificationItem, related_name = "subscribed_users")
-
-	def __str__(self):
-		return self.username
-
-	
 # Create your models here.

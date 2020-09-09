@@ -255,7 +255,7 @@ class TopicLeaf extends Component {
             'poster' : this.props.username,
             'topic_id' : this.props.topic_id,
             'group_code' : this.state.topic_audience,
-            'created_time' : Date.now()
+            'time' : Date.now()
         });
         this.setState({comment_to_be_posted: ""});
         console.log(this.state.comment_to_be_posted)

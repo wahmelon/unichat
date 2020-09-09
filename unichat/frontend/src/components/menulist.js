@@ -42,15 +42,6 @@ export default function MenuListComposition(props) {
     }
   }
 
-  function makeNotificationText(notification_array) {
-    const new_array = [];
-    for (const notif of notification_array) {
-      if (notif.type == interacted_with_own_topic) {
-        new_array.push({'id'})
-      }
-    }
-  }
-
   // return focus to the button when we transitioned from !open -> open
   const prevOpen = React.useRef(open);
   React.useEffect(() => {
@@ -61,6 +52,7 @@ export default function MenuListComposition(props) {
     prevOpen.current = open;
   }, [open]);
 
+  
   return (
     <div className={classes.root}>
       <div>
@@ -81,7 +73,7 @@ export default function MenuListComposition(props) {
               <Paper>
                 <ClickAwayListener onClickAway={handleClose}>
                   <MenuList autoFocusItem={open} id="menu-list-grow" onKeyDown={handleListKeyDown}>
-                    <MenuItem onClick={handleClose}>Profile</MenuItem>
+                    <MenuItem onClick={handleClose}>Profile</MenuItem> 
                     <MenuItem onClick={handleClose}>My account</MenuItem>
                     <MenuItem onClick={handleClose}>Logout</MenuItem>
                   </MenuList>

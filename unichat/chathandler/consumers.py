@@ -79,6 +79,7 @@ class ChatConsumer(WebsocketConsumer):
             topic_as_django_obj.followed_by.add(upvoter)
             topic_as_django_obj.save()
             event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
+            event['og_topic_poster'] = topic_as_django_obj.poster.id
             self.send(json.dumps(event))
             if NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_upvote'): #true if it exists
                 existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_upvote')
@@ -92,7 +93,8 @@ class ChatConsumer(WebsocketConsumer):
                     action_type = 'topic_upvote',
                     action_value = 1,
                     action_time = event['time'],
-                    last_actor = event['logged_user_id']
+                    last_actor = event['logged_user_id'],
+                    og_topic_owner = topic_as_django_obj.poster
                     )
 
         elif event['action'] == 'topic_downvote':
@@ -102,6 +104,7 @@ class ChatConsumer(WebsocketConsumer):
             topic_as_django_obj.followed_by.add(downvoter)
             topic_as_django_obj.save()
             event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
+            event['og_topic_poster'] = topic_as_django_obj.poster.id
             self.send(json.dumps(event))
             if NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_downvote'): #true if it exists
                 existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_downvote')
@@ -115,19 +118,20 @@ class ChatConsumer(WebsocketConsumer):
                     action_type = 'topic_downvote',
                     action_value = 1,
                     action_time = event['time'],
-                    last_actor = event['logged_user_id']
+                    last_actor = event['logged_user_id'],
+                    og_topic_owner = topic_as_django_obj.poster
                     )            
 
         elif event['action'] == 'add_comment':
-            poster = StudentUser.objects.get(username=event['poster'])
+            comment_poster = StudentUser.objects.get(username=event['poster'])
             topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
-            topic_as_django_obj.followed_by.add(poster)
+            topic_as_django_obj.followed_by.add(comment_poster)
             topic_as_django_obj.save()
 
             new_comment = Comment(
                 poster=poster,
                 content=event['content'],
-                created_time=event['created_time'],
+                created_time=event['time'],
                 topic_owner=topic_as_django_obj,
                 upvotes=0,
                 downvotes=0
@@ -138,6 +142,8 @@ class ChatConsumer(WebsocketConsumer):
             event['downvotes'] = 0
             event['upvotes'] = 0
             event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
+            event['og_comment_poster'] = comment_poster.id
+            event['og_topic_poster'] = topic_as_django_obj.poster.id
             self.send(json.dumps(event))
 
             if NotificationItem.objects.get(topic_id=event['topic_id'], action_type='add_comment'): #true if it exists
@@ -152,7 +158,9 @@ class ChatConsumer(WebsocketConsumer):
                     action_type = 'add_comment',
                     action_value = 1,
                     action_time = event['time'],
-                    last_actor = event['logged_user_id']
+                    last_actor = event['logged_user_id'],
+                    og_topic_owner = topic_as_django_obj.poster,
+                    og_comment_owner = comment_poster
                     )
 
         elif event['action'] == 'comment_upvote':
@@ -165,7 +173,9 @@ class ChatConsumer(WebsocketConsumer):
             comment_django_obj.save()
             payload = comment_django_obj.as_dict()
             payload['action'] = 'comment_upvote'
-            payload['followers'] = [user.id for user in topic_owner.followed_by.all()]            
+            payload['followers'] = [user.id for user in topic_owner.followed_by.all()]
+            payload['og_comment_poster'] = comment_django_obj.poster.id
+            payload['og_topic_poster'] = topic_owner.poster.id            
             payload.update(event)
             self.send(json.dumps(payload))
 
@@ -181,7 +191,9 @@ class ChatConsumer(WebsocketConsumer):
                     action_type = 'comment_upvote',
                     action_value = 1,
                     action_time = event['time'],
-                    last_actor = event['logged_user_id']
+                    last_actor = event['logged_user_id'],
+                    og_topic_owner = topic_owner.poster,
+                    og_comment_owner = comment_django_obj.poster
                     )            
 
         elif event['action'] == 'comment_downvote':
@@ -194,7 +206,9 @@ class ChatConsumer(WebsocketConsumer):
             comment_django_obj.save()
             payload = comment_django_obj.as_dict()
             payload['action'] = 'comment_downvote'
-            payload['followers'] = [user.id for user in topic_owner.followed_by.all()] 
+            payload['followers'] = [user.id for user in topic_owner.followed_by.all()]
+            payload['og_comment_poster'] = comment_django_obj.poster.id
+            payload['og_topic_poster'] = topic_owner.poster.id 
             payload.update(event)
             self.send(json.dumps(payload))
             if NotificationItem.objects.get(topic_id=event['topic_id'], action_type='comment_downvote'): #true if it exists
@@ -209,7 +223,9 @@ class ChatConsumer(WebsocketConsumer):
                     action_type = 'comment_downvote',
                     action_value = 1,
                     action_time = event['time'],
-                    last_actor = event['logged_user_id']
+                    last_actor = event['logged_user_id'],
+                    og_topic_owner = topic_owner.poster,
+                    og_comment_owner = comment_django_obj.poster
                     )            
 
 

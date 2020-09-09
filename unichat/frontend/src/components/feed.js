@@ -249,35 +249,124 @@ class Feed extends Component {
         }
     };
 
-    handleNotification(parsedData) { //for allowing websocket.js to alter state of feed.js - move websocket messages to notification data arrays 
-        //built to handle fields of notification_item - used in initial getnotificationItems
+    handleNotification(parsedData) { // create a notification whenever websocket reaceives msg, also can be used in initial componentdidmount get recent notifs
 
-        const new_notif = {
-            'topic_id' = parsedData.parent_topic,
-            'action_type' = parsedData.action,
-            'action_time' = 
+        if (this.state.user_id in parsedData.followers) {
+            const new_notif = {
+                'topic_id' = parsedData.topid_id,
+                'action_type' = parsedData.action,
+                'action_value' = parsedData.action_value,
+                'action_time' = parsedData.time,
+                'last_actor' = parsedData.logged_user_id, //the person who submitted the action
+                'og_topic_owner' = parsedData.og_topic_poster
+
+            }
+
+            if (parsedData.comment_id) { //concerns a comment
+                new_notif['comment_id'] = parsedData.comment_id
+                new_notif['og_comment_owner'] = parsedData.og_comment_poster
+            };
+
+
+            const new_array = this.state.notification_data_store;
+            new_array.push(new_item);
+            this.setState({notification_data_store:new_array})
+        } else {
+            //pass
         }
+    };
 
 
-            //        topic_id = models.PositiveSmallIntegerField()
-    //       comment_id = models.PositiveSmallIntegerField(blank=True)
-    //      action_type = models.CharField(max_length=120) #commented on topic, upvoted topic, downvoted topic, upvoted comment, downvoted comment
-    //     action_value = models.PositiveSmallIntegerField(default=0) #how many people have performed this action
-    //    action_time = models.BigIntegerField()
-    //    last_actor = models.CharField(max_length=120) #for adding to the notification text: Laura and 12 others upvoted your comment
+    groupNotificationsTogether(notif_array, type_as_string) { //type is eitther 'topic' or 'comment'
+        const array_of_groups = [];
+        for (notif of notif_array) {
+            const grouped_notification = [];
+            const current_id = notif[`${type_as_string}_id`]
+            for (item of notif_array) {
+                if (current_id == notif[`${type_as_string}_id`]) {
+                    grouped_notification.push(item)
+                    notif_array.splice(notif_array.indexOf(item),1) //removes so doesn't have to be processed next loop
+                }
+            }
+            array_of_groups.push(grouped_notification)
+        }
+    }
+
+    notificationToText(grouped_array, type_as_string, user_owns_as_boolean) { //type is eitther 'topic' or 'comment'
+
+        const final_text_based_array = [];
+        for (group of grouped_array) {
+            const text_dict = {
+                `${type_as_string}_id` = group[1][`${type_as_string}_id`].
+                'action_type' = [],
+                'action_time' = 0,
+            }
+            for (individual_notif of group) {
+                text_dict['action_type'].push(individual_notif['action_type'])
+                text_dict['action_value'] += individual_notif['action_value']
+                if (individual_notif['action_time'] > text_dict['action_time']) {
+                    text_dict['action_time'] = individual_notif['action_time']
+                    text_dict['last_actor'] = individual_notif['last_actor']
+                } 
+            }
+
+            if (text_dict['action_value'] = 1) {
+                const variable1 = 'has'
+            } else {variable1 = `and ${action_value - 1} have`}
+
+            if ('vote' in text_dict['action_type'] && 'comment' in text_dict['action_type']) { //must concern both
+                const variable2 = 'commented and voted'
+            } else if ('comment' in text_dict['action_type']) { //must be only mentioning comments
+                const variable2 = 'commented'
+            } else { //must be only mentioning votes
+                const variable2 = 'voted'
+            } 
+
+            if (user_owns_as_boolean) {
+                const variable3 = 'your'
+            } else {
+                if (type_as_string == 'comment') {
+                const variable3 = `${individual_notif['og_comment_owner']}'s`
+                } else {
+                    const variable3 = `${individual_notif['og_topic_owner']}'s`
+                }
+            } 
+
+            if (type_as_string == 'topic') {
+                variable4 = 'topic'
+            } else { //concernts comment
+                variable4 = 'comment'
+            } 
 
 
-        const new 
-        const new_array = this.state.notification_data_store;
-        new_array.push(new_item);
-        this.setState({notification_data_store:new_array})
+            const message = `${text_dict['last_actor']} ${variable1} ${variable2} on ${variable3} ${variable4}`
+            final_text_based_array.push({'topic_id' = group[1]['topic_id'], 'message' : message })
+
+        }
     }
 
     transformRawNotifications() { // transforming raw array into user-specific notifications for the drop down menu
-        const raw_array = this.state.raw_notifications;
-        for (const item of raw_array) {
+        const raw_array = this.state.notification_data_store;
+        const text_array = [];
+        const user_is_topic_owner_array = [];
+        const user_is_comment_owner_array = [];
+        const user_is_not_owner_array = [];
+        for (const notif of raw_array) {
+            if (this.state.user_id == notif['og_topic_owner']) {
+                user_is_topic_owner_array.push(notif);
+            } else if (this.state.user_id == notif['og_comment_owner']) {
+                user_is_comment_owner_array.push(notif);
+            } else {
+                user_is_not_owner_array.push(notif);
+            }
 
-        }
+        };
+
+
+
+
+
+
 // $$$$$$$$$$$$$$$$
         //when sent over websocket, data includes a list of all ids following, for the purposes ->
 //$$$$$$$$$$$$$$$
@@ -320,6 +409,7 @@ class Feed extends Component {
 
 
         const message = `${last_poster} ${variable1} ${variable2} on ${variable3} ${variable4}`
+        //should include content of comment/topic
 
 
         const notif_data_array = this.state.notification_data_store;
@@ -514,7 +604,8 @@ class Feed extends Component {
         return (
             <FeedGrid>
                 <FeedMenuDiv>
-                    <MenuListComposition>
+                    <MenuListComposition 
+                    >
                     </MenuListComposition>
                     <button 
                     style={{
