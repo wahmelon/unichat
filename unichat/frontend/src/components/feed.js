@@ -171,6 +171,7 @@ class Feed extends Component {
         postAreaOn:false,
         notification_data_store:[],
         new_topics:[],
+        notifications_as_text:[],
 
         //infinite scroll
         hasMoreItems : true,
@@ -237,13 +238,13 @@ class Feed extends Component {
 
         if (new_topic['user_id'] == this.state.user_id) {
             const topic_data_array = this.state.topic_data;
-            const new_topic_dict = {'id' : new_topic['topic_id'],'created_time':[new_topic['created_time']]};
+            const new_topic_dict = {'id' : new_topic['topic_id'],'created_time':new_topic['created_time']};
             topic_data_array.push(new_topic_dict);
             this.setState({topic_data:topic_data_array});
 
         } else {
             const topics_data_array = this.state.new_topics;
-            const new_topic_dict = {'id' : new_topic['topic_id'],'created_time':[new_topic['created_time']]};
+            const new_topic_dict = {'id' : new_topic['topic_id'],'created_time':new_topic['created_time']};
             topics_data_array.push(new_topic_dict);
             this.setState({new_topics:topics_data_array})
         }
@@ -253,12 +254,12 @@ class Feed extends Component {
 
         if (this.state.user_id in parsedData.followers) {
             const new_notif = {
-                'topic_id' = parsedData.topid_id,
-                'action_type' = parsedData.action,
-                'action_value' = parsedData.action_value,
-                'action_time' = parsedData.time,
-                'last_actor' = parsedData.logged_user_id, //the person who submitted the action
-                'og_topic_owner' = parsedData.og_topic_poster
+                'topic_id' : parsedData.topid_id,
+                'action_type' : parsedData.action,
+                'action_value' : parsedData.action_value,
+                'action_time' : parsedData.time,
+                'last_actor' : parsedData.logged_user_id, //the person who submitted the action
+                'og_topic_owner' : parsedData.og_topic_poster
 
             }
 
@@ -292,14 +293,18 @@ class Feed extends Component {
         }
     }
 
-    notificationToText(grouped_array, type_as_string, user_owns_as_boolean) { //type is eitther 'topic' or 'comment'
+    notificationToText(grouped_array, type_as_string, user_owns_as_boolean) { //type is eitther 'topic' or 'comment'   // for the menulist component
 
         const final_text_based_array = [];
         for (group of grouped_array) {
             const text_dict = {
-                `${type_as_string}_id` = group[1][`${type_as_string}_id`].
-                'action_type' = [],
-                'action_time' = 0,
+                'action_type' : [],
+                'action_time' : 0,
+            }
+            if (type_as_string == 'comment') {
+                text_dict['comment_id'] = group[1]['comment_id']
+            } else {
+                text_dict['topic_id'] = group[1]['topic_id']
             }
             for (individual_notif of group) {
                 text_dict['action_type'].push(individual_notif['action_type'])
@@ -340,10 +345,17 @@ class Feed extends Component {
 
 
             const message = `${text_dict['last_actor']} ${variable1} ${variable2} on ${variable3} ${variable4}`
-            final_text_based_array.push({'topic_id' = group[1]['topic_id'], 'message' : message })
+            final_text_based_array.push({'topic_id' : group[1]['topic_id'], 'message' : message })
 
         }
-    }
+        const new_array = this.state.notifications_as_text;
+        for (item of final_text_based_array) {
+        new_array.push(item)
+        }
+        this.setState({notifications_as_text:new_array})
+        console.log('text notifications in state: ', this.state.notifications_as_text)
+
+    } 
 
     transformRawNotifications() { // transforming raw array into user-specific notifications for the drop down menu
         const raw_array = this.state.notification_data_store;
@@ -361,62 +373,10 @@ class Feed extends Component {
             }
 
         };
-
-
-
-
-
-
-// $$$$$$$$$$$$$$$$
-        //when sent over websocket, data includes a list of all ids following, for the purposes ->
-//$$$$$$$$$$$$$$$
-        if you are topic owner (check user id against topic id?): you want to combine, if available, notification_items for commented on topic, upvoted topic, or downvoted topic
-        if you are comment owner (check user id against comment id?): you want to combine, if available, notificaion_items for upvoted comment or downvoted comment
-        if you either commented or voted on the post (everything else): you want to view notification items for commented on topic
-
-
-        const format;
-        if (new_item.poster == user_id) {
-            format = 1
-        } else if ()
-
-            //  X (has)/(and X others have) (commented)/(and voted) on (your)/(users) (topic)/(comment)
-
-            if (action_value > 1) {
-                const variable1 = 'has'
-            } else {variable1 = `and ${action_value - 1} have`}
-
-            if (only_comments) {
-                const variable2 = 'commented'
-            } else if (only_votes) {
-                const variable2 = 'voted'
-            } else { //both comments and votes
-                const variable2 = 'commented and voted'
-            } 
-
-            if (logged_user_owns) {
-                const variable3 = 'your'
-            } else {
-                const variable3 = `${topic_or_comment_owners}'s`
-            } 
-
-            if (concerns_topic) {
-                variable4 = 'topic'
-            } else { //concernts comment
-                variable4 = 'comment'
-            } 
-
-
-
-        const message = `${last_poster} ${variable1} ${variable2} on ${variable3} ${variable4}`
-        //should include content of comment/topic
-
-
-        const notif_data_array = this.state.notification_data_store;
-        const new_item_dict = {'id' : new_item['topic_id'],'message':message};
-        notif_data_array.push(new_topic_dict);
-        this.setState({notification_data_store:notif_data_array}); //to be passed to menulist as prop, alongside transition notification to feed for all onClicks
     };
+
+    /// write render method for menulist, get onclick working... also write the api for get more notifications (GET REQUEST)
+
 
     transitionNotificationToFeed(event){ //for clicking on a notification in drop down notification list, which will add the related topic to the top of the feed
         const new_topic_array = this.state.topic_data
@@ -522,21 +482,17 @@ class Feed extends Component {
 
 
     loadMoreTopics(page) { //interacts with infinite scroll
-        console.log('topic state loadmore: ', this.state.topic_data);
         var self = this;
         axiosInstance.post('/getmoretopics/', {page:this.state.functionCallTracker})
         .then(
             result => {
-                console.log(result.data.topic_data);
                 const topics_array = this.state.topic_data;
                 if (result.data.topic_data) {
                     for (const topic of result.data.topic_data) {
                         topics_array.push(topic)
                         }
-                    console.log('topic state loadmore: ', this.state.topic_data);
                     };
 
-                console.log('finished iterating');
                 this.setState({topic_data:topics_array});
                 const timesFunctionCalled = this.state.functionCallTracker;
                 this.setState({functionCallTracker:timesFunctionCalled+1});
@@ -556,8 +512,8 @@ class Feed extends Component {
       // (we use slice to clone the array so the
       // original array won't be modified)
       let results = [];
-      for (let i = 0; i < cloned_array.length - 1; i++) {
-        if (cloned_array[i + 1].id != cloned_array[i].id) {
+      for (let i = 0; i < cloned_array.length; i++) { //used to be cloned_array.length -1
+        if (!cloned_array[i+1] || cloned_array[i + 1].id != cloned_array[i].id ) { // or cloned_array[i+1] is undefined, reached the end 
           results.push(cloned_array[i]);
         }
       }
