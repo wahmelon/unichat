@@ -278,6 +278,8 @@ class Feed extends Component {
         }
     };
 
+    //combine the three methods, with different dict to text rules for relating to owned topic, owned comment, and everything else..
+
 
     groupNotificationsTogether(notif_array, type_as_string) { //type is eitther 'topic' or 'comment'
         console.log('groupNotificationsTogether param array: ', notif_array);
@@ -305,7 +307,7 @@ class Feed extends Component {
 
         var variable1;
         var variable2;
-        var variable3;
+        var variable3;  
         var variable4;
 
         for (const group of grouped_array) {
@@ -329,7 +331,7 @@ class Feed extends Component {
 
             if (text_dict['action_value'] = 1) {
                  variable1 = 'has'
-            } else { variable1 = `and ${action_value - 1} have`}
+            } else { variable1 = `and ${action_value - 1} have`} //if only 2, one other  otherwise two others.. etc
 
             if (text_dict['action_type'].includes('vote') && text_dict['action_type'].includes('comment')) { //must concern both
                  variable2 = 'commented and voted'
@@ -372,20 +374,29 @@ class Feed extends Component {
     transformRawNotifications() { // transforming raw array into user-specific notifications for the drop down menu
         console.log('running transformraw');
         const raw_array = this.state.notification_data_store;
-        console.log('this.state.notification data store: ', this.state.notification_data_store);
+        console.log('this.state.notification data store (raw_array): ', raw_array);
         const text_array = [];
         const user_is_topic_owner_array = [];
         const user_is_comment_owner_array = [];
         const user_is_not_owner_array = [];
         for (const notif of raw_array) {
             if (this.state.user_id == notif['og_topic_owner']) {
+                console.log('yes to test');
                 user_is_topic_owner_array.push(notif);
-            } else if (this.state.user_id == notif['og_comment_owner']) {
+                user_is_topic_owner_array.push('test_item 2');
+                console.log('topic owner: ', user_is_topic_owner_array);
+            };
+            if (this.state.user_id == notif['og_comment_owner']) {
                 user_is_comment_owner_array.push(notif);
-            } else if (notif['action_type'] == 'add_comment') { //if user is following but neither owner of topic or comment the only notifs they 
+                user_is_comment_owner_array.push('test_item');
+                console.log('comment owner: ', user_is_comment_owner_array);
+            };
+            if (notif['action_type'] == 'add_comment') { //if user is following but neither owner of topic or comment the only notifs they 
                 //receive shouldbe additional comments
                 user_is_not_owner_array.push(notif);
-            }
+                user_is_not_owner_array.push('test item 3');
+                console.log('other following: ', user_is_not_owner_array);
+            };
 
         };
         console.log('user id: ', this.state.user_id);
