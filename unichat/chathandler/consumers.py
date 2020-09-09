@@ -294,7 +294,6 @@ class ChatConsumer(WebsocketConsumer):
                 )
             new_topic.save()
             new_topic.followed_by.add(topic_poster)
-            new_topic.save()
             #adding fields to event
             event['topic_id'] = new_topic.id
             event['downvotes'] = 0

@@ -54,8 +54,11 @@ class WebSocketService {
     };
     this.socketRef.onmessage = e => {
       const parsedData = JSON.parse(e.data);
+      console.log('websocket: ', parsedData);
+      console.log('parsedData action: ', parsedData.action);
 
-      if(parsedData['action'] != 'add_topic') { // no notif handling for add topic
+      if(parsedData.action != 'add_topic') { // no notif handling for add topic
+        console.log('running!!');
         this.callbackDictionary['new_notification'](parsedData);
 
       };

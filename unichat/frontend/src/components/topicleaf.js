@@ -150,6 +150,7 @@ class TopicLeaf extends Component {
                     topic_downvotes : result.data.topic_data.downvotes,
                     comments : result.data.topic_data.comments,  
                 });
+                console.log('topicleaf comment array: ', this.state.comments);
 
             }
         ).catch(error => {throw error;})
@@ -169,7 +170,13 @@ class TopicLeaf extends Component {
 
 
     addCommentInState(newComment) {
+        console.log('add comment in state - new comment: ', newComment);
         console.log('calling update comments in topicleaf ', newComment);
+        if (newComment.time) {
+            const time_created = newComment.time; //there is a discrepancy between model record of comment and how consumer sends it
+            // (created_time on model) which is how the render method in topicleaf reads it and (time) which is how websocket sends it.
+            newComment.created_time = time_created;
+        };
         // let withNewComment = [...this.state.comments, comment_websocket_message.content].sort((a,b)=> a['created_time'] - b['created_time']);
         this.setState({comments : [...this.state.comments, newComment]});
         //spread operator ... is fully necessary to create a shallow clone - new version of the entire array so that javascript will rerender all properties of 

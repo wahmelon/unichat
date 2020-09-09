@@ -16,8 +16,6 @@ import MenuListComposition from './menulist';
 const remainingWidthForInputView = (window.innerWidth - 56); // 140 = remaining rows + gaps (in Topic and feed) 56
 
 const remainingHeightForContentView = (window.innerHeight - 160); // 140 = remaining rows + gaps 160
-console.log(remainingHeightForContentView);
-console.log(remainingWidthForInputView);
 
 
 const FeedGrid = styled.div`
@@ -251,12 +249,14 @@ class Feed extends Component {
     };
 
     handleNotification(parsedData) { // create a notification whenever websocket reaceives msg, also can be used in initial componentdidmount get recent notifs
-
-        if (this.state.user_id in parsedData.followers) {
+        console.log('running handlenotif in feedjs');
+        console.log('parsed data followers', parsedData.followers);
+        if (parsedData.followers.includes(this.state.user_id)) {
+            console.log('running handleNotification');
             const new_notif = {
-                'topic_id' : parsedData.topid_id,
+                'topic_id' : parsedData.topic_id,
                 'action_type' : parsedData.action,
-                'action_value' : parsedData.action_value,
+                'action_value' : 1,
                 'action_time' : parsedData.time,
                 'last_actor' : parsedData.logged_user_id, //the person who submitted the action
                 'og_topic_owner' : parsedData.og_topic_poster
@@ -270,8 +270,9 @@ class Feed extends Component {
 
 
             const new_array = this.state.notification_data_store;
-            new_array.push(new_item);
+            new_array.push(new_notif);
             this.setState({notification_data_store:new_array})
+            console.log('notif data store in state', this.state.notification_data_store);
         } else {
             //pass
         }
@@ -279,11 +280,13 @@ class Feed extends Component {
 
 
     groupNotificationsTogether(notif_array, type_as_string) { //type is eitther 'topic' or 'comment'
+        console.log('groupNotificationsTogether param array: ', notif_array);
+
         const array_of_groups = [];
-        for (notif of notif_array) {
+        for (const notif of notif_array) {
             const grouped_notification = [];
             const current_id = notif[`${type_as_string}_id`]
-            for (item of notif_array) {
+            for (const item of notif_array) {
                 if (current_id == notif[`${type_as_string}_id`]) {
                     grouped_notification.push(item)
                     notif_array.splice(notif_array.indexOf(item),1) //removes so doesn't have to be processed next loop
@@ -291,22 +294,31 @@ class Feed extends Component {
             }
             array_of_groups.push(grouped_notification)
         }
+        console.log('produced array of groups in groupNotificationsTogether: ', array_of_groups);
+        return array_of_groups;
     }
 
     notificationToText(grouped_array, type_as_string, user_owns_as_boolean) { //type is eitther 'topic' or 'comment'   // for the menulist component
+        console.log('notificationToText  grouped_array: ', grouped_array);
 
         const final_text_based_array = [];
-        for (group of grouped_array) {
+
+        var variable1;
+        var variable2;
+        var variable3;
+        var variable4;
+
+        for (const group of grouped_array) {
             const text_dict = {
                 'action_type' : [],
                 'action_time' : 0,
             }
             if (type_as_string == 'comment') {
-                text_dict['comment_id'] = group[1]['comment_id']
+                text_dict['comment_id'] = group[0]['comment_id']
             } else {
-                text_dict['topic_id'] = group[1]['topic_id']
+                text_dict['topic_id'] = group[0]['topic_id']
             }
-            for (individual_notif of group) {
+            for (const individual_notif of group) {
                 text_dict['action_type'].push(individual_notif['action_type'])
                 text_dict['action_value'] += individual_notif['action_value']
                 if (individual_notif['action_time'] > text_dict['action_time']) {
@@ -316,40 +328,40 @@ class Feed extends Component {
             }
 
             if (text_dict['action_value'] = 1) {
-                const variable1 = 'has'
-            } else {variable1 = `and ${action_value - 1} have`}
+                 variable1 = 'has'
+            } else { variable1 = `and ${action_value - 1} have`}
 
-            if ('vote' in text_dict['action_type'] && 'comment' in text_dict['action_type']) { //must concern both
-                const variable2 = 'commented and voted'
-            } else if ('comment' in text_dict['action_type']) { //must be only mentioning comments
-                const variable2 = 'commented'
+            if (text_dict['action_type'].includes('vote') && text_dict['action_type'].includes('comment')) { //must concern both
+                 variable2 = 'commented and voted'
+            } else if (text_dict['action_type'].includes('comment')) { //must be only mentioning comments
+                 variable2 = 'commented'
             } else { //must be only mentioning votes
-                const variable2 = 'voted'
+                 variable2 = 'voted'
             } 
 
             if (user_owns_as_boolean) {
-                const variable3 = 'your'
+                 variable3 = 'your'
             } else {
                 if (type_as_string == 'comment') {
-                const variable3 = `${individual_notif['og_comment_owner']}'s`
+                 variable3 = `${group[0]['og_comment_owner']}'s`
                 } else {
-                    const variable3 = `${individual_notif['og_topic_owner']}'s`
+                     variable3 = `${group[0]['og_topic_owner']}'s`
                 }
             } 
 
             if (type_as_string == 'topic') {
-                variable4 = 'topic'
+                 variable4 = 'topic'
             } else { //concernts comment
-                variable4 = 'comment'
+                 variable4 = 'comment'
             } 
 
 
             const message = `${text_dict['last_actor']} ${variable1} ${variable2} on ${variable3} ${variable4}`
-            final_text_based_array.push({'topic_id' : group[1]['topic_id'], 'message' : message })
+            final_text_based_array.push({'topic_id' : group[0]['topic_id'], 'message' : message })
 
         }
         const new_array = this.state.notifications_as_text;
-        for (item of final_text_based_array) {
+        for (const item of final_text_based_array) {
         new_array.push(item)
         }
         this.setState({notifications_as_text:new_array})
@@ -358,7 +370,9 @@ class Feed extends Component {
     } 
 
     transformRawNotifications() { // transforming raw array into user-specific notifications for the drop down menu
+        console.log('running transformraw');
         const raw_array = this.state.notification_data_store;
+        console.log('this.state.notification data store: ', this.state.notification_data_store);
         const text_array = [];
         const user_is_topic_owner_array = [];
         const user_is_comment_owner_array = [];
@@ -368,11 +382,37 @@ class Feed extends Component {
                 user_is_topic_owner_array.push(notif);
             } else if (this.state.user_id == notif['og_comment_owner']) {
                 user_is_comment_owner_array.push(notif);
-            } else {
+            } else if (notif['action_type'] == 'add_comment') { //if user is following but neither owner of topic or comment the only notifs they 
+                //receive shouldbe additional comments
                 user_is_not_owner_array.push(notif);
             }
 
         };
+        console.log('user id: ', this.state.user_id);
+        console.log('user_is_topic_owner_array: ', user_is_topic_owner_array);
+        console.log('user_is_comment_owner_array: ', user_is_comment_owner_array);
+        console.log('user_is_not_owner_array: ', user_is_not_owner_array);
+
+
+        if (user_is_topic_owner_array[0]) {
+            const grouped_array = this.groupNotificationsTogether(user_is_topic_owner_array, 'topic')
+            const text_array = this.notificationToText(grouped_array, 'topic', true);//boolean is ownership of something
+            console.log(text_array);
+
+        }
+           if (user_is_comment_owner_array[0]) {
+            const grouped_array = this.groupNotificationsTogether(user_is_topic_owner_array, 'comment')
+            const text_array = this.notificationToText(grouped_array, 'comment', true);//boolean is ownership of something 
+            console.log(text_array);
+
+        }
+           if (user_is_not_owner_array[0]) {
+            const grouped_array = this.groupNotificationsTogether(user_is_not_owner_array, 'comment') //user should be alertd of only extra comments
+            const text_array = this.notificationToText(grouped_array, 'comment', false); //boolean is ownership of something
+            console.log(text_array);
+
+        }
+
     };
 
     /// write render method for menulist, get onclick working... also write the api for get more notifications (GET REQUEST)
@@ -566,20 +606,19 @@ class Feed extends Component {
                     <button 
                     style={{
                         width: "20%",
-                        height: "100%",                 
+                        height: "20%",                 
                         backgroundColor: "#ddd",
                         border: "none",
                         color: "black",
                         textAlign: "center",
                         textDecoration: "none",
-                        display: "inline-block",
                         outline : "none",
                         // padding :"1px",
                         // margin: "1px 1px",
                         cursor: "pointer",
                         borderRadius: "16px"
                         }}
-                    onClick = {(e) => this.transitionNotificationsToFeed()}
+                    onClick = {(e) => this.transformRawNotifications()}
                     >
                       {this.state.notification_data_store.length}!
                     </button>
@@ -710,6 +749,7 @@ class Feed extends Component {
                                         console.log('posted topic');
 
                                         this.setState({topic_to_be_posted:""});
+                                        console.log('posted');
                                     } else {
                                         console.log('topic not posted');
 
