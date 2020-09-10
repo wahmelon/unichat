@@ -170,6 +170,7 @@ class Feed extends Component {
         notification_data_store:[],
         new_topics:[],
         notifications_as_text:[],
+        feed_reload_button_visible:false,
 
         //infinite scroll
         hasMoreItems : true,
@@ -194,6 +195,7 @@ class Feed extends Component {
         this.handleNewTopic = this.handleNewTopic.bind(this);
         this.transitionNotificationToFeed = this.transitionNotificationToFeed.bind(this);
         this.handleNotification = this.handleNotification.bind(this);
+        this.inspectTopicOfNotification = this.inspectTopicOfNotification.bind(this);
 
         this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary = {
             'add_new_topic' : this.handleNewTopic,
@@ -273,6 +275,7 @@ class Feed extends Component {
 
             const new_array = this.state.notification_data_store;
             new_array.push(new_notif);
+
             this.setState({notification_data_store:new_array})
             console.log('notif data store in state', this.state.notification_data_store);
         } else { //user is in group notif intended for but not following
@@ -380,7 +383,7 @@ class Feed extends Component {
 
             }
         }
-        console.log(output_array);
+        return this.groupedNotificationsToText(output_array);
         console.log(this.groupedNotificationsToText(output_array));
     };
 
@@ -446,187 +449,37 @@ class Feed extends Component {
             console.log(notification);
             console.log(final_message);
             output_array.push({
-                'topic_id' : notification.parent_topic_id,
+                'parent_topic_id' : notification.parent_topic_id,
                 'text' : final_message
             })
 
         }
 
-        console.log(output_array);
+        return output_array;
 
     };
 
-
-
-
-
-
-
-
-
-
-
-    //combine the three methods, with different dict to text rules for relating to owned topic, owned comment, and everything else..
-
-
-    groupNotificationsTogether(notif_array, type_as_string) { //type is eitther 'topic' or 'comment'
-        console.log('groupNotificationsTogether param array: ', notif_array);
-
-        const array_of_groups = [];
-        for (const notif of notif_array) {
-            const grouped_notification = [];
-            const current_id = notif[`${type_as_string}_id`]
-            for (const item of notif_array) {
-                if (current_id == notif[`${type_as_string}_id`]) {
-                    grouped_notification.push(item)
-                    notif_array.splice(notif_array.indexOf(item),1) //removes so doesn't have to be processed next loop
-                }
-            }
-            array_of_groups.push(grouped_notification)
-        }
-        console.log('produced array of groups in groupNotificationsTogether: ', array_of_groups);
-        return array_of_groups;
-    }
-
-    notificationToText(grouped_array, type_as_string, user_owns_as_boolean) { //type is eitther 'topic' or 'comment'   // for the menulist component
-        console.log('notificationToText  grouped_array: ', grouped_array);
-
-        const final_text_based_array = [];
-
-        var variable1;
-        var variable2;
-        var variable3;  
-        var variable4;
-
-        for (const group of grouped_array) {
-            const text_dict = {
-                'action_type' : [],
-                'action_time' : 0,
-            }
-            if (type_as_string == 'comment') {
-                text_dict['comment_id'] = group[0]['comment_id']
-            } else {
-                text_dict['topic_id'] = group[0]['topic_id']
-            }
-            for (const individual_notif of group) {
-                text_dict['action_type'].push(individual_notif['action_type'])
-                text_dict['action_value'] += individual_notif['action_value']
-                if (individual_notif['action_time'] > text_dict['action_time']) {
-                    text_dict['action_time'] = individual_notif['action_time']
-                    text_dict['last_actor'] = individual_notif['last_actor']
-                } 
-            }
-
-            if (text_dict['action_value'] = 1) {
-                 variable1 = 'has'
-            } else { variable1 = `and ${action_value - 1} have`} //if only 2, one other  otherwise two others.. etc
-
-            if (text_dict['action_type'].includes('vote') && text_dict['action_type'].includes('comment')) { //must concern both
-                 variable2 = 'commented and voted'
-            } else if (text_dict['action_type'].includes('comment')) { //must be only mentioning comments
-                 variable2 = 'commented'
-            } else { //must be only mentioning votes
-                 variable2 = 'voted'
-            } 
-
-            if (user_owns_as_boolean) {
-                 variable3 = 'your'
-            } else {
-                if (type_as_string == 'comment') {
-                 variable3 = `${group[0]['og_comment_owner']}'s`
-                } else {
-                     variable3 = `${group[0]['og_topic_owner']}'s`
-                }
-            } 
-
-            if (type_as_string == 'topic') {
-                 variable4 = 'topic'
-            } else { //concernts comment
-                 variable4 = 'comment'
-            } 
-
-
-            const message = `${text_dict['last_actor']} ${variable1} ${variable2} on ${variable3} ${variable4}`
-            final_text_based_array.push({'topic_id' : group[0]['topic_id'], 'message' : message })
-
-        }
-        const new_array = this.state.notifications_as_text;
-        for (const item of final_text_based_array) {
-        new_array.push(item)
-        }
-        this.setState({notifications_as_text:new_array})
-        console.log('text notifications in state: ', this.state.notifications_as_text)
-
-    } 
-
-    transformRawNotifications() { // transforming raw array into user-specific notifications for the drop down menu
-        console.log('running transformraw');
-        const raw_array = this.state.notification_data_store;
-        console.log('this.state.notification data store (raw_array): ', raw_array);
-        const text_array = [];
-        const user_is_topic_owner_array = [];
-        const user_is_comment_owner_array = [];
-        const user_is_not_owner_array = [];
-        for (const notif of raw_array) {
-            if (this.state.user_id == notif['og_topic_owner']) {
-                console.log('yes to test');
-                user_is_topic_owner_array.push(notif);
-                user_is_topic_owner_array.push('test_item 2');
-                console.log('topic owner: ', user_is_topic_owner_array);
-            };
-            if (this.state.user_id == notif['og_comment_owner']) {
-                user_is_comment_owner_array.push(notif);
-                user_is_comment_owner_array.push('test_item');
-                console.log('comment owner: ', user_is_comment_owner_array);
-            };
-            if (notif['action_type'] == 'add_comment') { //if user is following but neither owner of topic or comment the only notifs they 
-                //receive shouldbe additional comments
-                user_is_not_owner_array.push(notif);
-                user_is_not_owner_array.push('test item 3');
-                console.log('other following: ', user_is_not_owner_array);
-            };
-
-        };
-        console.log('user id: ', this.state.user_id);
-        console.log('user_is_topic_owner_array: ', user_is_topic_owner_array);
-        console.log('user_is_comment_owner_array: ', user_is_comment_owner_array);
-        console.log('user_is_not_owner_array: ', user_is_not_owner_array);
-
-
-        if (user_is_topic_owner_array[0]) {
-            const grouped_array = this.groupNotificationsTogether(user_is_topic_owner_array, 'topic')
-            const text_array = this.notificationToText(grouped_array, 'topic', true);//boolean is ownership of something
-            console.log(text_array);
-
-        }
-           if (user_is_comment_owner_array[0]) {
-            const grouped_array = this.groupNotificationsTogether(user_is_topic_owner_array, 'comment')
-            const text_array = this.notificationToText(grouped_array, 'comment', true);//boolean is ownership of something 
-            console.log(text_array);
-
-        }
-           if (user_is_not_owner_array[0]) {
-            const grouped_array = this.groupNotificationsTogether(user_is_not_owner_array, 'comment') //user should be alertd of only extra comments
-            const text_array = this.notificationToText(grouped_array, 'comment', false); //boolean is ownership of something
-            console.log(text_array);
-
-        }
-
+    inspectTopicOfNotification(topic_id){ //for clicking on a notification in drop down notification list, replaces feed with one topic relating to notif
+        //also makes feed_reload_button appear
+        this.setState({topic_data:[{'id':topic_id,'created_time':0}]});
+        this.setState({feed_reload_button_visible:true});
     };
 
-    /// write render method for menulist, get onclick working... also write the api for get more notifications (GET REQUEST)
+    handleFeedReloadButtonPress() {
+        this.setState({feed_reload_button_visible:false});
+        axiosInstance.get('/getusergroups/')
+        .then(
+            result => {
+                this.setState({
+                    topic_data : result.data.topic_data,
+                });
 
-
-    transitionNotificationToFeed(event){ //for clicking on a notification in drop down notification list, which will add the related topic to the top of the feed
-        const new_topic_array = this.state.topic_data
-        new_topic_array.push(event.topic) //somehow append topic data in correct format. will create a duplicate but removeDuplicatesByID should remove in render msg
-        //have an extra field for render method to indicate that topic has been reloaded out of the proper chron sorted order? ... extra field needs to be handled by render msg
-        //displayed time should be original topic creation, time in render should be time the topic was last replaced in feed.......? 
-        this.setState({topic_data:new_topic_array}) //triggers re-render
-        new_notification_array = this.state.notification_data_store
-        const notification_array_without_justrendered_topic = new_notification_array.filter(topic => topic.id != event.topic.id);
-        this.setState({notification_data_store:notification_array_without_justrendered_topic})
+                console.log('axios reloaded topic data in state: ', this.state.topic_data);
+            }
+        ).catch(error => {throw error})
     };
+
+
 
     getNotifications() { // get most recent notification_items created, probably while user was away....
         axiosInstance.get('/getnotifications/')
@@ -640,14 +493,6 @@ class Feed extends Component {
             }
         ).catch(error => {throw error})
     }
-
-
-
-
-
-////////////////////////////////////////////
-
-
 
 
     populateFeedCallbackDictionary(dictionaryFromTopicLeaf) {
@@ -799,7 +644,7 @@ class Feed extends Component {
         return (
             <FeedGrid>
                 <FeedMenuDiv>
-                    <MenuListComposition 
+                    <MenuListComposition
                     >
                     </MenuListComposition>
                     <button 
@@ -821,6 +666,31 @@ class Feed extends Component {
                     >
                       {this.state.notification_data_store.length}!
                     </button>
+
+
+                    {this.state.feed_reload_button_visible &&
+                   <button 
+                    style={{
+                        width: "20%",
+                        height: "20%",                 
+                        backgroundColor: "#ddd",
+                        border: "none",
+                        color: "black",
+                        textAlign: "center",
+                        textDecoration: "none",
+                        outline : "none",
+                        // padding :"1px",
+                        // margin: "1px 1px",
+                        cursor: "pointer",
+                        borderRadius: "16px"
+                        }}
+                    onClick = {(e) => this.handleFeedReloadButtonPress}
+                    >
+                      BACK
+                    </button>
+                }
+
+
                 </FeedMenuDiv>
                 <InputDiv>
                     <textarea 
