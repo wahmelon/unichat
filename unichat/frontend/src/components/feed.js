@@ -256,6 +256,7 @@ class Feed extends Component {
                 'action_value' : 1,
                 'action_time' : parsedData.time,
                 'last_actor' : parsedData.last_actor, //the person who submitted the action
+                'parent_topic_id' : parsedData.topic_id
             };
 
             if (parsedData.action == 'add_comment' || parsedData.action == 'topic_upvote' || parsedData.action == 'topic_downvote') { //concerns a topic
@@ -292,7 +293,7 @@ class Feed extends Component {
                         //modify existing notification
                         if (notif.og_topic_owner == this.state.user_id) {
                             output_array[i].number_of_actions ++;
-                            if (!notif.action_type in output_array[i].action_array) {
+                            if (!output_array[i].action_array.includes(notif.action_type)) {
                                 output_array[i].action_array.push(notif.action_type);
                             }
                             if (output_array[i].action_time < notif.action_time) {
@@ -322,7 +323,8 @@ class Feed extends Component {
                             'number_of_actions':1,
                             'action_time':notif.action_time,
                             'last_actor' : notif.last_actor,
-                            'user_owns' : true
+                            'user_owns' : true,
+                            'parent_topic_id' : notif.parent_topic_id
 
                         });
                     } else if (notif.action_type == 'add_comment') { 
@@ -333,7 +335,8 @@ class Feed extends Component {
                             'number_of_actions':1,
                             'action_time':notif.action_time,
                             'last_actor' : notif.last_actor,
-                            'user_owns' : false
+                            'user_owns' : false,
+                            'parent_topic_id' : notif.parent_topic_id
 
                         });
                     } else{
@@ -349,7 +352,7 @@ class Feed extends Component {
                         CommentNotifDoesNotExist = false;
                         if (notif.og_comment_owner == this.state.user_id) {
                             output_array[i].number_of_actions ++;                            
-                            if (!notif.action_type in output_array[i].action_array) {
+                            if (!output_array[i].action_array.includes(notif.action_type)) {
                                 output_array[i].action_array.push(notif.action_type);
                             }
                             if (output_array[i].action_time < notif.action_time) {
@@ -368,7 +371,8 @@ class Feed extends Component {
                             'number_of_actions':1,
                             'action_time':notif.action_time,
                             'last_actor' : notif.last_actor,
-                            'user_owns' : true //has to be true to get past initial parsedData -> notification item
+                            'user_owns' : true, //has to be true to get past initial parsedData -> notification item
+                            'parent_topic_id' : notif.parent_topic_id
 
                         });
                     //create notification for easy transform to text in render menulist
@@ -377,11 +381,82 @@ class Feed extends Component {
             }
         }
         console.log(output_array);
+        console.log(this.groupedNotificationsToText(output_array));
     };
 
     groupedNotificationsToText(grouped_array) {
+        const output_array = [];
 
-    }
+        for (notification of grouped_array) {
+            var actors;
+            var action_types;
+            var owner;
+            var item;
+
+            // setting actors
+
+            if (notification.number_of_actions == 1) {
+                actors = `${notification.last_actor} has`;
+            } else if (notification.number_of_actions == 2) {
+                actors = `${notification.last_actor} and 1 other user have`;
+            } else {
+                actors = `${notification.last_actor} and ${notification.number_of_actions - 1} other users have`;
+            };
+
+            //setting actions
+
+            if (notification.action_array.includes('comment_upvote') || notification.action_array.includes('comment_downvote')) {
+                action_types = 'voted on'
+            } else if (
+
+                (notification.action_array.includes('topic_upvote') || notification.action_array.includes('topic_downvote'))
+                && notification.action_array.includes('add_comment')
+
+            ) {
+                
+                action_types = 'commented and voted on'
+
+            } else if (notification.action_array.includes('topic_upvote') || notification.action_array.includes('topic_downvote')) { //only topic votes
+                    action_types = 'voted on'
+            } else {
+                action_types = 'commented on'
+            }
+
+            //setting owner
+
+            if (notification.user_owns) {
+                owner = 'your'
+            } else {
+                if (notification.comment_id) {
+                    owner = `${notification.og_comment_owner}'s`
+                } else { //must concern topic...
+                    owner = `${notification.og_topic_owner}'s`
+                }
+            }
+
+            //setting item
+
+            if (notification.comment_id) {
+                item = 'comment'
+            } else {
+                item = 'topic'
+            }
+
+            const final_message = `${actors} ${action_types} ${owner} ${item}`
+            console.log(notification);
+            console.log(final_message);
+            output_array.push({
+                'topic_id' : notification.parent_topic_id,
+                'text' : final_message
+            })
+
+        }
+
+        console.log(output_array);
+
+    };
+
+
 
 
 
