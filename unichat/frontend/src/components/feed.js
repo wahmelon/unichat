@@ -336,7 +336,7 @@ class Feed extends Component {
                             'action_time':notif.action_time,
                             'last_actor' : notif.last_actor,
                             'user_owns' : false,
-                            'parent_topic_id' : notif.parent_topic_id
+                            'parent_topic_id' : notif.parent_topic_id,
 
                         });
                     } else{
@@ -387,7 +387,7 @@ class Feed extends Component {
     groupedNotificationsToText(grouped_array) {
         const output_array = [];
 
-        for (notification of grouped_array) {
+        for (const notification of grouped_array) {
             var actors;
             var action_types;
             var owner;
@@ -430,7 +430,7 @@ class Feed extends Component {
                 if (notification.comment_id) {
                     owner = `${notification.og_comment_owner}'s`
                 } else { //must concern topic...
-                    owner = `${notification.og_topic_owner}'s`
+                    owner = 'a followed'//`${notification.og_topic_owner}'s`            -- this data as a username not yet being passed from consumer.py, only id...
                 }
             }
 
