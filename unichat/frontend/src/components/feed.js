@@ -249,8 +249,6 @@ class Feed extends Component {
     };
 
     handleNotification(parsedData) { // create a notification whenever websocket reaceives msg, also can be used in initial componentdidmount get recent notifs
-        console.log('running handlenotif in feedjs');
-        console.log('parsed data followers', parsedData.followers);
         if (parsedData.followers.includes(this.state.user_id)) {
             console.log('running handleNotification');
             const new_notif = {
@@ -263,7 +261,7 @@ class Feed extends Component {
 
             }
 
-            if (parsedData.comment_id) { //concerns a comment
+            if (parsedData.action_type == 'comment_upvote' || parsedData.action_type == 'comment_downvote') { //concerns a comment
                 new_notif['comment_id'] = parsedData.comment_id
                 new_notif['og_comment_owner'] = parsedData.og_comment_poster
             };
@@ -275,6 +273,102 @@ class Feed extends Component {
             console.log('notif data store in state', this.state.notification_data_store);
         } else {
             //pass
+        }
+    };
+
+    transformNotifications(notif_array) {
+        const output_array = [];
+        for (const notif of notif_array) {
+            var idToFind;
+            var TopicNotifDoesNotExist = true;
+            if (notif.topic_id) { //concerns topic (add comment, topic up/downvote)
+                idToFind = notif.topic_id;
+                for (var i in output_array) {
+                    if (output_array[i].topic_id == idToFind) { //notification already exists
+                        TopicNotifDoesNotExist = false;
+                        //modify existing notification
+                        if (notif.og_topic_owner == this.state.user_id) {
+                            output_array[i].number_of_actions ++;
+                            if (!notif.action_type in output_array[i].action_array) {
+                                output_array[i].action_array.push(notif.action_type);
+                            }
+                            if (output_array[i].action_time < notif.action_time) {
+                                output_array[i].action_time = notif.action_time;
+                                output_array[i].last_actor = notif.last_actor;
+                            }
+                        } else if (notif.action_type == 'add_comment') { //add comment only notif relevant if not topic owner
+                            output_array[i].number_of_actions ++;
+                            if (output_array[i].action_time < notif.action_time) {
+                                output_array[i].action_time = notif.action_time;
+                                output_array[i].last_actor = notif.last_actor;
+                            }
+                        } else {
+                            //pass
+                        }
+                        //modification (adding action and action value) dependent on ownership of topic 
+                    }
+                }
+
+                if (TopicNotifDoesNotExist) {
+                    //create notification for easy transform to text in render menulist
+                    // topic votes only matter if you are topic owner. if topic owner, add three actions, if not , only add add comments
+                    if (notif.og_topic_owner == this.state.user_id) {
+                        output_array.push({
+                            'topic_id' : notif.topic_id,
+                            'action_array' : [notif.action_type],
+                            'number_of_actions':1,
+                            'action_time':notif.action_time,
+                            'last_actor' : notif.last_actor
+
+                        });
+                    } else if (notif.action_type == 'add_comment') { 
+                    //^ 'add_comment' is the only one of three actions relevant if not topic owner
+                        output_array.push({
+                            'topic_id' : notif.topic_id,
+                            'action_array' : [notif.action_type],
+                            'number_of_actions':1,
+                            'action_time':notif.action_time,
+                            'last_actor' : notif.last_actor
+
+                        });
+                    } else{
+                        //pass
+                    }
+                }
+
+            } else { //concerns comment (comment up/downvote)
+                var idToFind = notif.comment_id; 
+                var CommentNotifDoesNotExist = true;
+                for (var i in output_array) {
+                    if (output_array[i].comment_id == idToFind) { //notification already exists
+                        CommentNotifDoesNotExist = false;
+                        if (notif.og_comment_owner == this.state.user_id) {
+                            output_array[i].number_of_actions ++;                            
+                            if (!notif.action_type in output_array[i].action_array) {
+                                output_array[i].action_array.push(notif.action_type);
+                            }
+                            if (output_array[i].action_time < notif.action_time) {
+                                output_array[i].action_time = notif.action_time;
+                                output_array[i].last_actor = notif.last_actor;
+                            }
+                        } else {
+                            //pass , comment up/downvotes not relevant to anyone except comment owner
+                        }
+                    }
+                }
+                if (CommentNotifDoesNotExist) {
+                    output_array.push({
+                            'comment_id' : notif.comment_id,
+                            'action_array' : [notif.action_type],
+                            'number_of_actions':1,
+                            'action_time':notif.action_time,
+                            'last_actor' : notif.last_actor
+
+                        });
+                    //create notification for easy transform to text in render menulist
+                }
+
+            }
         }
     };
 

@@ -165,7 +165,6 @@ class ChatConsumer(WebsocketConsumer):
             event['downvotes'] = 0
             event['upvotes'] = 0
             event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
-            event['og_comment_poster'] = comment_poster.id
             event['og_topic_poster'] = topic_as_django_obj.poster.id
             self.send(json.dumps(event))
 
@@ -211,7 +210,6 @@ class ChatConsumer(WebsocketConsumer):
             payload['action'] = 'comment_upvote'
             payload['followers'] = [user.id for user in topic_owner.followed_by.all()]
             payload['og_comment_poster'] = comment_django_obj.poster.id
-            payload['og_topic_poster'] = topic_owner.poster.id            
             payload.update(event)
             self.send(json.dumps(payload))
 
@@ -255,7 +253,6 @@ class ChatConsumer(WebsocketConsumer):
             payload['action'] = 'comment_downvote'
             payload['followers'] = [user.id for user in topic_owner.followed_by.all()]
             payload['og_comment_poster'] = comment_django_obj.poster.id
-            payload['og_topic_poster'] = topic_owner.poster.id 
             payload.update(event)
             self.send(json.dumps(payload))
             try: 
