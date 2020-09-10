@@ -255,16 +255,18 @@ class Feed extends Component {
                 'action_type' : parsedData.action,
                 'action_value' : 1,
                 'action_time' : parsedData.time,
-                'last_actor' : parsedData.logged_user_id, //the person who submitted the action
+                'last_actor' : parsedData.last_actor, //the person who submitted the action
             };
 
-            if (parsedData.action == 'comment_upvote' || parsedData.action == 'comment_downvote') { //concerns a comment
-                new_notif['comment_id'] = parsedData.comment_id
-                new_notif['og_comment_owner'] = parsedData.og_comment_poster
-            } else { //refers to add comment, topic up/downvote
+            if (parsedData.action == 'add_comment' || parsedData.action == 'topic_upvote' || parsedData.action == 'topic_downvote') { //concerns a topic
                 new_notif['topic_id'] = parsedData.topic_id,
                 new_notif['og_topic_owner'] = parsedData.og_topic_poster
-
+            } else if (this.state.user_id == parsedData.og_comment_poster) {
+            //remaining actions (comment up/downvotes) only relevant to comment owner
+                new_notif['comment_id'] = parsedData.comment_id
+                new_notif['og_comment_owner'] = parsedData.og_comment_poster
+            } else {
+                //pass
             };
 
 
@@ -319,7 +321,8 @@ class Feed extends Component {
                             'action_array' : [notif.action_type],
                             'number_of_actions':1,
                             'action_time':notif.action_time,
-                            'last_actor' : notif.last_actor
+                            'last_actor' : notif.last_actor,
+                            'user_owns' : true
 
                         });
                     } else if (notif.action_type == 'add_comment') { 
@@ -329,7 +332,8 @@ class Feed extends Component {
                             'action_array' : [notif.action_type],
                             'number_of_actions':1,
                             'action_time':notif.action_time,
-                            'last_actor' : notif.last_actor
+                            'last_actor' : notif.last_actor,
+                            'user_owns' : false
 
                         });
                     } else{
@@ -363,7 +367,8 @@ class Feed extends Component {
                             'action_array' : [notif.action_type],
                             'number_of_actions':1,
                             'action_time':notif.action_time,
-                            'last_actor' : notif.last_actor
+                            'last_actor' : notif.last_actor,
+                            'user_owns' : true //has to be true to get past initial parsedData -> notification item
 
                         });
                     //create notification for easy transform to text in render menulist
@@ -373,6 +378,18 @@ class Feed extends Component {
         }
         console.log(output_array);
     };
+
+    groupedNotificationsToText(grouped_array) {
+
+    }
+
+
+
+
+
+
+
+
 
     //combine the three methods, with different dict to text rules for relating to owned topic, owned comment, and everything else..
 

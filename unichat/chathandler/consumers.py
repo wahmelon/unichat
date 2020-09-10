@@ -80,13 +80,14 @@ class ChatConsumer(WebsocketConsumer):
             topic_as_django_obj.save()
             event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
             event['og_topic_poster'] = topic_as_django_obj.poster.id
+            event['last_actor'] = upvoter.username
             self.send(json.dumps(event))
             try:
                 NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_upvote') #true if it exists
                 existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_upvote')
                 existing_item.action_value += 1
                 existing_item.action_time = event['time']
-                existing_item.last_actor = event['logged_user_id']
+                existing_item.last_actor = upvoter.username
                 existing_item.save()
             except:
                 print('creating new notification item')
@@ -96,7 +97,7 @@ class ChatConsumer(WebsocketConsumer):
                     action_type = 'topic_upvote',
                     action_value = 1,
                     action_time = event['time'],
-                    last_actor = event['logged_user_id'],
+                    last_actor = upvoter.username,
                     og_topic_owner = topic_as_django_obj.poster
                     )
                 new_notification.save()
@@ -117,12 +118,13 @@ class ChatConsumer(WebsocketConsumer):
             topic_as_django_obj.save()
             event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
             event['og_topic_poster'] = topic_as_django_obj.poster.id
+            event['last_actor'] = downvoter.username
             self.send(json.dumps(event))
             try:
                 existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_downvote')
                 existing_item.action_value += 1
                 existing_item.action_time = event['time']
-                existing_item.last_actor = event['logged_user_id']
+                existing_item.last_actor = downvoter.username
                 existing_item.save()
             except:
                 print('creating new notification item')
@@ -132,7 +134,7 @@ class ChatConsumer(WebsocketConsumer):
                     action_type = 'topic_downvote',
                     action_value = 1,
                     action_time = event['time'],
-                    last_actor = event['logged_user_id'],
+                    last_actor = downvoter.username,
                     og_topic_owner = topic_as_django_obj.poster
                     )
                 new_notification.save()            
@@ -166,6 +168,7 @@ class ChatConsumer(WebsocketConsumer):
             event['upvotes'] = 0
             event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
             event['og_topic_poster'] = topic_as_django_obj.poster.id
+            event['last_actor'] = comment_poster.username
             self.send(json.dumps(event))
 
             try:
@@ -173,7 +176,7 @@ class ChatConsumer(WebsocketConsumer):
                 existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='add_comment')
                 existing_item.action_value += 1
                 existing_item.action_time = event['time']
-                existing_item.last_actor = event['logged_user_id']
+                existing_item.last_actor = comment_poster.username
                 existing_item.save()
             except:
                 print('creating new notification item')
@@ -183,7 +186,7 @@ class ChatConsumer(WebsocketConsumer):
                     action_type = 'add_comment',
                     action_value = 1,
                     action_time = event['time'],
-                    last_actor = event['logged_user_id'],
+                    last_actor = comment_poster.username,
                     og_topic_owner = topic_as_django_obj.poster,
                     og_comment_owner = comment_poster
                     )
@@ -210,6 +213,7 @@ class ChatConsumer(WebsocketConsumer):
             payload['action'] = 'comment_upvote'
             payload['followers'] = [user.id for user in topic_owner.followed_by.all()]
             payload['og_comment_poster'] = comment_django_obj.poster.id
+            payload['last_actor'] = upvoter.username
             payload.update(event)
             self.send(json.dumps(payload))
 
@@ -218,7 +222,7 @@ class ChatConsumer(WebsocketConsumer):
                 existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='comment_upvote')
                 existing_item.action_value += 1
                 existing_item.action_time = event['time']
-                existing_item.last_actor = event['logged_user_id']
+                existing_item.last_actor = upvoter.username
                 existing_item.save()
             except:
                 print('creating new notification item')
@@ -228,7 +232,7 @@ class ChatConsumer(WebsocketConsumer):
                     action_type = 'comment_upvote',
                     action_value = 1,
                     action_time = event['time'],
-                    last_actor = event['logged_user_id'],
+                    last_actor = upvoter.username,
                     og_topic_owner = topic_owner.poster,
                     og_comment_owner = comment_django_obj.poster
                     )
@@ -239,7 +243,7 @@ class ChatConsumer(WebsocketConsumer):
 
 
 
-
+#need to change last actor on model instance creation and on payload.....
 
         elif event['action'] == 'comment_downvote':
             downvoter = StudentUser.objects.get(id=event['logged_user_id'])            
@@ -253,6 +257,7 @@ class ChatConsumer(WebsocketConsumer):
             payload['action'] = 'comment_downvote'
             payload['followers'] = [user.id for user in topic_owner.followed_by.all()]
             payload['og_comment_poster'] = comment_django_obj.poster.id
+            payload['last_actor'] = downvoter.username
             payload.update(event)
             self.send(json.dumps(payload))
             try: 
@@ -261,7 +266,7 @@ class ChatConsumer(WebsocketConsumer):
                 existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='comment_downvote')
                 existing_item.action_value += 1
                 existing_item.action_time = event['time']
-                existing_item.last_actor = event['logged_user_id']
+                existing_item.last_actor = downvoter.username
                 existing_item.save()
             except:
                 print('creating new notification item')
@@ -271,7 +276,7 @@ class ChatConsumer(WebsocketConsumer):
                     action_type = 'comment_downvote',
                     action_value = 1,
                     action_time = event['time'],
-                    last_actor = event['logged_user_id'],
+                    last_actor = downvoter.username,
                     og_topic_owner = topic_owner.poster,
                     og_comment_owner = comment_django_obj.poster
                     )
