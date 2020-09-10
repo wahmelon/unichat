@@ -167,8 +167,11 @@ class Feed extends Component {
         anonymous_user_handle : "",
         currently_anonymous: true,
         postAreaOn:false,
-        notification_data_store:[],
         new_topics:[],
+
+        //notification
+
+        notification_data_store:[],
         notifications_as_text:[],
         feed_reload_button_visible:false,
 
@@ -193,7 +196,6 @@ class Feed extends Component {
         this.iterateThroughGroupCodes = this.iterateThroughGroupCodes.bind(this);
         this.toggleIdentity = this.toggleIdentity.bind(this);
         this.handleNewTopic = this.handleNewTopic.bind(this);
-        this.transitionNotificationToFeed = this.transitionNotificationToFeed.bind(this);
         this.handleNotification = this.handleNotification.bind(this);
         this.inspectTopicOfNotification = this.inspectTopicOfNotification.bind(this);
 
@@ -276,8 +278,11 @@ class Feed extends Component {
             const new_array = this.state.notification_data_store;
             new_array.push(new_notif);
 
-            this.setState({notification_data_store:new_array})
-            console.log('notif data store in state', this.state.notification_data_store);
+            this.setState({notification_data_store:new_array});
+            
+            const notifs_as_text = this.transformNotifications(new_array);
+            this.setState({notifications_as_text:notifs_as_text});
+            console.log('notifs as text in state: ', this.state.notifications_as_text);
         } else { //user is in group notif intended for but not following
             //pass
         }
@@ -645,6 +650,8 @@ class Feed extends Component {
             <FeedGrid>
                 <FeedMenuDiv>
                     <MenuListComposition
+                    array = {this.state.notifications_as_text}
+                    inspectTopicOfNotification = {this.inspectTopicOfNotification}
                     >
                     </MenuListComposition>
                     <button 

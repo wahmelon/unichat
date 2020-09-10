@@ -27,12 +27,35 @@ export default function MenuListComposition(props) {
     setOpen((prevOpen) => !prevOpen);
   };
 
-  const handleClose = (event) => {
-    if (anchorRef.current && anchorRef.current.contains(event.target)) {
-      return;
-    }
+  // const handleClose = (event) => {
+  //   if (anchorRef.current && anchorRef.current.contains(event.target)) {
+  //     return;
+  //   }
 
-    setOpen(false);
+  //   setOpen(false);
+
+    
+  // };
+
+
+  const handleClose = (topic_id, e) => {
+      if (anchorRef.current && anchorRef.current.contains(event.target)) {
+        return;
+      }
+
+      setOpen(false);
+      props.inspectTopicOfNotification(topic_id)
+      
+    };
+
+  const renderNotifs = (notif_array) => { //need to somehow sort by action time?
+    const array_of_notifications = [];
+    for (const notification of notif_array) {
+      array_of_notifications.push(
+        <MenuItem onClick={e=>handleClose(notification.id, e)}>notification.message</MenuItem>
+        )
+    };
+    return array_of_notifications;
   };
 
   function handleListKeyDown(event) {
@@ -73,9 +96,7 @@ export default function MenuListComposition(props) {
               <Paper>
                 <ClickAwayListener onClickAway={handleClose}>
                   <MenuList autoFocusItem={open} id="menu-list-grow" onKeyDown={handleListKeyDown}>
-                    <MenuItem onClick={handleClose}>Profile</MenuItem> 
-                    <MenuItem onClick={handleClose}>My account</MenuItem>
-                    <MenuItem onClick={handleClose}>Logout</MenuItem>
+                    {renderNotifs}
                   </MenuList>
                 </ClickAwayListener>
               </Paper>
