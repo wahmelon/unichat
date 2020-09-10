@@ -252,18 +252,19 @@ class Feed extends Component {
         if (parsedData.followers.includes(this.state.user_id)) {
             console.log('running handleNotification');
             const new_notif = {
-                'topic_id' : parsedData.topic_id,
                 'action_type' : parsedData.action,
                 'action_value' : 1,
                 'action_time' : parsedData.time,
                 'last_actor' : parsedData.logged_user_id, //the person who submitted the action
-                'og_topic_owner' : parsedData.og_topic_poster
+            };
 
-            }
-
-            if (parsedData.action_type == 'comment_upvote' || parsedData.action_type == 'comment_downvote') { //concerns a comment
+            if (parsedData.action == 'comment_upvote' || parsedData.action == 'comment_downvote') { //concerns a comment
                 new_notif['comment_id'] = parsedData.comment_id
                 new_notif['og_comment_owner'] = parsedData.og_comment_poster
+            } else { //refers to add comment, topic up/downvote
+                new_notif['topic_id'] = parsedData.topic_id,
+                new_notif['og_topic_owner'] = parsedData.og_topic_poster
+
             };
 
 
@@ -271,7 +272,7 @@ class Feed extends Component {
             new_array.push(new_notif);
             this.setState({notification_data_store:new_array})
             console.log('notif data store in state', this.state.notification_data_store);
-        } else {
+        } else { //user is in group notif intended for but not following
             //pass
         }
     };
@@ -370,6 +371,7 @@ class Feed extends Component {
 
             }
         }
+        console.log(output_array);
     };
 
     //combine the three methods, with different dict to text rules for relating to owned topic, owned comment, and everything else..
@@ -723,7 +725,7 @@ class Feed extends Component {
                         cursor: "pointer",
                         borderRadius: "16px"
                         }}
-                    onClick = {(e) => this.transformRawNotifications()}
+                    onClick = {(e) => this.transformNotifications(this.state.notification_data_store)}
                     >
                       {this.state.notification_data_store.length}!
                     </button>
