@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt import views as jwt_views
-from .views import ObtainTokenPairWithCurrentGroupsView, StudentUserCreate, GetUserGroups, LogoutAndBlacklistRefreshTokenForUserView, SetUniInfo, PostTopic, GetTopicData, GetMoreTopics
+from .views import ObtainTokenPairWithCurrentGroupsView, StudentUserCreate, GetUserGroups, LogoutAndBlacklistRefreshTokenForUserView, SetUniInfo, PostTopic, GetTopicData, GetMoreTopics, GetNotifications
 
 
 urlpatterns = [
@@ -12,5 +12,6 @@ urlpatterns = [
     path('getusergroups/', GetUserGroups.as_view(), name='get_user_groups'),
     path('getmoretopics/', GetMoreTopics.as_view(), name = 'get_more_topics'),
     path('get_topic_data/', GetTopicData.as_view(), name='get_topic_data'),
+    path('getnotifications/', GetNotifications.as_view(), name='get_notifications'),
     path('blacklist/', LogoutAndBlacklistRefreshTokenForUserView.as_view(), name='blacklist')
 ]

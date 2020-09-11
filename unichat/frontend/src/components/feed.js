@@ -174,10 +174,11 @@ class Feed extends Component {
         notification_data_store:[],
         notifications_as_text:[],
         feed_reload_button_visible:false,
+        getNotificationsCallTracker:0, //multiplier for getnotifications, allows backend to return paginated
 
         //infinite scroll
         hasMoreItems : true,
-        functionCallTracker:1, //multiplier for loadMoreTopics - specifies which 10 topics should be returned
+        scrollFunctionCallTracker:1, //multiplier for loadMoreTopics - specifies which 10 topics should be returned
         
 
 
@@ -488,14 +489,25 @@ class Feed extends Component {
 
 
     getNotifications() { // get most recent notification_items created, probably while user was away....
-        axiosInstance.get('/getnotifications/')
+        axiosInstance.post('/getnotifications/', {page:this.state.getNotificationsCallTracker})
         .then(
             result => {
+                console.log('result data: ', result.data);
+                const prevState = this.state.notification_data_store;
+                const newState = prevState.concat(result.data.payload_list)
                 this.setState({
-                    notification_data_store:result.data.notification_array
+                    notification_data_store:newState
                 });
+                const timesCalled = this.state.getNotificationsCallTracker;
+                this.setState({getNotificationsCallTracker:timesCalled+1})
 
-                console.log('axios updated state: ', this.state);
+                console.log('axios updated notif data store state: ', this.state.notification_data_store);
+                
+                const notifs_as_text = this.transformNotifications(newState);
+                this.setState({notifications_as_text:notifs_as_text});
+                console.log('notifs as text in state: ', this.state.notifications_as_text);
+
+
             }
         ).catch(error => {throw error})
     }
@@ -543,6 +555,7 @@ class Feed extends Component {
             WebSocketInstance.populateCallbackDictionary(this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary);
             } 
         );
+        this.getNotifications();
     };
 
 
@@ -573,7 +586,7 @@ class Feed extends Component {
 
     loadMoreTopics(page) { //interacts with infinite scroll
         var self = this;
-        axiosInstance.post('/getmoretopics/', {page:this.state.functionCallTracker})
+        axiosInstance.post('/getmoretopics/', {page:this.state.scrollFunctionCallTracker})
         .then(
             result => {
                 const topics_array = this.state.topic_data;
@@ -584,8 +597,8 @@ class Feed extends Component {
                     };
 
                 this.setState({topic_data:topics_array});
-                const timesFunctionCalled = this.state.functionCallTracker;
-                this.setState({functionCallTracker:timesFunctionCalled+1});
+                const timesFunctionCalled = this.state.scrollFunctionCallTracker;
+                this.setState({scrollFunctionCallTracker:timesFunctionCalled+1});
                 // if (topics_array.length < 10) {
                 if (result.data.topic_data.length < 10) { //before 10
 
@@ -671,7 +684,7 @@ class Feed extends Component {
                         cursor: "pointer",
                         borderRadius: "16px"
                         }}
-                    onClick = {(e) => this.handleFeedReloadButtonPress}
+                    onClick = {(e) => this.handleFeedReloadButtonPress()}
                     >
                       BACK
                     </button>
