@@ -471,6 +471,7 @@ class Feed extends Component {
     };
 
     handleFeedReloadButtonPress() {
+        console.log('back pressed');
         this.setState({feed_reload_button_visible:false});
         axiosInstance.get('/getusergroups/')
         .then(
@@ -654,27 +655,6 @@ class Feed extends Component {
                     inspectTopicOfNotification = {this.inspectTopicOfNotification}
                     >
                     </MenuListComposition>
-                    <button 
-                    style={{
-                        width: "20%",
-                        height: "20%",                 
-                        backgroundColor: "#ddd",
-                        border: "none",
-                        color: "black",
-                        textAlign: "center",
-                        textDecoration: "none",
-                        outline : "none",
-                        // padding :"1px",
-                        // margin: "1px 1px",
-                        cursor: "pointer",
-                        borderRadius: "16px"
-                        }}
-                    onClick = {(e) => this.transformNotifications(this.state.notification_data_store)}
-                    >
-                      {this.state.notification_data_store.length}!
-                    </button>
-
-
                     {this.state.feed_reload_button_visible &&
                    <button 
                     style={{

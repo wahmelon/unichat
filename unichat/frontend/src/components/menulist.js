@@ -105,7 +105,7 @@ export default function MenuListComposition(props) {
                 <ClickAwayListener onClickAway={handleClose}>
                   <MenuList autoFocusItem={open} id="menu-list-grow" onKeyDown={handleListKeyDown}>
                     {props.array.map((notif, index) =>
-                    <MenuItem key={index} value={index} primarytext={notif.text} onClick={e=>handleClose(notif.parent_topic_id,e)}/>
+                    <MenuItem key={index} value={index} onClick={e=>handleClose(notif.parent_topic_id,e)}>{notif.text}</MenuItem>
                     )}
                   </MenuList>
                 </ClickAwayListener>
