@@ -493,8 +493,10 @@ class Feed extends Component {
         .then(
             result => {
                 console.log('result data: ', result.data);
+                console.log('payload list: ', result.data.notif_data);
                 const prevState = this.state.notification_data_store;
-                const newState = prevState.concat(result.data.payload_list)
+                const newState = prevState.concat(result.data.notif_data);
+                console.log(newState);
                 this.setState({
                     notification_data_store:newState
                 });

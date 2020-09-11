@@ -114,6 +114,7 @@ class GetNotifications(APIView):
 					pass
 
 				payload_list.append(notification_dict)
+		print(payload_list)
 		return Response(data={"notif_data": payload_list}, status=status.HTTP_200_OK)
 
 
