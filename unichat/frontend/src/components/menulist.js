@@ -58,6 +58,8 @@ export default function MenuListComposition(props) {
     return array_of_notifications;
   };
 
+  ////
+
   function handleListKeyDown(event) {
     if (event.key === 'Tab') {
       event.preventDefault();
@@ -76,6 +78,12 @@ export default function MenuListComposition(props) {
   }, [open]);
 
   
+
+  // {notif_array.map((notif, index) => {
+  //     return <MenuItem key={index} onClick={e=>handleClose(notif.id, e)}>notif.message</MenuItem>
+  //   })
+
+
   return (
     <div className={classes.root}>
       <div>
@@ -96,7 +104,9 @@ export default function MenuListComposition(props) {
               <Paper>
                 <ClickAwayListener onClickAway={handleClose}>
                   <MenuList autoFocusItem={open} id="menu-list-grow" onKeyDown={handleListKeyDown}>
-                    {renderNotifs}
+                    {props.array.map((notif, index) =>
+                    <MenuItem key={index} value={index} primarytext={notif.text} onClick={e=>handleClose(notif.parent_topic_id,e)}/>
+                    )}
                   </MenuList>
                 </ClickAwayListener>
               </Paper>
