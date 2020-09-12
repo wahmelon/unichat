@@ -105,7 +105,8 @@ class GetNotifications(APIView):
 					"action_value" : 1,
 					"action_time" : notification.action_time,
 					"last_actor" : notification.last_actor,
-					"parent_topic_id" : notification.topic_id
+					"parent_topic_id" : notification.topic_id,
+					"participating_users" : [user.id for user in notification.participating_users]
 					}
 
 					if notification.action_type == "add_comment" or notification.action_type == "topic_upvote" or notification.action_type == "topic_downvote":

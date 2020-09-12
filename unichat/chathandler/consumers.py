@@ -173,30 +173,39 @@ class ChatConsumer(WebsocketConsumer):
             event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
             event['og_topic_poster'] = topic_as_django_obj.poster.id
             event['last_actor'] = comment_poster.username
-            self.send(json.dumps(event))
+
 
             try:
                 NotificationItem.objects.get(topic_id=event['topic_id'], action_type='add_comment') #true if it exists
                 existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='add_comment')
-                existing_item.action_value += 1
                 existing_item.action_time = event['time']
                 existing_item.last_actor = comment_poster.username
+                if comment_poster not in existing_item.participating_users:
+                    existing_item.participating_users.add(comment_poster) 
                 existing_item.save()
+                event['participating_users'] = [user.id for user in existing_item.participating_users]
             except:
                 print('creating new notification item')
                 new_notification = NotificationItem(
                     topic_id = event['topic_id'],
                     #comment_id = models.PositiveSmallIntegerField(blank=True)
                     action_type = 'add_comment',
-                    action_value = 1,
+                    action_value = 0,
                     action_time = event['time'],
                     last_actor = comment_poster.username,
                     og_topic_owner = topic_as_django_obj.poster,
-                    og_comment_owner = comment_poster
+                    og_comment_owner = comment_poster,
+                    participating_users = [comment_poster.id]
                     )
                 new_notification.save()
+                event['participating_users'] = [user.id for user in new_notification.participating_users]
                 topic_as_django_obj.history.add(new_notification)
                 topic_as_django_obj.save()
+
+
+
+            self.send(json.dumps(event))
+
 
 
 

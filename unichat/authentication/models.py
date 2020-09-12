@@ -29,6 +29,7 @@ class NotificationItem(models.Model):
 	og_comment_owner = models.ForeignKey(StudentUser, blank=True, null=True, related_name = 'comment_notification', on_delete=models.PROTECT)
 	action_type = models.CharField(max_length=120) #commented on topic, upvoted topic, downvoted topic, upvoted comment, downvoted comment
 	action_value = models.PositiveSmallIntegerField(default=0) #how many people have performed this action
+	participating_users = models.ManyToManyField(StudentUser, related_name = 'participating_users') #users that have commented
 	action_time = models.BigIntegerField()
 	last_actor = models.CharField(max_length=120) #for adding to the notification text: Laura and 12 others upvoted your comment
 

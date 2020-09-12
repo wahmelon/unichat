@@ -275,6 +275,10 @@ class Feed extends Component {
                 //pass
             };
 
+            if (parsedData.action == 'add_comment') {
+                new_notif['participating_users'] = parsedData.participating_users
+            }
+
 
             const new_array = this.state.notification_data_store;
             new_array.push(new_notif);
@@ -301,7 +305,8 @@ class Feed extends Component {
                         TopicNotifDoesNotExist = false;
                         //modify existing notification
                         if (notif.og_topic_owner == this.state.user_id) {
-                            output_array[i].number_of_actions ++;
+                            oldNumber = output_array[i].number_of_actions
+                            output_array[i].number_of_actions = oldNumber + notif.action_value;
                             if (!output_array[i].action_array.includes(notif.action_type)) {
                                 output_array[i].action_array.push(notif.action_type);
                             }
@@ -310,10 +315,12 @@ class Feed extends Component {
                                 output_array[i].last_actor = notif.last_actor;
                             }
                         } else if (notif.action_type == 'add_comment') { //add comment only notif relevant if not topic owner
-                            output_array[i].number_of_actions ++;
-                            if (output_array[i].action_time < notif.action_time) {
+                            oldNumber = output_array[i].number_of_actions
+                            output_array[i].number_of_actions = oldNumber + notif.action_value;
+                            if (output_array[i].action_time < notif.action_time) { //should be as is a more recent notif however good to check incase some backend lag?
                                 output_array[i].action_time = notif.action_time;
                                 output_array[i].last_actor = notif.last_actor;
+                                output_array[i].participating_users = notif.participating_users; //should replace old array with new array, probably with more users
                             }
                         } else {
                             //pass
@@ -329,7 +336,7 @@ class Feed extends Component {
                         output_array.push({
                             'topic_id' : notif.topic_id,
                             'action_array' : [notif.action_type],
-                            'number_of_actions':1,
+                            'number_of_actions':notif.action_value,
                             'action_time':notif.action_time,
                             'last_actor' : notif.last_actor,
                             'user_owns' : true,
@@ -341,11 +348,12 @@ class Feed extends Component {
                         output_array.push({
                             'topic_id' : notif.topic_id,
                             'action_array' : [notif.action_type],
-                            'number_of_actions':1,
+                            'number_of_actions':notif.action_value,
                             'action_time':notif.action_time,
                             'last_actor' : notif.last_actor,
                             'user_owns' : false,
                             'parent_topic_id' : notif.parent_topic_id,
+                            'participating_users' : notif.participating_users
 
                         });
                     } else{
@@ -353,14 +361,15 @@ class Feed extends Component {
                     }
                 }
 
-            } else { //concerns comment (comment up/downvote)
+            } else { //if (notif.comment_id)  - concerns comment (comment up/downvote)
                 var idToFind = notif.comment_id; 
                 var CommentNotifDoesNotExist = true;
                 for (var i in output_array) {
                     if (output_array[i].comment_id == idToFind) { //notification already exists
                         CommentNotifDoesNotExist = false;
                         if (notif.og_comment_owner == this.state.user_id) {
-                            output_array[i].number_of_actions ++;                            
+                            oldNumber = output_array[i].number_of_actions
+                            output_array[i].number_of_actions = oldNumber + notif.action_value;                            
                             if (!output_array[i].action_array.includes(notif.action_type)) {
                                 output_array[i].action_array.push(notif.action_type);
                             }
@@ -377,7 +386,7 @@ class Feed extends Component {
                     output_array.push({
                             'comment_id' : notif.comment_id,
                             'action_array' : [notif.action_type],
-                            'number_of_actions':1,
+                            'number_of_actions':notif.action_value,
                             'action_time':notif.action_time,
                             'last_actor' : notif.last_actor,
                             'user_owns' : true, //has to be true to get past initial parsedData -> notification item
@@ -402,15 +411,39 @@ class Feed extends Component {
             var owner;
             var item;
 
-            // setting actors
+            if (notification.last_actor == this.state.username) {
+                continue // breaks out of current for loop iteration onto the next....
+                //contentious - prevents the user being alerted if they were the one creating the notification..... would this prevent the user being notified if they
+                //were the last people after many people?
+                //probably fine until i find a better solution. only for situation where user acts on their own followed topic before checking notifs?
+            }
 
-            if (notification.number_of_actions == 1) {
-                actors = `${notification.last_actor} has`;
-            } else if (notification.number_of_actions == 2) {
-                actors = `${notification.last_actor} and 1 other user have`;
-            } else {
-                actors = `${notification.last_actor} and ${notification.number_of_actions - 1} other users have`;
-            };
+            // setting actors
+            if (notification.participating_users) { //inolves addition of comments, only reason this property would be there
+                const numberOfUsersCommenting = notification.participating_users.length
+                if (notification.participating_users.includes(this.state.user_id)) {
+                    numberOfUsersCommenting--;//should decrement
+                    if (numberOfUsersCommenting == 0 && notification.number_of_actions == 0) {
+                        continue //breaks out of the current iteration, this means that the user is only one to comment on a followed topic, no point adding info
+                    }
+                    numberTotalActions = notification.number_of_actions + numberOfUsers
+                    if (notification.number_of_actions == 1) {
+                        actors = `${notification.last_actor} has`;
+                    } else if (notification.number_of_actions == 2) {
+                        actors = `${notification.last_actor} and 1 other user have`;
+                    } else {
+                        actors = `${notification.last_actor} and ${notification.number_of_actions - 1} other users have`;
+                    }   
+                }             
+            } else { //doesn't relate to add comment, all other actions can only be performed by a user once so action value is applicable for workign out numberof people doing
+                if (notification.number_of_actions == 1) {
+                    actors = `${notification.last_actor} has`;
+                } else if (notification.number_of_actions == 2) {
+                    actors = `${notification.last_actor} and 1 other user have`;
+                } else {
+                    actors = `${notification.last_actor} and ${notification.number_of_actions - 1} other users have`;
+                }                
+            }
 
             //setting actions
 
