@@ -24,7 +24,7 @@ class StudentUser(AbstractUser):
 
 class NotificationItem(models.Model):
 	topic_id = models.PositiveSmallIntegerField()
-	og_topic_owner = models.ForeignKey(StudentUser, blank=True, null=True, related_name = 'topic_notifications', on_delete=models.PROTECT)
+	og_topic_owner = models.ForeignKey(StudentUser, related_name = 'topic_notifications', on_delete=models.PROTECT)
 	comment_id = models.PositiveSmallIntegerField(blank=True, null=True)
 	og_comment_owner = models.ForeignKey(StudentUser, blank=True, null=True, related_name = 'comment_notification', on_delete=models.PROTECT)
 	action_type = models.CharField(max_length=120) #commented on topic, upvoted topic, downvoted topic, upvoted comment, downvoted comment

@@ -101,6 +101,8 @@ class ChatConsumer(WebsocketConsumer):
                     og_topic_owner = topic_as_django_obj.poster
                     )
                 new_notification.save()
+                topic_as_django_obj.history.add(new_notification)
+                topic_as_django_obj.save()
 
 
 
@@ -137,7 +139,9 @@ class ChatConsumer(WebsocketConsumer):
                     last_actor = downvoter.username,
                     og_topic_owner = topic_as_django_obj.poster
                     )
-                new_notification.save()            
+                new_notification.save()
+                topic_as_django_obj.history.add(new_notification)
+                topic_as_django_obj.save()            
 
 
 
@@ -191,6 +195,8 @@ class ChatConsumer(WebsocketConsumer):
                     og_comment_owner = comment_poster
                     )
                 new_notification.save()
+                topic_as_django_obj.history.add(new_notification)
+                topic_as_django_obj.save()
 
 
 
@@ -236,7 +242,9 @@ class ChatConsumer(WebsocketConsumer):
                     og_topic_owner = topic_owner.poster,
                     og_comment_owner = comment_django_obj.poster
                     )
-                new_notification.save()       
+                new_notification.save()
+                topic_owner.history.add(new_notification)
+                topic_owner.save()       
 
 
 
@@ -280,7 +288,9 @@ class ChatConsumer(WebsocketConsumer):
                     og_topic_owner = topic_owner.poster,
                     og_comment_owner = comment_django_obj.poster
                     )
-                new_notification.save()            
+                new_notification.save()
+                topic_owner.history.add(new_notification)
+                topic_owner.save()            
 
 
         elif event['action'] == 'add_topic':

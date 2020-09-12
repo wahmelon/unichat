@@ -90,30 +90,36 @@ class GetNotifications(APIView):
 		django_user = StudentUser.objects.get(username=user.username)
 		payload_list = []
 		page = request.data['page']
-		for notification in django_user.topic_notifications.all()[(page*20):((page*20)+19)]:
-			print(notification.action_type)
-			#some code representing paginated notification if use react infinite scroller
-			if notification: #not no notification
-				notification_dict = {
-				"action_type" : notification.action_type,
-				"action_value" : 1,
-				"action_time" : notification.action_time,
-				"last_actor" : notification.last_actor,
-				"parent_topic_id" : notification.topic_id
-				}
+		#topic_list = django_user.topic_notifications.all()
+		#comment_list = django_user.comment_notifications.all()
+		print(django_user.topic_notifications.all())
+		for topic in django_user.topics_followed.all():
+			for notification in topic.history.all()[(page*20):((page*20)+19)]:
+				print(notification.action_type)
+				if notification.og_comment_owner.id:
+					print(notification.og_comment_owner.id)
+				#some code representing paginated notification if use react infinite scroller
+				if notification: #not no notification
+					notification_dict = {
+					"action_type" : notification.action_type,
+					"action_value" : 1,
+					"action_time" : notification.action_time,
+					"last_actor" : notification.last_actor,
+					"parent_topic_id" : notification.topic_id
+					}
 
-				if(notification.action_type == "add_comment" or notification.action_type == "topic_upvote" or notification.action_type == "topic_downvote"):
-					#^ concerns topic
-					notification_dict['topic_id'] = notification.topic_id
-					notification_dict['og_topic_owner'] = notification.og_topic_owner.id
-				elif(notification.og_comment_owner == django_user.id):
-					#^must concernt comment
-					notification_dict['comment_id'] = notification.comment_id
-					notification_dict['og_comment_owner'] = notification.og_comment_owner.id
-				else:
-					pass
+					if notification.action_type == "add_comment" or notification.action_type == "topic_upvote" or notification.action_type == "topic_downvote":
+						#^ concerns topic
+						notification_dict['topic_id'] = notification.topic_id
+						notification_dict['og_topic_owner'] = notification.og_topic_owner.id
+					elif notification.og_comment_owner.id == django_user.id:
+						#^must concernt comment
+						notification_dict['comment_id'] = notification.comment_id
+						notification_dict['og_comment_owner'] = notification.og_comment_owner.id
+					else:
+						pass
 
-				payload_list.append(notification_dict)
+					payload_list.append(notification_dict)
 		print(payload_list)
 		return Response(data={"notif_data": payload_list}, status=status.HTTP_200_OK)
 

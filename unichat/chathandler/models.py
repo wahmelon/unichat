@@ -9,8 +9,9 @@ class Topic(models.Model):
 	upvotes = models.PositiveSmallIntegerField(default=0)
 	downvotes = models.PositiveSmallIntegerField(default=0)
 	posted_as_anonymous = models.BooleanField(default=True)
-	followed_by = models.ManyToManyField("authentication.StudentUser", related_name = "topics")
-	#time field should be created by a Date.now() function in frontend
+	followed_by = models.ManyToManyField("authentication.StudentUser", related_name = "topics_followed")
+	history = models.ManyToManyField("authentication.NotificationItem", related_name = "history")
+
 	def as_dict(self):
 
 		return {
