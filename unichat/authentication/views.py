@@ -96,17 +96,19 @@ class GetNotifications(APIView):
 		for topic in django_user.topics_followed.all():
 			for notification in topic.history.all()[(page*20):((page*20)+19)]:
 				print(notification.action_type)
-				if notification.og_comment_owner.id:
-					print(notification.og_comment_owner.id)
 				#some code representing paginated notification if use react infinite scroller
 				if notification: #not no notification
+					participating_users_array = []
+					for participating_user in notification.participating_users:
+						participating_users_array.append(
+							{'username' : participating_user.user.username, 'id' : participating_user.user.id, 'time' : participating_user.time}
+
+						)
 					notification_dict = {
 					"action_type" : notification.action_type,
-					"action_value" : 1,
 					"action_time" : notification.action_time,
-					"last_actor" : notification.last_actor,
 					"parent_topic_id" : notification.topic_id,
-					"participating_users" : [user.id for user in notification.participating_users]
+					"participating_users" : participating_users_array
 					}
 
 					if notification.action_type == "add_comment" or notification.action_type == "topic_upvote" or notification.action_type == "topic_downvote":

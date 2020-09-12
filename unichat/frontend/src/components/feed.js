@@ -258,10 +258,9 @@ class Feed extends Component {
             console.log('running handleNotification');
             const new_notif = {
                 'action_type' : parsedData.action,
-                'action_value' : 1,
                 'action_time' : parsedData.time,
-                'last_actor' : parsedData.last_actor, //the person who submitted the action
-                'parent_topic_id' : parsedData.topic_id
+                'parent_topic_id' : parsedData.topic_id,
+                'participating_users' : parsedData.participating_users
             };
 
             if (parsedData.action == 'add_comment' || parsedData.action == 'topic_upvote' || parsedData.action == 'topic_downvote') { //concerns a topic
@@ -274,11 +273,6 @@ class Feed extends Component {
             } else {
                 //pass
             };
-
-            if (parsedData.action == 'add_comment') {
-                new_notif['participating_users'] = parsedData.participating_users
-            }
-
 
             const new_array = this.state.notification_data_store;
             new_array.push(new_notif);
@@ -416,6 +410,8 @@ class Feed extends Component {
                 //contentious - prevents the user being alerted if they were the one creating the notification..... would this prevent the user being notified if they
                 //were the last people after many people?
                 //probably fine until i find a better solution. only for situation where user acts on their own followed topic before checking notifs?
+
+                //potentiall add code to change last_actor to a place holder "a user" 
             }
 
             // setting actors

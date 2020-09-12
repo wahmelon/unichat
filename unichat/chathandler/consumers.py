@@ -4,7 +4,7 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 import time
 from .models import Topic, Comment
-from authentication.models import StudentUser, Group, NotificationItem
+from authentication.models import StudentUser, Group, NotificationItem, ParticipatingUser
 
 class ChatConsumer(WebsocketConsumer): 
     #
@@ -14,6 +14,94 @@ class ChatConsumer(WebsocketConsumer):
         group_queryset = current_user_django_obj.current_groups.all()
         return [str(group) for group in group_queryset] #returns list of group name friendly UNITCODES
         #UNITCODES MUST BE ALPHANUMERAL HYPHEN OR PERIOD
+    
+    def get_participating_users(event_dict):
+        existing_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type=event_dict['action'])
+        participating_users_array = []
+        for participating_user in existing_item.participating_users:
+            participating_users_array.append(
+                {'username' : participating_user.user.username, 'id' : participating_user.user.id, 'time' : participating_user.time}
+
+                )
+        return participating_users_array        
+
+    def update_or_create_notification_item(event_dict):
+        user_obj = StudentUser.objects.get(id=event_dict['logged_user_id'])
+        try:
+            existing_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type=event_dict['action'])
+            does_not_exist_flag = False
+            for participating_user in existing_item.participating_users:
+                if participating_user.user == user_obj:
+                    participating_user.time = event_dict['time']
+                    participating_user.save()
+                    does_not_exist_flag = True
+                    break
+            if (does_not_exist_flag):            
+                new_participation = ParticipatingUser(
+                    user = user_obj,
+                    time = event_dict['time']
+                )
+                new_participation.save()
+                existing_item.participating_users.add(new_participation)
+            existing_item.action_time = event_dict['time']
+            existing_item.save()
+        except:
+            topic_as_django_obj = Topic.objects.get(id=event_dict['topic_id'])
+            new_notification = NotificationItem(
+                topic_id = event_dict['topic_id'],
+                #comment_id = models.PositiveSmallIntegerField(blank=True)
+                action_type = event_dict['action'],
+                action_time = event_dict['time'],
+                og_topic_owner = topic_as_django_obj.poster
+                )
+
+            new_notification.save()
+            new_participation = ParticipatingUser(
+                user = StudentUser.objects.get(id=event_dict['logged_user_id']),
+                time = event_dict['time']
+                )
+            new_participation.save()
+            new_notification.participating_users.add(new_participation)
+            if event_dict['action'] == 'add_comment':
+                new_notification.og_comment_owner = StudentUser.objects.get(id=event_dict['logged_user_id'])
+            elif event_dict['action'] == 'comment_upvote' or event_dict['action'] == 'comment_downvote':
+                comment_django_obj = Comment.objects.get(id=event_dict['comment_id'])
+                new_notification.og_comment_owner = comment_django_obj.poster
+            new_notification.save()
+            topic_as_django_obj.history.add(new_notification)
+            topic_as_django_obj.save()
+
+    def update_topic(event_dict):
+        
+        topic = Topic.objects.get(id=event_dict['topic_id'])
+        if event_dict['action'] == 'topic_upvote':
+            topic_as_django_obj.upvotes += 1
+        else:
+            topic_as_django_obj.downvotes += 1
+        topic_as_django_obj.save()
+
+    def update_comment(event_dict):
+        comment_django_obj = Comment.objects.get(id=event['comment_id'])
+        if event_dict['action'] == 'comment_upvote':
+            comment_django_obj.upvotes += 1
+        else:
+            comment_django_obj.downvotes +=1
+        comment_django_obj.save()
+
+    def add_follow(event_dict):
+        actor = StudentUser.objects.get(id=event_dict['logged_user_id'])
+        topic_as_django_obj = Topic.objects.get(id=event_dict['topic_id'])
+        topic_as_django_obj.followed_by.add(actor)
+        topic_as_django_obj.save()
+
+    def get_topic_followers(event_dict):
+        topic_as_django_obj = Topic.objects.get(id=event_dict['topic_id'])
+        return [user.id for user in topic_as_django_obj.followed_by.all()]
+
+    def get_og_topic_poster(event_dict):
+        topic_as_django_obj = Topic.objects.get(id=event_dict['topic_id'])
+        return topic_as_django_obj.poster.id
+
 
     def connect(self):
 
@@ -21,17 +109,12 @@ class ChatConsumer(WebsocketConsumer):
 
         user_groups = self.get_user_groups()
         for group in user_groups:
-        #self.room_group_name = self.scope['url_route']['kwargs']['user_id']
-
 
         # Join room group
             async_to_sync(self.channel_layer.group_add)(
             group,
             self.channel_name
             )
-            #do i need async?
-            #self.accept()
-
 
     def disconnect(self, close_code):
         user_groups = self.get_user_groups()
@@ -50,118 +133,48 @@ class ChatConsumer(WebsocketConsumer):
         async_to_sync(self.channel_layer.group_send)(text_data_json['group_code'], text_data_json)
                                                 #GROUP CODE SHOULD COME FROM WEBSOCKET MESSAGE
 
-
-        # def get_last_20(self, event):
-        #     last_available_message_time = event['timeid']
-        #     last_20_messages = [obj.as_dict() for obj in Message.objects.filter(time__lte=last_available_message_time)[:20]]
-        #     if len(last_20_messages) > 0:
-        #         for item in last_20_messages:
-        #             message = {
-        #                 'type' : 'chat_message',
-        #                 'author': item['author'],
-        #                 'timeid' : item['time'],
-        #                 'content' : item['message']
-        #             }
-        #             self.send(text_data=json.dumps(message))
-
-
-        #__lte (double underscore lte is special django model queryset api syntax)
-        #self.send(text_data=json.dumps(Message.get_last_20(current_milli_time)))
-
         # Receive message from room group
     def websocket_message(self, event):
         # Send message to WebSocket
         #save message to DB
-        if event['action'] == 'topic_upvote':
+        if event['action'] == 'topic_upvote' or event['action'] == 'topic_downvote':
+            add_follow(event)
+            update_or_create_notification_item(event)
+
+            update_topic(event)
+            event['participating_users'] = get_participating_users(event)
+            event['followers'] = get_topic_followers(event)
+            event['og_topic_poster'] = get_og_topic_poster(event)
+
+            self.send(json.dumps(event))
+
+        elif event['action'] == 'comment_upvote' or event['action'] == 'comment_downvote':
+            add_follow(event)
+            update_or_create_notification_item(event)
+
+
             upvoter = StudentUser.objects.get(id=event['logged_user_id'])
-            topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
-            topic_as_django_obj.upvotes += 1
-            topic_as_django_obj.followed_by.add(upvoter)
-            topic_as_django_obj.save()
-            event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
-            event['og_topic_poster'] = topic_as_django_obj.poster.id
-            event['last_actor'] = upvoter.username
-            self.send(json.dumps(event))
-            try:
-                NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_upvote') #true if it exists
-                existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_upvote')
-                existing_item.action_value += 1
-                existing_item.action_time = event['time']
-                existing_item.last_actor = upvoter.username
-                existing_item.save()
-            except:
-                print('creating new notification item')
-                new_notification = NotificationItem(
-                    topic_id = event['topic_id'],
-                    #comment_id = models.PositiveSmallIntegerField(blank=True)
-                    action_type = 'topic_upvote',
-                    action_value = 1,
-                    action_time = event['time'],
-                    last_actor = upvoter.username,
-                    og_topic_owner = topic_as_django_obj.poster
-                    )
-                new_notification.save()
-                topic_as_django_obj.history.add(new_notification)
-                topic_as_django_obj.save()
-
-
-
-
-
-
-
-
-
-        elif event['action'] == 'topic_downvote':
-            downvoter = StudentUser.objects.get(id=event['logged_user_id'])
-            topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
-            topic_as_django_obj.downvotes += 1
-            topic_as_django_obj.followed_by.add(downvoter)
-            topic_as_django_obj.save()
-            event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
-            event['og_topic_poster'] = topic_as_django_obj.poster.id
-            event['last_actor'] = downvoter.username
-            self.send(json.dumps(event))
-            try:
-                existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='topic_downvote')
-                existing_item.action_value += 1
-                existing_item.action_time = event['time']
-                existing_item.last_actor = downvoter.username
-                existing_item.save()
-            except:
-                print('creating new notification item')
-                new_notification = NotificationItem(
-                    topic_id = event['topic_id'],
-                    #comment_id = models.PositiveSmallIntegerField(blank=True)
-                    action_type = 'topic_downvote',
-                    action_value = 1,
-                    action_time = event['time'],
-                    last_actor = downvoter.username,
-                    og_topic_owner = topic_as_django_obj.poster
-                    )
-                new_notification.save()
-                topic_as_django_obj.history.add(new_notification)
-                topic_as_django_obj.save()            
-
-
-
-
-
-
-
-
+            update_comment(event)
+            comment_django_obj = Comment.objects.get(id=event['comment_id'])
+            payload = comment_django_obj.as_dict()
+            payload['action'] = event['action']
+            payload['followers'] = get_topic_followers(event)
+            payload['og_comment_poster'] = comment_django_obj.poster.id
+            payload['participating_users'] = get_participating_users(event)
+            payload.update(event)
+            self.send(json.dumps(payload))
 
         elif event['action'] == 'add_comment':
-            comment_poster = StudentUser.objects.get(username=event['poster'])
-            topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
-            topic_as_django_obj.followed_by.add(comment_poster)
-            topic_as_django_obj.save()
+            add_follow(event)
+            update_or_create_notification_item(event)
+
+            comment_poster = StudentUser.objects.get(id=event['logged_user_id'])
 
             new_comment = Comment(
                 poster=comment_poster,
                 content=event['content'],
                 created_time=event['time'],
-                topic_owner=topic_as_django_obj,
+                topic_owner=Topic.objects.get(id=event['topic_id']),
                 upvotes=0,
                 downvotes=0
                 )
@@ -172,135 +185,9 @@ class ChatConsumer(WebsocketConsumer):
             event['upvotes'] = 0
             event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
             event['og_topic_poster'] = topic_as_django_obj.poster.id
-            event['last_actor'] = comment_poster.username
-
-
-            try:
-                NotificationItem.objects.get(topic_id=event['topic_id'], action_type='add_comment') #true if it exists
-                existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='add_comment')
-                existing_item.action_time = event['time']
-                existing_item.last_actor = comment_poster.username
-                if comment_poster not in existing_item.participating_users:
-                    existing_item.participating_users.add(comment_poster) 
-                existing_item.save()
-                event['participating_users'] = [user.id for user in existing_item.participating_users]
-            except:
-                print('creating new notification item')
-                new_notification = NotificationItem(
-                    topic_id = event['topic_id'],
-                    #comment_id = models.PositiveSmallIntegerField(blank=True)
-                    action_type = 'add_comment',
-                    action_value = 0,
-                    action_time = event['time'],
-                    last_actor = comment_poster.username,
-                    og_topic_owner = topic_as_django_obj.poster,
-                    og_comment_owner = comment_poster,
-                    participating_users = [comment_poster.id]
-                    )
-                new_notification.save()
-                event['participating_users'] = [user.id for user in new_notification.participating_users]
-                topic_as_django_obj.history.add(new_notification)
-                topic_as_django_obj.save()
-
-
+            event['participating_users'] = get_participating_users(event)
 
             self.send(json.dumps(event))
-
-
-
-
-
-
-
-
-
-
-
-        elif event['action'] == 'comment_upvote':
-            upvoter = StudentUser.objects.get(id=event['logged_user_id'])
-            comment_django_obj = Comment.objects.get(id=event['comment_id'])
-            comment_django_obj.upvotes += 1
-            topic_owner = comment_django_obj.topic_owner
-            topic_owner.followed_by.add(upvoter)
-            topic_owner.save()
-            comment_django_obj.save()
-            payload = comment_django_obj.as_dict()
-            payload['action'] = 'comment_upvote'
-            payload['followers'] = [user.id for user in topic_owner.followed_by.all()]
-            payload['og_comment_poster'] = comment_django_obj.poster.id
-            payload['last_actor'] = upvoter.username
-            payload.update(event)
-            self.send(json.dumps(payload))
-
-            try: 
-                NotificationItem.objects.get(topic_id=event['topic_id'], action_type='comment_upvote') #true if it exists
-                existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='comment_upvote')
-                existing_item.action_value += 1
-                existing_item.action_time = event['time']
-                existing_item.last_actor = upvoter.username
-                existing_item.save()
-            except:
-                print('creating new notification item')
-                new_notification = NotificationItem(
-                    topic_id = event['topic_id'],
-                    #comment_id = models.PositiveSmallIntegerField(blank=True)
-                    action_type = 'comment_upvote',
-                    action_value = 1,
-                    action_time = event['time'],
-                    last_actor = upvoter.username,
-                    og_topic_owner = topic_owner.poster,
-                    og_comment_owner = comment_django_obj.poster
-                    )
-                new_notification.save()
-                topic_owner.history.add(new_notification)
-                topic_owner.save()       
-
-
-
-
-
-
-#need to change last actor on model instance creation and on payload.....
-
-        elif event['action'] == 'comment_downvote':
-            downvoter = StudentUser.objects.get(id=event['logged_user_id'])            
-            comment_django_obj = Comment.objects.get(id=event['comment_id'])
-            comment_django_obj.downvotes += 1
-            topic_owner = comment_django_obj.topic_owner
-            topic_owner.followed_by.add(downvoter)
-            topic_owner.save()
-            comment_django_obj.save()
-            payload = comment_django_obj.as_dict()
-            payload['action'] = 'comment_downvote'
-            payload['followers'] = [user.id for user in topic_owner.followed_by.all()]
-            payload['og_comment_poster'] = comment_django_obj.poster.id
-            payload['last_actor'] = downvoter.username
-            payload.update(event)
-            self.send(json.dumps(payload))
-            try: 
-                NotificationItem.objects.get(topic_id=event['topic_id'], action_type='comment_downvote') #true if it exists
-                print('success')
-                existing_item = NotificationItem.objects.get(topic_id=event['topic_id'], action_type='comment_downvote')
-                existing_item.action_value += 1
-                existing_item.action_time = event['time']
-                existing_item.last_actor = downvoter.username
-                existing_item.save()
-            except:
-                print('creating new notification item')
-                new_notification = NotificationItem(
-                    topic_id = event['topic_id'],
-                    #comment_id = models.PositiveSmallIntegerField(blank=True)
-                    action_type = 'comment_downvote',
-                    action_value = 1,
-                    action_time = event['time'],
-                    last_actor = downvoter.username,
-                    og_topic_owner = topic_owner.poster,
-                    og_comment_owner = comment_django_obj.poster
-                    )
-                new_notification.save()
-                topic_owner.history.add(new_notification)
-                topic_owner.save()            
-
 
         elif event['action'] == 'add_topic':
             topic_poster = StudentUser.objects.get(id=event['user_id'])
