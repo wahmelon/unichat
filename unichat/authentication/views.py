@@ -99,7 +99,7 @@ class GetNotifications(APIView):
 				#some code representing paginated notification if use react infinite scroller
 				if notification: #not no notification
 					participating_users_array = []
-					for participating_user in notification.participating_users:
+					for participating_user in notification.participating_users.all():
 						participating_users_array.append(
 							{'username' : participating_user.user.username, 'id' : participating_user.user.id, 'time' : participating_user.time}
 
@@ -108,7 +108,8 @@ class GetNotifications(APIView):
 					"action_type" : notification.action_type,
 					"action_time" : notification.action_time,
 					"parent_topic_id" : notification.topic_id,
-					"participating_users" : participating_users_array
+					"participating_users" : participating_users_array,
+					"og_poster_name" : topic.poster.username
 					}
 
 					if notification.action_type == "add_comment" or notification.action_type == "topic_upvote" or notification.action_type == "topic_downvote":

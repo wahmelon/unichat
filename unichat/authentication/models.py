@@ -37,6 +37,24 @@ class NotificationItem(models.Model):
 
 	def __str__(self):
 		return self.action_type
+
+	def as_dict(self):
+
+		participating_users = self.participating_users.all()
+
+		notif_dict = {
+		'topic_id' : self.topic_id,
+		'og_topic_owner' : self.og_topic_owner,
+		'action_type' : self.action_type,
+		'participating_users' : [participating_user.user.username for participating_user in participating_users],
+		'action_time' : self.action_time,
+		}
+
+		if self.comment_id:
+			notif_dict['og_comment_owner'] = self.og_comment_owner
+			notif_dict['comment_id'] = self.comment_id
+		return notif_dict
+
 	class Meta:
 		ordering = ['-action_time']
 # Create your models here.

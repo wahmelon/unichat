@@ -254,7 +254,8 @@ class Feed extends Component {
     };
 
     handleNotifEvent(parsedData) { // create a notification whenever websocket reaceives msg, also can be used in initial componentdidmount get recent notifs
-       
+
+        console.log()   
         const filteredArray = parsedData.participating_users.filter(user_dict => user_dict.id != this.state.user_id) 
             //takes out user, who should not be receiving notifs for their own actions
 
@@ -280,6 +281,7 @@ class Feed extends Component {
                 //pass
             };
 
+            console.log('new notif over ws: ', new_notif);
             const new_array = this.state.notification_data_store;
             new_array.push(new_notif);
 
@@ -306,6 +308,7 @@ class Feed extends Component {
     }
 
     aggregateNotifEvents(notif_array) {
+        console.log('notif array at start of aggregate notif events: ', notif_array);
         const output_array = [];
         for (const notif of notif_array) {
             var idToFind;
@@ -332,6 +335,7 @@ class Feed extends Component {
 
                             //re-evaluating most recent user acting
                             const mostRecentUser = this.mostRecentActor(output_array[i].participating_users);
+                            console.log('most recent user: ', mostRecentUser);
                             /////// NEEDS MORE INTELLIGENT SORTING BY TIME. IS NOW MOST RECENT TIME IN PARTICIPATING USERS array, last actor 
                             //is this too.
 
@@ -347,7 +351,7 @@ class Feed extends Component {
 
                             //finding most recent user acting
                             const mostRecentUser = this.mostRecentActor(output_array[i].participating_users);
-
+                            console.log('most recent user: ', mostRecentUser);
                             output_array[i]['action_time'] = mostRecentUser.time;
                             output_array[i]['last_actor'] = mostRecentUser.username;
 
@@ -359,6 +363,7 @@ class Feed extends Component {
                 }
 
                 if (topicNotExistFlag) {
+                    console.log('creating notif');
                     //create notification for easy transform to text in render menulist
                     // topic votes only matter if you are topic owner. if topic owner, add three actions, if not , only add add comments
                     if (notif.og_topic_owner == this.state.user_id) {
@@ -367,7 +372,9 @@ class Feed extends Component {
                             'action_array' : [notif.action_type],
                             'parent_topic_id' : notif.parent_topic_id,
                             'participating_users' : notif.participating_users,
-                            'og_poster_name' : notif.og_poster_name
+                            'og_poster_name' : notif.og_poster_name,
+                            'action_time' : notif.participating_users[0].time, //should only be one 
+                            'last_actor' : notif.participating_users[0].username
 
                         });
                     } else if (notif.action_type == 'add_comment') { 
@@ -377,7 +384,9 @@ class Feed extends Component {
                             'action_array' : [notif.action_type],
                             'parent_topic_id' : notif.parent_topic_id,
                             'participating_users' : notif.participating_users,
-                            'og_poster_name' : notif.og_poster_name
+                            'og_poster_name' : notif.og_poster_name,
+                            'action_time' : notif.participating_users[0].time, //should only be one 
+                            'last_actor' : notif.participating_users[0].username
 
 
                         });
@@ -404,6 +413,7 @@ class Feed extends Component {
                                 output_array[i].action_array.push(notif.action_type);
                             }
                             const mostRecentUser = this.mostRecentActor(output_array[i].participating_users);
+                            console.log('most recent user: ', mostRecentUser);
 
                             output_array[i]['action_time'] = mostRecentUser.time;
                             output_array[i]['last_actor'] = mostRecentUser.username;
@@ -418,7 +428,9 @@ class Feed extends Component {
                             'action_array' : [notif.action_type],
                             'parent_topic_id' : notif.parent_topic_id,
                             'participating_users' : notif.participating_users,
-                            'og_poster_name' : notif.og_poster_name
+                            'og_poster_name' : notif.og_poster_name,
+                            'action_time' : notif.participating_users[0].time,
+                            'last_actor' : notif.participating_users[0].username
 
                         });
                     //create notification for easy transform to text in render menulist
@@ -431,6 +443,7 @@ class Feed extends Component {
     };
 
     groupedNotificationsToText(grouped_array) {
+        console.log('grouped_array at start of groupedNotificationsToText: ', grouped_array);
         const output_array = [];
 
         for (const notification of grouped_array) {
