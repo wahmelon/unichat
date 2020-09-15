@@ -197,12 +197,12 @@ class Feed extends Component {
         this.iterateThroughGroupCodes = this.iterateThroughGroupCodes.bind(this);
         this.toggleIdentity = this.toggleIdentity.bind(this);
         this.handleNewTopic = this.handleNewTopic.bind(this);
-        this.handleNotification = this.handleNotification.bind(this);
+        this.handleNotifEvent = this.handleNotifEvent.bind(this);
         this.inspectTopicOfNotification = this.inspectTopicOfNotification.bind(this);
 
         this.callbackDictionaryPopulatedFromTopicLeafsForWebsocketCallbackDictionary = {
             'add_new_topic' : this.handleNewTopic,
-            'new_notification' : this.handleNotification
+            'new_notification' : this.handleNotifEvent
         }
     }
 
@@ -253,14 +253,19 @@ class Feed extends Component {
         }
     };
 
-    handleNotification(parsedData) { // create a notification whenever websocket reaceives msg, also can be used in initial componentdidmount get recent notifs
-        if (parsedData.followers.includes(this.state.user_id)) {
-            console.log('running handleNotification');
+    handleNotifEvent(parsedData) { // create a notification whenever websocket reaceives msg, also can be used in initial componentdidmount get recent notifs
+       
+        const filteredArray = parsedData.participating_users.filter(user_dict => user_dict.id != this.state.user_id) 
+            //takes out user, who should not be receiving notifs for their own actions
+
+        if (parsedData.followers.includes(this.state.user_id) && filteredArray.length > 0) {
+
+            console.log('running handle notif events');
             const new_notif = {
                 'action_type' : parsedData.action,
                 'action_time' : parsedData.time,
                 'parent_topic_id' : parsedData.topic_id,
-                'participating_users' : parsedData.participating_users
+                'participating_users' : filteredArray
             };
 
             if (parsedData.action == 'add_comment' || parsedData.action == 'topic_upvote' || parsedData.action == 'topic_downvote') { //concerns a topic
@@ -279,7 +284,7 @@ class Feed extends Component {
 
             this.setState({notification_data_store:new_array});
             
-            const notifs_as_text = this.transformNotifications(new_array);
+            const notifs_as_text = this.aggregateNotifEvents(new_array);
             this.setState({notifications_as_text:notifs_as_text});
             console.log('notifs as text in state: ', this.state.notifications_as_text);
         } else { //user is in group notif intended for but not following
@@ -287,23 +292,32 @@ class Feed extends Component {
         }
     };
 
-    transformNotifications(notif_array) {
+    aggregateNotifEvents(notif_array) {
         const output_array = [];
         for (const notif of notif_array) {
             var idToFind;
             var TopicNotifDoesNotExist = true;
             if (notif.topic_id) { //concerns topic (add comment, topic up/downvote)
                 idToFind = notif.topic_id;
+
+                //searching for existing event to aggregate
                 for (var i in output_array) {
-                    if (output_array[i].topic_id == idToFind) { //notification already exists
+                    if (output_array[i].topic_id == idToFind) { //event already exists
                         TopicNotifDoesNotExist = false;
-                        //modify existing notification
+                        
+
+                        //add to existing event
                         if (notif.og_topic_owner == this.state.user_id) {
-                            oldNumber = output_array[i].number_of_actions
-                            output_array[i].number_of_actions = oldNumber + notif.action_value;
+                            const oldParticipatingUsers = output_array[i].participating_users
+                            const concatArray = oldParticipatingUsers.concat(notif.participating_users);
+                            output_array[i].participating_users = concatArray;
+
                             if (!output_array[i].action_array.includes(notif.action_type)) {
                                 output_array[i].action_array.push(notif.action_type);
                             }
+
+                            /////// NEEDS MORE INTELLIGENT SORTING BY TIME. IS NOW MOST RECENT TIME IN PARTICIPATING USERS array, last actor 
+                            //is this too.
                             if (output_array[i].action_time < notif.action_time) {
                                 output_array[i].action_time = notif.action_time;
                                 output_array[i].last_actor = notif.last_actor;
@@ -356,7 +370,7 @@ class Feed extends Component {
                 }
 
             } else { //if (notif.comment_id)  - concerns comment (comment up/downvote)
-                var idToFind = notif.comment_id; 
+                var idToFind = notif.comment_id; //searching for an existing event to modify rather than create
                 var CommentNotifDoesNotExist = true;
                 for (var i in output_array) {
                     if (output_array[i].comment_id == idToFind) { //notification already exists
@@ -534,7 +548,7 @@ class Feed extends Component {
 
                 console.log('axios updated notif data store state: ', this.state.notification_data_store);
                 
-                const notifs_as_text = this.transformNotifications(newState);
+                const notifs_as_text = this.aggregateNotifEvents(newState);
                 this.setState({notifications_as_text:notifs_as_text});
                 console.log('notifs as text in state: ', this.state.notifications_as_text);
 

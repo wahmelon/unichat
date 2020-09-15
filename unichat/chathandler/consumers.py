@@ -32,7 +32,7 @@ class ChatConsumer(WebsocketConsumer):
             does_not_exist_flag = False
             for participating_user in existing_item.participating_users:
                 if participating_user.user == user_obj:
-                    participating_user.time = event_dict['time']
+                    participating_user.time = event_dict['time']#updates time field to most recent for that user
                     participating_user.save()
                     does_not_exist_flag = True
                     break
@@ -43,7 +43,7 @@ class ChatConsumer(WebsocketConsumer):
                 )
                 new_participation.save()
                 existing_item.participating_users.add(new_participation)
-            existing_item.action_time = event_dict['time']
+            existing_item.action_time = event_dict['time'] #update most recent so notif items can be sorted by time
             existing_item.save()
         except:
             topic_as_django_obj = Topic.objects.get(id=event_dict['topic_id'])
@@ -62,6 +62,7 @@ class ChatConsumer(WebsocketConsumer):
                 )
             new_participation.save()
             new_notification.participating_users.add(new_participation)
+            # below: notifs relating to comment require extra fields, optional on the notificationitem model
             if event_dict['action'] == 'add_comment':
                 new_notification.og_comment_owner = StudentUser.objects.get(id=event_dict['logged_user_id'])
             elif event_dict['action'] == 'comment_upvote' or event_dict['action'] == 'comment_downvote':
@@ -152,8 +153,6 @@ class ChatConsumer(WebsocketConsumer):
             add_follow(event)
             update_or_create_notification_item(event)
 
-
-            upvoter = StudentUser.objects.get(id=event['logged_user_id'])
             update_comment(event)
             comment_django_obj = Comment.objects.get(id=event['comment_id'])
             payload = comment_django_obj.as_dict()
