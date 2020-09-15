@@ -99,10 +99,6 @@ class ChatConsumer(WebsocketConsumer):
         topic_as_django_obj = Topic.objects.get(id=event_dict['topic_id'])
         return [user.id for user in topic_as_django_obj.followed_by.all()]
 
-    def get_og_topic_poster(event_dict):
-        topic_as_django_obj = Topic.objects.get(id=event_dict['topic_id'])
-        return topic_as_django_obj.poster.id
-
 
     def connect(self):
 
@@ -143,9 +139,11 @@ class ChatConsumer(WebsocketConsumer):
             update_or_create_notification_item(event)
 
             update_topic(event)
+            topic_as_django_obj = Topic.objects.get(id=event_dict['topic_id'])
             event['participating_users'] = get_participating_users(event)
             event['followers'] = get_topic_followers(event)
-            event['og_topic_poster'] = get_og_topic_poster(event)
+            event['og_topic_poster'] = topic_as_django_obj.poster.id
+            event['og_poster_name'] = topic_as_django_obj.poster.username
 
             self.send(json.dumps(event))
 
@@ -159,6 +157,7 @@ class ChatConsumer(WebsocketConsumer):
             payload['action'] = event['action']
             payload['followers'] = get_topic_followers(event)
             payload['og_comment_poster'] = comment_django_obj.poster.id
+            payload['og_poster_name'] = comment_django_obj.poster.username
             payload['participating_users'] = get_participating_users(event)
             payload.update(event)
             self.send(json.dumps(payload))
@@ -167,13 +166,14 @@ class ChatConsumer(WebsocketConsumer):
             add_follow(event)
             update_or_create_notification_item(event)
 
+            topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
             comment_poster = StudentUser.objects.get(id=event['logged_user_id'])
 
             new_comment = Comment(
                 poster=comment_poster,
                 content=event['content'],
                 created_time=event['time'],
-                topic_owner=Topic.objects.get(id=event['topic_id']),
+                topic_owner=topic_as_django_obj,
                 upvotes=0,
                 downvotes=0
                 )
@@ -184,6 +184,7 @@ class ChatConsumer(WebsocketConsumer):
             event['upvotes'] = 0
             event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
             event['og_topic_poster'] = topic_as_django_obj.poster.id
+            event['og_poster_name'] = topic_as_django_obj.poster.username
             event['participating_users'] = get_participating_users(event)
 
             self.send(json.dumps(event))

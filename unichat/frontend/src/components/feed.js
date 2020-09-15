@@ -265,7 +265,8 @@ class Feed extends Component {
                 'action_type' : parsedData.action,
                 'action_time' : parsedData.time,
                 'parent_topic_id' : parsedData.topic_id,
-                'participating_users' : filteredArray
+                'participating_users' : filteredArray,
+                'og_poster_name' : parsedData.og_poster_name
             };
 
             if (parsedData.action == 'add_comment' || parsedData.action == 'topic_upvote' || parsedData.action == 'topic_downvote') { //concerns a topic
@@ -292,44 +293,64 @@ class Feed extends Component {
         }
     };
 
+    mostRecentActor(participating_users_array) {
+        var mostRecentTime = 0;
+        var mostRecentActor;
+        for (var i in participating_users_array) {
+            if (participating_users_array[i].time > mostRecentTime) {
+                mostRecentTime = participating_users_array[i].time;
+                mostRecentActor = participating_users_array[i];
+            }
+        }
+        return mostRecentActor;
+    }
+
     aggregateNotifEvents(notif_array) {
         const output_array = [];
         for (const notif of notif_array) {
             var idToFind;
-            var TopicNotifDoesNotExist = true;
+            var topicNotExistFlag = true;
             if (notif.topic_id) { //concerns topic (add comment, topic up/downvote)
                 idToFind = notif.topic_id;
 
                 //searching for existing event to aggregate
                 for (var i in output_array) {
                     if (output_array[i].topic_id == idToFind) { //event already exists
-                        TopicNotifDoesNotExist = false;
+                        topicNotExistFlag = false;
                         
 
-                        //add to existing event
+                        //adding participating users
                         if (notif.og_topic_owner == this.state.user_id) {
                             const oldParticipatingUsers = output_array[i].participating_users
                             const concatArray = oldParticipatingUsers.concat(notif.participating_users);
                             output_array[i].participating_users = concatArray;
 
+                            //adding action types
                             if (!output_array[i].action_array.includes(notif.action_type)) {
                                 output_array[i].action_array.push(notif.action_type);
                             }
 
+                            //re-evaluating most recent user acting
+                            const mostRecentUser = this.mostRecentActor(output_array[i].participating_users);
                             /////// NEEDS MORE INTELLIGENT SORTING BY TIME. IS NOW MOST RECENT TIME IN PARTICIPATING USERS array, last actor 
                             //is this too.
-                            if (output_array[i].action_time < notif.action_time) {
-                                output_array[i].action_time = notif.action_time;
-                                output_array[i].last_actor = notif.last_actor;
-                            }
+
+                            output_array[i]['action_time'] = mostRecentUser.time;
+                            output_array[i]['last_actor'] = mostRecentUser.username;
+
                         } else if (notif.action_type == 'add_comment') { //add comment only notif relevant if not topic owner
-                            oldNumber = output_array[i].number_of_actions
-                            output_array[i].number_of_actions = oldNumber + notif.action_value;
-                            if (output_array[i].action_time < notif.action_time) { //should be as is a more recent notif however good to check incase some backend lag?
-                                output_array[i].action_time = notif.action_time;
-                                output_array[i].last_actor = notif.last_actor;
-                                output_array[i].participating_users = notif.participating_users; //should replace old array with new array, probably with more users
-                            }
+                            //adding participating users
+
+                            const oldParticipatingUsers = output_array[i].participating_users
+                            const concatArray = oldParticipatingUsers.concat(notif.participating_users);
+                            output_array[i].participating_users = concatArray;
+
+                            //finding most recent user acting
+                            const mostRecentUser = this.mostRecentActor(output_array[i].participating_users);
+
+                            output_array[i]['action_time'] = mostRecentUser.time;
+                            output_array[i]['last_actor'] = mostRecentUser.username;
+
                         } else {
                             //pass
                         }
@@ -337,18 +358,16 @@ class Feed extends Component {
                     }
                 }
 
-                if (TopicNotifDoesNotExist) {
+                if (topicNotExistFlag) {
                     //create notification for easy transform to text in render menulist
                     // topic votes only matter if you are topic owner. if topic owner, add three actions, if not , only add add comments
                     if (notif.og_topic_owner == this.state.user_id) {
                         output_array.push({
                             'topic_id' : notif.topic_id,
                             'action_array' : [notif.action_type],
-                            'number_of_actions':notif.action_value,
-                            'action_time':notif.action_time,
-                            'last_actor' : notif.last_actor,
-                            'user_owns' : true,
-                            'parent_topic_id' : notif.parent_topic_id
+                            'parent_topic_id' : notif.parent_topic_id,
+                            'participating_users' : notif.participating_users,
+                            'og_poster_name' : notif.og_poster_name
 
                         });
                     } else if (notif.action_type == 'add_comment') { 
@@ -356,12 +375,10 @@ class Feed extends Component {
                         output_array.push({
                             'topic_id' : notif.topic_id,
                             'action_array' : [notif.action_type],
-                            'number_of_actions':notif.action_value,
-                            'action_time':notif.action_time,
-                            'last_actor' : notif.last_actor,
-                            'user_owns' : false,
                             'parent_topic_id' : notif.parent_topic_id,
-                            'participating_users' : notif.participating_users
+                            'participating_users' : notif.participating_users,
+                            'og_poster_name' : notif.og_poster_name
+
 
                         });
                     } else{
@@ -376,15 +393,20 @@ class Feed extends Component {
                     if (output_array[i].comment_id == idToFind) { //notification already exists
                         CommentNotifDoesNotExist = false;
                         if (notif.og_comment_owner == this.state.user_id) {
-                            oldNumber = output_array[i].number_of_actions
-                            output_array[i].number_of_actions = oldNumber + notif.action_value;                            
+                            //modifying participating users
+
+                            const oldParticipatingUsers = output_array[i].participating_users
+                            const concatArray = oldParticipatingUsers.concat(notif.participating_users);
+                            output_array[i].participating_users = concatArray;
+
+                            //modifying action                          
                             if (!output_array[i].action_array.includes(notif.action_type)) {
                                 output_array[i].action_array.push(notif.action_type);
                             }
-                            if (output_array[i].action_time < notif.action_time) {
-                                output_array[i].action_time = notif.action_time;
-                                output_array[i].last_actor = notif.last_actor;
-                            }
+                            const mostRecentUser = this.mostRecentActor(output_array[i].participating_users);
+
+                            output_array[i]['action_time'] = mostRecentUser.time;
+                            output_array[i]['last_actor'] = mostRecentUser.username;
                         } else {
                             //pass , comment up/downvotes not relevant to anyone except comment owner
                         }
@@ -394,11 +416,9 @@ class Feed extends Component {
                     output_array.push({
                             'comment_id' : notif.comment_id,
                             'action_array' : [notif.action_type],
-                            'number_of_actions':notif.action_value,
-                            'action_time':notif.action_time,
-                            'last_actor' : notif.last_actor,
-                            'user_owns' : true, //has to be true to get past initial parsedData -> notification item
-                            'parent_topic_id' : notif.parent_topic_id
+                            'parent_topic_id' : notif.parent_topic_id,
+                            'participating_users' : notif.participating_users,
+                            'og_poster_name' : notif.og_poster_name
 
                         });
                     //create notification for easy transform to text in render menulist
@@ -419,40 +439,14 @@ class Feed extends Component {
             var owner;
             var item;
 
-            if (notification.last_actor == this.state.username) {
-                continue // breaks out of current for loop iteration onto the next....
-                //contentious - prevents the user being alerted if they were the one creating the notification..... would this prevent the user being notified if they
-                //were the last people after many people?
-                //probably fine until i find a better solution. only for situation where user acts on their own followed topic before checking notifs?
+            //setting actors
 
-                //potentiall add code to change last_actor to a place holder "a user" 
-            }
-
-            // setting actors
-            if (notification.participating_users) { //inolves addition of comments, only reason this property would be there
-                const numberOfUsersCommenting = notification.participating_users.length
-                if (notification.participating_users.includes(this.state.user_id)) {
-                    numberOfUsersCommenting--;//should decrement
-                    if (numberOfUsersCommenting == 0 && notification.number_of_actions == 0) {
-                        continue //breaks out of the current iteration, this means that the user is only one to comment on a followed topic, no point adding info
-                    }
-                    numberTotalActions = notification.number_of_actions + numberOfUsers
-                    if (notification.number_of_actions == 1) {
-                        actors = `${notification.last_actor} has`;
-                    } else if (notification.number_of_actions == 2) {
-                        actors = `${notification.last_actor} and 1 other user have`;
-                    } else {
-                        actors = `${notification.last_actor} and ${notification.number_of_actions - 1} other users have`;
-                    }   
-                }             
-            } else { //doesn't relate to add comment, all other actions can only be performed by a user once so action value is applicable for workign out numberof people doing
-                if (notification.number_of_actions == 1) {
-                    actors = `${notification.last_actor} has`;
-                } else if (notification.number_of_actions == 2) {
-                    actors = `${notification.last_actor} and 1 other user have`;
-                } else {
-                    actors = `${notification.last_actor} and ${notification.number_of_actions - 1} other users have`;
-                }                
+            if (notification.participating_users.length == 1) {
+                actors = `${notification.last_actor} has`;
+            } else if (notification.participating_users.length == 2) {
+                actors = `${notification.last_actor} and 1 other user have`;
+            } else {
+                actors = `${notification.last_actor} and ${notification.participating_users.length} other users have`
             }
 
             //setting actions
@@ -468,7 +462,7 @@ class Feed extends Component {
                 
                 action_types = 'commented and voted on'
 
-            } else if (notification.action_array.includes('topic_upvote') || notification.action_array.includes('topic_downvote')) { //only topic votes
+            } else if (notification.action_array.includes('topic_upvote') || notification.action_array.includes('topic_downvote')) { //only topic_votes OR topic_comment left
                     action_types = 'voted on'
             } else {
                 action_types = 'commented on'
@@ -476,14 +470,10 @@ class Feed extends Component {
 
             //setting owner
 
-            if (notification.user_owns) {
+            if (notification.og_poster_name == this.state.username) {
                 owner = 'your'
             } else {
-                if (notification.comment_id) {
-                    owner = `${notification.og_comment_owner}'s`
-                } else { //must concern topic...
-                    owner = 'a followed'//`${notification.og_topic_owner}'s`            -- this data as a username not yet being passed from consumer.py, only id...
-                }
+               owner = `${notification.og_poster_name}'s`
             }
 
             //setting item
