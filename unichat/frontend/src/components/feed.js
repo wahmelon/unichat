@@ -255,18 +255,20 @@ class Feed extends Component {
 
     handleNotifEvent(parsedData) { // create a notification whenever websocket reaceives msg, also can be used in initial componentdidmount get recent notifs
 
-        console.log()   
-        const filteredArray = parsedData.participating_users.filter(user_dict => user_dict.id != this.state.user_id) 
+        // const filteredArray = parsedData.participating_users.filter(user_dict => user_dict.id != this.state.user_id)
+
             //takes out user, who should not be receiving notifs for their own actions
 
-        if (parsedData.followers.includes(this.state.user_id) && filteredArray.length > 0) {
+        // if (parsedData.followers.includes(this.state.user_id) && filteredArray.length > 0) {
+        if (parsedData.followers.includes(this.state.user_id)) {
+
 
             console.log('running handle notif events');
             const new_notif = {
                 'action_type' : parsedData.action,
                 'action_time' : parsedData.time,
                 'parent_topic_id' : parsedData.topic_id,
-                'participating_users' : filteredArray,
+                'participating_users' : parsedData.participating_users,
                 'og_poster_name' : parsedData.og_poster_name
             };
 
@@ -311,6 +313,13 @@ class Feed extends Component {
         console.log('notif array at start of aggregate notif events: ', notif_array);
         const output_array = [];
         for (const notif of notif_array) {
+
+            const filteredArray = notif.participating_users.filter(user_dict => user_dict.id != this.state.user_id); //filters array for the current user.
+
+            if (filteredArray.length == 0) {
+                continue //should skip this loop iteration
+            }
+            notif.participating_users = filteredArray;
             var idToFind;
             var topicNotExistFlag = true;
             if (notif.topic_id) { //concerns topic (add comment, topic up/downvote)

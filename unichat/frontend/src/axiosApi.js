@@ -19,10 +19,16 @@ axiosInstance.interceptors.response.use(
     response => response,
     error => {
         const originalRequest = error.config;
+        console.log('error response status: ', error.response.status);
+        console.log('original request url: ', originalRequest.url);
+        console.log('base url: ', baseURL);
 
         // Prevent infinite loops
-        if (error.response.status === 401 && originalRequest.url === baseURL+'token/refresh/') {
-            window.location.href = '/'; //used to be "/login/"
+        // if (error.response.status === 401 && originalRequest.url === baseURL+'token/refresh/') {
+        if (error.response.status === 401 && originalRequest.url === '/token/refresh/') {
+
+            window.location.href = '/'; //used to be "/login/" //should i force reload() ?
+            console.log('rejected - ms');
             return Promise.reject(error);
         }
 

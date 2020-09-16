@@ -28,8 +28,10 @@ class ChatConsumer(WebsocketConsumer):
 
     def update_or_create_notification_item(self, event_dict):
         user_obj = StudentUser.objects.get(id=event_dict['logged_user_id'])
+        print('user_obj: ', user_obj.username)
         try:
             existing_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type=event_dict['action'])
+            print('existing item: ', existing_item)
             does_not_exist_flag = False
             for participating_user in existing_item.participating_users.all():
                 if participating_user.user == user_obj:
@@ -178,50 +180,52 @@ class ChatConsumer(WebsocketConsumer):
             self.send(json.dumps(payload))
 
         elif event['action'] == 'add_comment':
-            self.add_follow(event)
-            self.update_or_create_notification_item(event)
+            if not Comment.objects.get(id=event['comment_id']): #if comment is not duplicate it should be !undefined ie true
+                self.add_follow(event)
+                self.update_or_create_notification_item(event)
 
-            topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
-            comment_poster = StudentUser.objects.get(id=event['logged_user_id'])
+                topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
+                comment_poster = StudentUser.objects.get(id=event['logged_user_id'])
 
-            new_comment = Comment(
-                poster=comment_poster,
-                content=event['content'],
-                created_time=event['time'],
-                topic_owner=topic_as_django_obj,
-                upvotes=0,
-                downvotes=0
-                )
-            new_comment.save()
-            #adding fields to event
-            event['comment_id'] = new_comment.id
-            event['downvotes'] = 0
-            event['upvotes'] = 0
-            event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
-            event['og_topic_poster'] = topic_as_django_obj.poster.id
-            event['og_poster_name'] = topic_as_django_obj.poster.username
-            event['participating_users'] = self.get_participating_users(event)
+                new_comment = Comment(
+                    poster=comment_poster,
+                    content=event['content'],
+                    created_time=event['time'],
+                    topic_owner=topic_as_django_obj,
+                    upvotes=0,
+                    downvotes=0
+                    )
+                new_comment.save()
+                #adding fields to event
+                event['comment_id'] = new_comment.id
+                event['downvotes'] = 0
+                event['upvotes'] = 0
+                event['followers'] = [user.id for user in topic_as_django_obj.followed_by.all()]
+                event['og_topic_poster'] = topic_as_django_obj.poster.id
+                event['og_poster_name'] = topic_as_django_obj.poster.username
+                event['participating_users'] = self.get_participating_users(event)
 
             self.send(json.dumps(event))
 
         elif event['action'] == 'add_topic':
-            topic_poster = StudentUser.objects.get(id=event['user_id'])
-            new_topic = Topic(
-                audience=Group.objects.get(group_code=event['group_code']),
-                content=event['content'],
-                created_time=event['created_time'],
-                poster=topic_poster,
-                posted_as_anonymous = event['posted_as_anonymous'],
-                upvotes=0,
-                downvotes=0
-                )
-            new_topic.save()
-            new_topic.followed_by.add(topic_poster)
-            #adding fields to event
-            event['topic_id'] = new_topic.id
-            event['downvotes'] = 0
-            event['upvotes'] = 0
-            self.send(json.dumps(event))
+            if not Topic.objects.get(id=event['topic_id']): #if comment is not duplicate it should be !undefined ie true
+                topic_poster = StudentUser.objects.get(id=event['user_id'])
+                new_topic = Topic(
+                    audience=Group.objects.get(group_code=event['group_code']),
+                    content=event['content'],
+                    created_time=event['created_time'],
+                    poster=topic_poster,
+                    posted_as_anonymous = event['posted_as_anonymous'],
+                    upvotes=0,
+                    downvotes=0
+                    )
+                new_topic.save()
+                new_topic.followed_by.add(topic_poster)
+                #adding fields to event
+                event['topic_id'] = new_topic.id
+                event['downvotes'] = 0
+                event['upvotes'] = 0
+                self.send(json.dumps(event))
 
 
 
