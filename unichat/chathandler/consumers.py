@@ -16,28 +16,49 @@ class ChatConsumer(WebsocketConsumer):
         #UNITCODES MUST BE ALPHANUMERAL HYPHEN OR PERIOD
     
     def get_participating_users(self, event_dict):
-        existing_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type=event_dict['action'])
+        existing_item = None
+        if event_dict['action'] == 'comment_upvote' or event_dict['action'] == 'comment_downvote':
+            existing_item = NotificationItem.objects.get(comment_id=event_dict['comment_id'], action_type=event_dict['action'])
+        else:
+            existing_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type=event_dict['action'])
         participating_users_array = []
         for participating_user in existing_item.participating_users.all():
             participating_users_array.append(
                 {'username' : participating_user.user.username, 'id' : participating_user.user.id, 'time' : participating_user.time}
 
                 )
-        print('running get_participating_users: ', participating_users_array)
         return participating_users_array        
 
     def update_or_create_notification_item(self, event_dict):
         user_obj = StudentUser.objects.get(id=event_dict['logged_user_id'])
-        print('user_obj: ', user_obj.username)
-        try:
-            existing_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type=event_dict['action'])
-            print('existing item: ', existing_item)
+        notification_exists = False
+        try: 
+            if event_dict['action'] == 'comment_upvote' or event_dict['action'] == 'comment_downvote': #concerns comment, more specific
+                existing_item = NotificationItem.objects.get(comment_id=event_dict['comment_id'], action_type=event_dict['action'])
+                notification_exists = True
+            else:
+                print('attempting to find...')
+                for notification in NotificationItem.objects.all():
+                    print('existing notification topic id:', notification.topic_id)
+                    print('existing notification action: ', notification.action_type)
+                    print('query params: ', event_dict['topic_id'], event_dict['action'])
+                existing_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type=event_dict['action'])
+                notification_exists = True
+        except:
+            pass
+
+        if notification_exists:
+            print('notification exists')
+            existing_item = None
+            if event_dict['comment_id']: #concerns comment, more specific
+                existing_item = NotificationItem.objects.get(comment_id=event_dict['comment_id'], action_type=event_dict['action'])
+            else:
+                existing_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type=event_dict['action'])
             does_not_exist_flag = False
             for participating_user in existing_item.participating_users.all():
                 if participating_user.user == user_obj:
                     participating_user.time = event_dict['time']#updates time field to most recent for that user
                     participating_user.save()
-                    print('updating existing participation as: ', participating_user.user, participating_user.time)
                     does_not_exist_flag = True
                     break
             if (does_not_exist_flag):            
@@ -46,16 +67,14 @@ class ChatConsumer(WebsocketConsumer):
                     time = event_dict['time']
                 )
                 new_participation.save()
-                print('creating new partcipation item: ', new_participation.user, new_participation.time)
                 existing_item.participating_users.add(new_participation)
             existing_item.action_time = event_dict['time'] #update most recent so notif items can be sorted by time
             existing_item.save()
-            print('updated notif object: ', existing_item.as_dict() )
-        except:
+        else:
+            print('notification doesnt exist')
             topic_as_django_obj = Topic.objects.get(id=event_dict['topic_id'])
             new_notification = NotificationItem(
                 topic_id = event_dict['topic_id'],
-                #comment_id = models.PositiveSmallIntegerField(blank=True)
                 action_type = event_dict['action'],
                 action_time = event_dict['time'],
                 og_topic_owner = topic_as_django_obj.poster
@@ -67,52 +86,46 @@ class ChatConsumer(WebsocketConsumer):
                 time = event_dict['time']
                 )
             new_participation.save()
-            print('creating new partcipation item: ', new_participation.user, new_participation.time)
             new_notification.participating_users.add(new_participation)
             # below: notifs relating to comment require extra fields, optional on the notificationitem model
             if event_dict['action'] == 'add_comment':
                 new_notification.og_comment_owner = StudentUser.objects.get(id=event_dict['logged_user_id'])
+                new_comment = Comment.objects.get(content=event_dict['content'])
+                new_notification.comment_id = new_comment.id
             elif event_dict['action'] == 'comment_upvote' or event_dict['action'] == 'comment_downvote':
                 comment_django_obj = Comment.objects.get(id=event_dict['comment_id'])
                 new_notification.og_comment_owner = comment_django_obj.poster
+                new_notification.comment_id = event_dict['comment_id']
             new_notification.save()
-            print('created new notification object: ', new_notification.as_dict())
             topic_as_django_obj.history.add(new_notification)
             topic_as_django_obj.save()
 
     def update_topic(self, event_dict):
         
         topic_as_django_obj = Topic.objects.get(id=event_dict['topic_id'])
-        print('before update topic: ', topic_as_django_obj.as_dict())
         if event_dict['action'] == 'topic_upvote':
             topic_as_django_obj.upvotes += 1
         else:
             topic_as_django_obj.downvotes += 1
         topic_as_django_obj.save()
-        print('after update topic: ', topic_as_django_obj.as_dict())
 
     def update_comment(self, event_dict):
         comment_django_obj = Comment.objects.get(id=event_dict['comment_id'])
-        print('before: ', comment_django_obj.as_dict())
 
         if event_dict['action'] == 'comment_upvote':
             comment_django_obj.upvotes += 1
         else:
             comment_django_obj.downvotes +=1
         comment_django_obj.save()
-        print('after: ', comment_django_obj.as_dict())
 
     def add_follow(self, event_dict):
         actor = StudentUser.objects.get(id=event_dict['logged_user_id'])
         topic_as_django_obj = Topic.objects.get(id=event_dict['topic_id'])
-        print('before add follow: ', topic_as_django_obj.as_dict())
         topic_as_django_obj.followed_by.add(actor)
         topic_as_django_obj.save()
-        print('after add follow: ', topic_as_django_obj.as_dict())
 
     def get_topic_followers(self, event_dict):
         topic_as_django_obj = Topic.objects.get(id=event_dict['topic_id'])
-        print('getting followers: ', [user.id for user in topic_as_django_obj.followed_by.all()])
         return [user.id for user in topic_as_django_obj.followed_by.all()]
 
 
@@ -150,8 +163,9 @@ class ChatConsumer(WebsocketConsumer):
     def websocket_message(self, event):
         # Send message to WebSocket
         #save message to DB
+        print(event)
+
         if event['action'] == 'topic_upvote' or event['action'] == 'topic_downvote':
-            print(event)
             self.add_follow(event)
             self.update_or_create_notification_item(event)
 
@@ -180,13 +194,16 @@ class ChatConsumer(WebsocketConsumer):
             self.send(json.dumps(payload))
 
         elif event['action'] == 'add_comment':
-            if not Comment.objects.get(id=event['comment_id']): #if comment is not duplicate it should be !undefined ie true
+            comment_poster = StudentUser.objects.get(id=event['logged_user_id'])
+
+            try:
+                comment = Comment.objects.get(content=event['content'], poster=comment_poster) #if succeeds, comment is a duplicate
+                print('comment already exists')
+                pass
+            except:
                 self.add_follow(event)
-                self.update_or_create_notification_item(event)
 
                 topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
-                comment_poster = StudentUser.objects.get(id=event['logged_user_id'])
-
                 new_comment = Comment(
                     poster=comment_poster,
                     content=event['content'],
@@ -196,6 +213,8 @@ class ChatConsumer(WebsocketConsumer):
                     downvotes=0
                     )
                 new_comment.save()
+                self.update_or_create_notification_item(event)
+
                 #adding fields to event
                 event['comment_id'] = new_comment.id
                 event['downvotes'] = 0
@@ -208,8 +227,13 @@ class ChatConsumer(WebsocketConsumer):
             self.send(json.dumps(event))
 
         elif event['action'] == 'add_topic':
-            if not Topic.objects.get(id=event['topic_id']): #if comment is not duplicate it should be !undefined ie true
-                topic_poster = StudentUser.objects.get(id=event['user_id'])
+            topic_poster = StudentUser.objects.get(id=event['user_id'])
+
+            try:
+                topic = Topic.objects.get(content=event['content'], poster=topic_poster) #if this succeeds it means topic already created 
+                print('topic already exists')
+                pass
+            except:
                 new_topic = Topic(
                     audience=Group.objects.get(group_code=event['group_code']),
                     content=event['content'],

@@ -8,13 +8,24 @@ import downvoteIcon from './downvoteicon.jpg';
 import sendButton from './sendbutton.png';
 import collapseIcon from './collapseIcon.png';
 
+
+//material ui stuff
+
+import { makeStyles } from '@material-ui/core/styles';
+import Card from '@material-ui/core/Card';
+import CardActions from '@material-ui/core/CardActions';
+import CardContent from '@material-ui/core/CardContent';
+import Button from '@material-ui/core/Button';
+import ButtonGroup from '@material-ui/core/ButtonGroup';
+import Typography from '@material-ui/core/Typography';
+
 const remainingWidthForContentView = window.innerWidth - 56; // 140 = remaining rows + gaps (in Topic and feed)
 
 const TopicLeafGrid = styled.div`
   display: grid;
   grid-template-columns:  ${remainingWidthForContentView}px 50px ;
   grid-template-rows:  25px minmax(25px, auto) minmax(50px, auto) minmax(50px, auto) 25px;
-  gap: 2px 2px;
+  //gap: 2px 2px;
   grid-template-areas: 
   "UserAndAudience Voting"
   "Topic Voting"
@@ -76,7 +87,6 @@ const CommentGrid = styled.div`
   display: grid;
   grid-template-columns:  1fr 25px ;
   grid-template-rows:  25px minmax(50px, auto);
-  gap: 5px 5px;
   grid-template-areas: 
   "CommentContent CommentVoting"
   "CommentContent CommentVoting"
@@ -271,56 +281,50 @@ class TopicLeaf extends Component {
         };
     };
 
-    renderComments = (commentArray) => {
-        commentArray.sort(function(a,b) {
-            return a['created_time'] - b['created_time']; //comments are rendered with more recent ones at the bottom
-        })
-        //sort comment array by comment.created_time (ascending)
-        return commentArray.map((comment) => (
-            <li
-                key={comment['comment_id']}
-            >
-            <CommentGrid>
-                <CommentContent>
-                    <span style = {{"fontSize" : "15px"}}>{comment['poster'] + ' - ' + comment['created_time']}</span>
-                    <br/>
-                    <span style = {{"fontSize" : "20px"}}>{comment['content']}</span>
-                </CommentContent>
-                <CommentVoting>
-                    {comment['upvotes']}
-                    <input 
-                    type="image" 
-                    src={upvoteIcon}
-                    style={{
-                        "width" : "100%",
-                        outline : "none"
+//     renderComments = (commentArray) => {
+//         commentArray.sort(function(a,b) {
+//             return a['created_time'] - b['created_time']; //comments are rendered with more recent ones at the bottom
+//         })
+//         //sort comment array by comment.created_time (ascending)
+// 
+//         const array_of_comments = [];
+//         for (const comment of commentArray) {
+//             var date = new Date(comment['created_time']);
+//             const timeInString = date.toLocaleString();
+//           array_of_comments.push(
+//              <Card className={classes.root}>
+//                   <CardContent>
+//                     <Typography className={classes.title} color="textSecondary" gutterBottom>
+//                       {timeInString}
+//                     </Typography>
+//                     <Typography className={classes.pos} color="textSecondary">
+//                       {comment['poster']}
+//                     </Typography>
+//                     <Typography variant="body2" component="p">
+//                       {comment['content']}
+//                     </Typography>
+//                   </CardContent>
+//                   <CardActions>
+//                     <ButtonGroup color="primary" aria-label="outlined primary button group">
+//                     <Button onClick = {(e) => this.submitCommentUpvote(e, comment['comment_id'])}>Upvote</Button>
+//                     <Button onClick = {(e) => this.submitCommentDownvote(e, comment['comment_id'])}>Downvote</Button>
+//                     </ButtonGroup>
+//                     <Button size="small">Report</Button>
+//                   </CardActions>
+//                 </Card>
+//             )
+//         };
+//         return array_of_comments;
+//       };
 
-                    //     "height" : "100%",
-                    }}
-                    onClick = {(e) => this.submitCommentUpvote(e, comment['comment_id'])}                        
-                    />
-                    <input 
-                    type="image" 
-                    src={downvoteIcon}
-                    style={{
-                        "width" : "100%",
-                        outline : "none"
-
-                    //     "height" : "100%",
-                    }}
-                    onClick = {(e) => this.submitCommentDownvote(e, comment['comment_id'])}                        
-                    />
-                    {comment['downvotes']}
-                </CommentVoting>
-            </CommentGrid>
-            </li>
-            ))
-    };
 
 // add renderMethod that turns arrays back into dictionaries for display in jsx... arrayindexOf + 1.... etc
 
+
+
     render() {
         const comments_collapsed = this.state.comments_collapsed;
+
         return (
             <TopicLeafGrid>
                 <UserAndAudience>
@@ -334,7 +338,28 @@ class TopicLeaf extends Component {
                     <span style = {{"fontSize" : "15px"}}>Expand comments to the right</span>
                     : 
                     <ul style = {{ listStyleType : "none" }}>
-                        {this.renderComments(this.state.comments)}
+                        {this.state.comments.map((comment, index) =>
+                        <Card key={index}>
+                          <CardContent>
+                            <Typography  color="textSecondary" gutterBottom>
+                              {comment['created_time']}
+                            </Typography>
+                            <Typography  color="textSecondary">
+                              {comment['poster']}
+                            </Typography>
+                            <Typography variant="body2" component="p">
+                              {comment['content']}
+                            </Typography>
+                          </CardContent>
+                          <CardActions>
+                            <ButtonGroup color="primary" aria-label="outlined primary button group">
+                            <Button onClick = {(e) => this.submitCommentUpvote(e, comment['comment_id'])}>Upvote</Button>
+                            <Button onClick = {(e) => this.submitCommentDownvote(e, comment['comment_id'])}>Downvote</Button>
+                            </ButtonGroup>
+                            <Button size="small">Report</Button>
+                          </CardActions>
+                        </Card>
+                    )}
                     </ul>
                 }
                 </Comments>
