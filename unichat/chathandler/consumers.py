@@ -5,6 +5,8 @@ from channels.generic.websocket import WebsocketConsumer
 import time
 from .models import Topic, Comment
 from authentication.models import StudentUser, Group, NotificationItem, ParticipatingUser
+from django.core.exceptions import ObjectDoesNotExist
+
 
 class ChatConsumer(WebsocketConsumer): 
     #
@@ -44,13 +46,13 @@ class ChatConsumer(WebsocketConsumer):
                     print('query params: ', event_dict['topic_id'], event_dict['action'])
                 existing_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type=event_dict['action'])
                 notification_exists = True
-        except:
+        except ObjectDoesNotExist:
             pass
 
         if notification_exists:
             print('notification exists')
             existing_item = None
-            if event_dict['comment_id']: #concerns comment, more specific
+            if event_dict.get('comment_id', None): #concerns comment, more specific
                 existing_item = NotificationItem.objects.get(comment_id=event_dict['comment_id'], action_type=event_dict['action'])
             else:
                 existing_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type=event_dict['action'])
@@ -200,7 +202,7 @@ class ChatConsumer(WebsocketConsumer):
                 comment = Comment.objects.get(content=event['content'], poster=comment_poster) #if succeeds, comment is a duplicate
                 print('comment already exists')
                 pass
-            except:
+            except ObjectDoesNotExist:
                 self.add_follow(event)
 
                 topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
@@ -233,7 +235,7 @@ class ChatConsumer(WebsocketConsumer):
                 topic = Topic.objects.get(content=event['content'], poster=topic_poster) #if this succeeds it means topic already created 
                 print('topic already exists')
                 pass
-            except:
+            except ObjectDoesNotExist:
                 new_topic = Topic(
                     audience=Group.objects.get(group_code=event['group_code']),
                     content=event['content'],
