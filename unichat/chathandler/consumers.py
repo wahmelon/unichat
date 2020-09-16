@@ -56,12 +56,12 @@ class ChatConsumer(WebsocketConsumer):
                 existing_item = NotificationItem.objects.get(comment_id=event_dict['comment_id'], action_type=event_dict['action'])
             else:
                 existing_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type=event_dict['action'])
-            does_not_exist_flag = False
+            does_not_exist_flag = True
             for participating_user in existing_item.participating_users.all():
                 if participating_user.user == user_obj:
                     participating_user.time = event_dict['time']#updates time field to most recent for that user
                     participating_user.save()
-                    does_not_exist_flag = True
+                    does_not_exist_flag = False
                     break
             if (does_not_exist_flag):            
                 new_participation = ParticipatingUser(
