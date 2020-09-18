@@ -11,6 +11,8 @@ import * as jwt_decode from 'jwt-decode';
 import InfiniteScroll from 'react-infinite-scroller';
 import MenuListComposition from './menulist';
 
+import PersonIcon from '@material-ui/icons/Person';
+
 
 
 const remainingWidthForInputView = (window.innerWidth - 56); // 140 = remaining rows + gaps (in Topic and feed) 56
@@ -442,7 +444,7 @@ class Feed extends Component {
                             'last_actor' : notif.participating_users[0].username
 
                         });
-                    //create notification for easy transform to text in render menulist
+                    //create notification for easy transform to text in render menulistn 
                 }
 
             }
@@ -909,7 +911,10 @@ class Feed extends Component {
                 </FeedContentDiv>
         </InfiniteScroll>
                 <FeedNavDiv>
-                    <Link className={"nav-link"} to={"/authentication/"}>Account management for {this.state.username}</Link>
+                     <Link to="/authentication/">
+                         <PersonIcon>
+                         </PersonIcon>
+                     </Link>
                 </FeedNavDiv>
             </FeedGrid>
         )

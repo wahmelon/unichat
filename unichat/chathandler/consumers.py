@@ -39,11 +39,7 @@ class ChatConsumer(WebsocketConsumer):
                 existing_item = NotificationItem.objects.get(comment_id=event_dict['comment_id'], action_type=event_dict['action'])
                 notification_exists = True
             else:
-                print('attempting to find...')
                 for notification in NotificationItem.objects.all():
-                    print('existing notification topic id:', notification.topic_id)
-                    print('existing notification action: ', notification.action_type)
-                    print('query params: ', event_dict['topic_id'], event_dict['action'])
                 existing_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type=event_dict['action'])
                 notification_exists = True
         except ObjectDoesNotExist:
@@ -102,22 +98,110 @@ class ChatConsumer(WebsocketConsumer):
             topic_as_django_obj.history.add(new_notification)
             topic_as_django_obj.save()
 
-    def update_topic(self, event_dict):
-        
+    def update_topic_votes(self, event_dict):
+        user_obj = StudentUser.objects.get(id=event_dict['logged_user_id'])
         topic_as_django_obj = Topic.objects.get(id=event_dict['topic_id'])
-        if event_dict['action'] == 'topic_upvote':
-            topic_as_django_obj.upvotes += 1
-        else:
-            topic_as_django_obj.downvotes += 1
+        if event_dict['logged_user_id'] != topic_as_django_obj.poster.id:
+            try:
+                existing_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type=event_dict['action']) #if this succeeds it means topic already created 
+                if user_obj not in existing_item.participating_users.all():
+                    if event_dict['action'] == 'topic_upvote':
+                        topic_as_django_obj.upvotes += 1
+                        #checking if user has made other action, so we can undo it
+                        try:
+                            existing_other_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type='topic_downvote')
+                            if user_obj in existing_other_item.participating_users.all():
+                                topic_as_django_obj.downvotes -= 1
+                                existing_other_item.participating_users.remove(user_obj)
+                        except ObjectDoesNotExist:
+                            pass
+
+                    else:
+                        topic_as_django_obj.downvotes += 1
+                                                #checking if user has made other action, so we can undo it
+
+                        try:
+                            existing_other_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type='topic_upvote')
+                            if user_obj in existing_other_item.participating_users.all():
+                                topic_as_django_obj.upvotes -= 1
+                                existing_other_item.participating_users.remove(user_obj)
+                        except ObjectDoesNotExist:
+                            pass
+
+            except ObjectDoesNotExist:
+                if event_dict['action'] == 'topic_upvote':
+                    topic_as_django_obj.upvotes += 1
+                                            #checking if user has made other action, so we can undo it
+
+                    try:
+                        existing_other_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type='topic_downvote')
+                        if user_obj in existing_other_item.participating_users.all():
+                            topic_as_django_obj.downvotes -= 1
+                            existing_other_item.participating_users.remove(user_obj)
+                    except ObjectDoesNotExist:
+                        pass
+                else:
+                    topic_as_django_obj.downvotes += 1
+                                            #checking if user has made other action, so we can undo it
+
+                    try:
+                        existing_other_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type='topic_upvote')
+                        if user_obj in existing_other_item.participating_users.all():
+                            topic_as_django_obj.upvotes -= 1
+                            existing_other_item.participating_users.remove(user_obj)
+                    except ObjectDoesNotExist:
+                        pass
         topic_as_django_obj.save()
 
-    def update_comment(self, event_dict):
+    def update_comment_votes(self, event_dict):
+        user_obj = StudentUser.objects.get(id=event_dict['logged_user_id'])
         comment_django_obj = Comment.objects.get(id=event_dict['comment_id'])
+        if event_dict['logged_user_id'] != comment_django_obj.poster.id:
+            try:
+                existing_item = NotificationItem.objects.get(comment_id=event_dict['comment_id'], action_type=event_dict['action'])
+                if user_obj not in existing_item.participating_users.all():
+                    if event_dict['action'] == 'comment_upvote':
+                        comment_django_obj.upvotes += 1
+                        #checking if user has made other action, so we can undo it
+                        try:
+                            existing_other_item = NotificationItem.objects.get(comment_id=event_dict['comment_id'], action_type='comment_downvote')
+                            if user_obj in existing_other_item.participating_users.all():
+                                comment_django_obj.downvotes -= 1
+                                existing_other_item.participating_users.remove(user_obj)
+                        except ObjectDoesNotExist:
+                            pass
+                    else:
+                        comment_django_obj.downvotes += 1
+                                                #checking if user has made other action, so we can undo it
 
-        if event_dict['action'] == 'comment_upvote':
-            comment_django_obj.upvotes += 1
-        else:
-            comment_django_obj.downvotes +=1
+                        try:
+                            existing_other_item = NotificationItem.objects.get(comment_id=event_dict['comment_id'], action_type='comment_upvote')
+                            if user_obj in existing_other_item.participating_users.all():
+                                comment_django_obj.upvotes -= 1
+                                existing_other_item.participating_users.remove(user_obj)
+                        except ObjectDoesNotExist:
+                            pass
+            except ObjectDoesNotExist:
+                if event_dict['action'] == 'comment_upvote':
+                    comment_django_obj.upvotes += 1
+                        #checking if user has made other action, so we can undo it
+                    try:
+                        existing_other_item = NotificationItem.objects.get(comment_id=event_dict['comment_id'], action_type='comment_downvote')
+                        if user_obj in existing_other_item.participating_users.all():
+                            comment_django_obj.downvotes -= 1
+                            existing_other_item.participating_users.remove(user_obj)
+                    except ObjectDoesNotExist:
+                            pass
+                else:
+                    comment_django_obj.downvotes +=1
+                    #checking if user has made other action, so we can undo it
+                    try:
+                        existing_other_item = NotificationItem.objects.get(comment_id=event_dict['comment_id'], action_type='comment_upvote')
+                        if user_obj in existing_other_item.participating_users.all():
+                            comment_django_obj.upvotes -= 1
+                            existing_other_item.participating_users.remove(user_obj)
+                    except ObjectDoesNotExist:
+                        pass
         comment_django_obj.save()
 
     def add_follow(self, event_dict):
@@ -171,7 +255,7 @@ class ChatConsumer(WebsocketConsumer):
             self.add_follow(event)
             self.update_or_create_notification_item(event)
 
-            self.update_topic(event)
+            self.update_topic_votes(event)
             topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
             event['participating_users'] = self.get_participating_users(event)
             event['followers'] = self.get_topic_followers(event)
@@ -184,7 +268,7 @@ class ChatConsumer(WebsocketConsumer):
             self.add_follow(event)
             self.update_or_create_notification_item(event)
 
-            self.update_comment(event)
+            self.update_comment_votes(event)
             comment_django_obj = Comment.objects.get(id=event['comment_id'])
             payload = comment_django_obj.as_dict()
             payload['action'] = event['action']
