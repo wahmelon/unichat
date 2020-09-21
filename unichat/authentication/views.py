@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from .serializers import MyTokenObtainPairSerializer, StudentUserSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import StudentUser, Group, NotificationItem
-from chathandler.models import Topic
+from chathandler.models import Topic, Comment
 
 def UserFromToken(request):
 	jwt_object = JWTAuthentication()
@@ -119,10 +119,13 @@ class GetNotifications(APIView):
 							#^ concerns topic
 							notification_dict['topic_id'] = notification.topic_id
 							notification_dict['og_topic_owner'] = notification.og_topic_owner.id
+							notification_dict['content'] = topic.content
 						elif notification.og_comment_owner.id == django_user.id:
 							#^must concernt comment
 							notification_dict['comment_id'] = notification.comment_id
 							notification_dict['og_comment_owner'] = notification.og_comment_owner.id
+							comment_object = Comment.objects.get(id=notification.comment_id)
+							notification_dict['content'] = comment_object.content
 						else:
 							pass
 
@@ -167,10 +170,13 @@ class GetMoreNotifications(APIView):
 								#^ concerns topic
 								notification_dict['topic_id'] = notification.topic_id
 								notification_dict['og_topic_owner'] = notification.og_topic_owner.id
+								notification_dict['content'] = topic.content
 							elif notification.og_comment_owner.id == django_user.id:
 								#^must concernt comment
 								notification_dict['comment_id'] = notification.comment_id
 								notification_dict['og_comment_owner'] = notification.og_comment_owner.id
+								comment_object = Comment.objects.get(id=notification.comment_id)
+								notification_dict['content'] = comment_object.content
 							else:
 								pass
 

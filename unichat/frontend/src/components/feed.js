@@ -305,16 +305,18 @@ class Feed extends Component {
                 'action_time' : parsedData.time,
                 'parent_topic_id' : parsedData.topic_id,
                 'participating_users' : parsedData.participating_users,
-                'og_poster_name' : parsedData.og_poster_name
+                'og_poster_name' : parsedData.og_poster_name,
+                'content' : parsedData.content
+
             };
 
             if (parsedData.action == 'add_comment' || parsedData.action == 'topic_upvote' || parsedData.action == 'topic_downvote') { //concerns a topic
-                new_notif['topic_id'] = parsedData.topic_id,
-                new_notif['og_topic_owner'] = parsedData.og_topic_poster
+                new_notif['topic_id'] = parsedData.topic_id;
+                new_notif['og_topic_owner'] = parsedData.og_topic_poster;
             } else if (this.state.user_id == parsedData.og_comment_poster) {
             //remaining actions (comment up/downvotes) only relevant to comment owner
-                new_notif['comment_id'] = parsedData.comment_id
-                new_notif['og_comment_owner'] = parsedData.og_comment_poster
+                new_notif['comment_id'] = parsedData.comment_id;
+                new_notif['og_comment_owner'] = parsedData.og_comment_poster;
             } else {
                 //pass
             };
@@ -419,7 +421,8 @@ class Feed extends Component {
                             'participating_users' : notif.participating_users,
                             'og_poster_name' : notif.og_poster_name,
                             'action_time' : notif.participating_users[0].time, //should only be one 
-                            'last_actor' : notif.participating_users[0].username
+                            'last_actor' : notif.participating_users[0].username,
+                            'content' : notif.content
 
                         });
                     } else if (notif.action_type == 'add_comment') { 
@@ -431,7 +434,8 @@ class Feed extends Component {
                             'participating_users' : notif.participating_users,
                             'og_poster_name' : notif.og_poster_name,
                             'action_time' : notif.participating_users[0].time, //should only be one 
-                            'last_actor' : notif.participating_users[0].username
+                            'last_actor' : notif.participating_users[0].username,
+                            'content' : notif.content
 
 
                         });
@@ -475,7 +479,8 @@ class Feed extends Component {
                             'participating_users' : notif.participating_users,
                             'og_poster_name' : notif.og_poster_name,
                             'action_time' : notif.participating_users[0].time,
-                            'last_actor' : notif.participating_users[0].username
+                            'last_actor' : notif.participating_users[0].username,
+                            'content' : notif.content
 
                         });
                     //create notification for easy transform to text in render menulistn 
@@ -496,6 +501,7 @@ class Feed extends Component {
             var action_types;
             var owner;
             var item;
+            var content_preview;
 
             //setting actors
 
@@ -542,12 +548,25 @@ class Feed extends Component {
                 item = 'topic'
             }
 
-            const final_message = `${actors} ${action_types} ${owner} ${item}`
+            //setting content preview
+            var content = notification.content;
+            console.log("content: ", content); 
+
+            if (content.length > 30) {
+                full_length = content.length;
+                content_preview = `${full_length[0:29]}...`;
+            } else {
+                content_preview = content; 
+            }
+
+
+            const final_message = `${actors} ${action_types} ${owner} ${item} (${content})`
             console.log(notification);
             console.log(final_message);
             output_array.push({
                 'parent_topic_id' : notification.parent_topic_id,
-                'text' : final_message
+                'text' : final_message,
+                'action_time' : notification.action_time
             })
 
         }
