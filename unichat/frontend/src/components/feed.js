@@ -267,6 +267,32 @@ class Feed extends Component {
 
     }
 
+    getTimeText(millisecond_timestamp){
+        //timezone shoudl be three letter string
+        const difference = Date.now() - millisecond_timestamp
+        var text_timestamp;
+
+        if (difference < 60000) {
+            text_timestamp = 'Just now';
+
+        } else if (difference < 3600000) { //difference is less than an hr
+            text_timestamp = `${(difference/60000).round()} mins ago` //divided by 60000ms (1 min)
+        } else if (difference < 86400000) { //less than 24 hr
+            text_timestamp = `${(difference/3600000).round()} hours ago`
+        } else if (difference < 31556952000) { //less than a yr
+            const new_date = new Date(millisecond_timestamp);
+            const date_array = new_date.toUTCString().split(' ');
+            text_timestamp = date_array[1] + " " + date_array[2];
+            //expect output e.g. 20 March
+        } else {
+            const new_date = new Date(millisecond_timestamp);
+            const date_array = new_date.toUTCString().split(' ');
+            text_timestamp = date_array[1] + " " + date_array[2] + " " + date_array[3];
+            //expect output e.g. 20 March 2019
+        }
+        return text_timestamp;
+    }
+
 /////////////////////
 
 
