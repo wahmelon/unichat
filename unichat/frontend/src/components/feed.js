@@ -235,6 +235,40 @@ class Feed extends Component {
 
 ///////////////////////////////////////////////////////////
 
+// to be used in future components
+//get more notifications - for use in the notif dropdown component, to get more notification than newest 20, which is what the CDM getnotifications grabs
+
+    getMoreNotifications() {
+        const prev_notif_data = this.state.notification_data_store;
+        const oldest_notif_time = Date.now();
+        for (const notif in prev_notif_data) {
+            if (notif.action_time < oldest_notif_time) {
+                oldest_notif_time = notif.action_time
+            }
+        }
+        axiosInstance.post('/getmorenotifications/', {oldest_notif_time:oldest_notif_time})
+        .then(
+            result => {
+                console.log('result data: ', result.data);
+                console.log('payload list: ', result.data.notif_data);
+                const newState = prev_notif_data.concat(result.data.notif_data);
+                this.setState({
+                    notification_data_store:newState
+                });
+                console.log('axios updated notif data store state: ', this.state.notification_data_store);
+                
+                const notifs_as_text = this.aggregateNotifEvents(newState);
+                this.setState({notifications_as_text:notifs_as_text});
+                console.log('notifs as text in state: ', this.state.notifications_as_text);
+
+
+            }
+        ).catch(error => {throw error})
+
+    }
+
+/////////////////////
+
 
 
 

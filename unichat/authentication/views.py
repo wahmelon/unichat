@@ -89,43 +89,98 @@ class GetNotifications(APIView):
 		user = UserFromToken(request)
 		django_user = StudentUser.objects.get(username=user.username)
 		payload_list = []
-		page = request.data['page']
-		#topic_list = django_user.topic_notifications.all()
-		#comment_list = django_user.comment_notifications.all()
-		print(django_user.topic_notifications.all())
-		for topic in django_user.topics_followed.all():
-			for notification in topic.history.all()[(page*20):((page*20)+19)]:
-				print(notification.action_type)
-				#some code representing paginated notification if use react infinite scroller
-				if notification: #not no notification
-					participating_users_array = []
-					for participating_user in notification.participating_users.all():
-						participating_users_array.append(
-							{'username' : participating_user.user.username, 'id' : participating_user.user.id, 'time' : participating_user.time}
+		# page = request.data['page']
 
-						)
-					notification_dict = {
-					"action_type" : notification.action_type,
-					"action_time" : notification.action_time,
-					"parent_topic_id" : notification.topic_id,
-					"participating_users" : participating_users_array,
-					"og_poster_name" : topic.poster.username
-					}
+# FOR PAGINATION - needs info on what was include in the last slice of data so re-queries don't include same data (e.g. if new topic during that time, pushing everything down an index)
+		# array_limit = (page*20) + 19
+		array_limit = 20
+		counter = 0
+		while counter < array_limit:
+			for topic in django_user.topics_followed.all():
+				for notification in topic.history.all():
+					print(notification.action_type)
+					#some code representing paginated notification if use react infinite scroller
+					if notification: #not no notification
+						participating_users_array = []
+						for participating_user in notification.participating_users.all():
+							participating_users_array.append(
+								{'username' : participating_user.user.username, 'id' : participating_user.user.id, 'time' : participating_user.time}
 
-					if notification.action_type == "add_comment" or notification.action_type == "topic_upvote" or notification.action_type == "topic_downvote":
-						#^ concerns topic
-						notification_dict['topic_id'] = notification.topic_id
-						notification_dict['og_topic_owner'] = notification.og_topic_owner.id
-					elif notification.og_comment_owner.id == django_user.id:
-						#^must concernt comment
-						notification_dict['comment_id'] = notification.comment_id
-						notification_dict['og_comment_owner'] = notification.og_comment_owner.id
-					else:
-						pass
+							)
+						notification_dict = {
+						"action_type" : notification.action_type,
+						"action_time" : notification.action_time,
+						"parent_topic_id" : notification.topic_id,
+						"participating_users" : participating_users_array,
+						"og_poster_name" : topic.poster.username
+						}
 
-					payload_list.append(notification_dict)
-		print(payload_list)
+						if notification.action_type == "add_comment" or notification.action_type == "topic_upvote" or notification.action_type == "topic_downvote":
+							#^ concerns topic
+							notification_dict['topic_id'] = notification.topic_id
+							notification_dict['og_topic_owner'] = notification.og_topic_owner.id
+						elif notification.og_comment_owner.id == django_user.id:
+							#^must concernt comment
+							notification_dict['comment_id'] = notification.comment_id
+							notification_dict['og_comment_owner'] = notification.og_comment_owner.id
+						else:
+							pass
+
+						payload_list.append(notification_dict)
+						counter += 1
+		payload_list.sort(key= lambda dict:dict['action_time']) #can put in reverse=true if necessary.... this currently sorts in ascending order
+		# return Response(data={"notif_data": payload_list[(page*20):((page*20)+19)]}, status=status.HTTP_200_OK)  #for pagination
 		return Response(data={"notif_data": payload_list}, status=status.HTTP_200_OK)
+
+class GetMoreNotifications(APIView):
+	def post(self, request):
+		user = UserFromToken(request)
+		django_user = StudentUser.objects.get(username=user.username)
+		payload_list = []
+		oldest_notif_time = request.data['last_notif_time']
+
+# FOR PAGINATION - needs info on what was include in the last slice of data so re-queries don't include same data (e.g. if new topic during that time, pushing everything down an index)
+		# array_limit = (page*20) + 19
+		array_limit = 20
+		counter = 0
+		while counter < array_limit:
+			for topic in django_user.topics_followed.all():
+				for notification in topic.history.all():
+					#some code representing paginated notification if use react infinite scroller
+					if notification: #not no notification
+						if notification.action_time < oldest_notif_time:
+							participating_users_array = []
+							for participating_user in notification.participating_users.all():
+								participating_users_array.append(
+									{'username' : participating_user.user.username, 'id' : participating_user.user.id, 'time' : participating_user.time}
+
+								)
+							notification_dict = {
+							"action_type" : notification.action_type,
+							"action_time" : notification.action_time,
+							"parent_topic_id" : notification.topic_id,
+							"participating_users" : participating_users_array,
+							"og_poster_name" : topic.poster.username
+							}
+
+							if notification.action_type == "add_comment" or notification.action_type == "topic_upvote" or notification.action_type == "topic_downvote":
+								#^ concerns topic
+								notification_dict['topic_id'] = notification.topic_id
+								notification_dict['og_topic_owner'] = notification.og_topic_owner.id
+							elif notification.og_comment_owner.id == django_user.id:
+								#^must concernt comment
+								notification_dict['comment_id'] = notification.comment_id
+								notification_dict['og_comment_owner'] = notification.og_comment_owner.id
+							else:
+								pass
+
+							payload_list.append(notification_dict)
+							counter += 1
+		payload_list.sort(key= lambda dict:dict['action_time']) #can put in reverse=true if necessary.... this currently sorts in ascending order
+		# return Response(data={"notif_data": payload_list[(page*20):((page*20)+19)]}, status=status.HTTP_200_OK)  #for pagination
+		return Response(data={"notif_data": payload_list}, status=status.HTTP_200_OK)
+
+
 
 
 

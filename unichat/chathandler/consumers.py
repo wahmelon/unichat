@@ -40,8 +40,8 @@ class ChatConsumer(WebsocketConsumer):
                 notification_exists = True
             else:
                 for notification in NotificationItem.objects.all():
-                existing_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type=event_dict['action'])
-                notification_exists = True
+                    existing_item = NotificationItem.objects.get(topic_id=event_dict['topic_id'], action_type=event_dict['action'])
+                    notification_exists = True
         except ObjectDoesNotExist:
             pass
 
