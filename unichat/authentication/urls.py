@@ -3,7 +3,7 @@ from rest_framework_simplejwt import views as jwt_views
 from .views import (
     ObtainTokenPairWithCurrentGroupsView, StudentUserCreate, GetUserGroups, 
     LogoutAndBlacklistRefreshTokenForUserView, SetUniInfo, PostTopic, GetTopicData, GetMoreTopics, GetNotifications,
-    GetMoreNotifications)
+    GetMoreNotifications, ReportUser)
 
 
 urlpatterns = [
@@ -17,5 +17,6 @@ urlpatterns = [
     path('get_topic_data/', GetTopicData.as_view(), name='get_topic_data'),
     path('getnotifications/', GetNotifications.as_view(), name='get_notifications'),
     path('blacklist/', LogoutAndBlacklistRefreshTokenForUserView.as_view(), name='blacklist'),
-    path('getmorenotifications/', GetMoreNotifications.as_view(), name = 'get_more_notifications')
+    path('getmorenotifications/', GetMoreNotifications.as_view(), name = 'get_more_notifications'),
+    path('reportuser/', ReportUser.as_view(), name = 'report_user')
 ]

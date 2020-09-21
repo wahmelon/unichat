@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import MyTokenObtainPairSerializer, StudentUserSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .models import StudentUser, Group, NotificationItem
+from .models import StudentUser, Group, NotificationItem, Report
 from chathandler.models import Topic, Comment
 
 def UserFromToken(request):
@@ -74,6 +74,24 @@ class GetMoreTopics(APIView): #change to "get topic ids of user groups (or somet
 			#topics has been set as related_name on foreign key params in Topic object referencing Group object #allowing this lookup
 		# print(topic_comment_list)
 		return Response(data={"topic_data": payload_list}, status=status.HTTP_200_OK)
+		
+class ReportUser(APIView):
+	def post(self, request):
+		user=UserFromToken(request)
+		new_report = Report(
+			user_reporting=StudentUser.objects.get(username=user.username),
+			reported_user = StudentUser.objects.get(username=request.data['username'])
+			)
+		new_report.save()
+		if request.data['comment_id']:
+			new_report.relevant_comment = Topic.objects.get(id=request.data['comment_id'])
+		else:
+			new_report.relevant_topic = Comment.objects.get(id=request.daa['topic_id'])
+		if request.data['additional_comments']:
+			new_report.additional_comments =  request.data['additional_comments']
+		new_report.save()
+		return Response(status=status.HTTP_200_OK)
+
 
 
 

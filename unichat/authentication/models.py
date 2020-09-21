@@ -26,6 +26,15 @@ class ParticipatingUser(models.Model):
 	user = models.ForeignKey(StudentUser, related_name = 'user', on_delete = models.PROTECT)
 	time = models.BigIntegerField()
 
+class Report(models.Model):
+	user_reporting = models.ForeignKey(StudentUser, related_name = 'user_reporting', on_delete = models.PROTECT)
+	reported_user = models.ForeignKey(StudentUser, related_name = 'reported_user', on_delete = models.PROTECT)
+	action_taken = models.CharField(blank=True, null=True) #for admin to record action
+	relevant_topic = models.ForeignKey(Topic, blank=True, related_name = 'topic', on_delete = models.PROTECT)
+	relevant_comment = models.ForeignKey(Comment, blank =True, related_name = 'comment', on_delete = models.PROTECT)
+	additional_comments = models.CharField(blank=True, null=True)
+
+
 class NotificationItem(models.Model):
 	topic_id = models.PositiveSmallIntegerField()
 	og_topic_owner = models.ForeignKey(StudentUser, related_name = 'topic_notifications', on_delete=models.PROTECT)

@@ -267,6 +267,7 @@ class Feed extends Component {
 
     }
 
+
     getTimeText(millisecond_timestamp){
         //timezone shoudl be three letter string
         const difference = Date.now() - millisecond_timestamp
@@ -292,6 +293,8 @@ class Feed extends Component {
         }
         return text_timestamp;
     }
+
+
 
 /////////////////////
 
