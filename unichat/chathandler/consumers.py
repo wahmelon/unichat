@@ -4,7 +4,7 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 import time
 from .models import Topic, Comment
-from authentication.models import StudentUser, Group, NotificationItem, ParticipatingUser
+from authentication.models import StudentUser, Group, NotificationItem, ParticipatingUser, HistoryItem
 from django.core.exceptions import ObjectDoesNotExist
 
 
@@ -209,10 +209,21 @@ class ChatConsumer(WebsocketConsumer):
         topic_as_django_obj = Topic.objects.get(id=event_dict['topic_id'])
         topic_as_django_obj.followed_by.add(actor)
         topic_as_django_obj.save()
+        new_history = HistoryItem(
+                topic = topic_as_django_obj,
+                time = event_dict['time'],
+                action = event_dict['action']
+            )
+        new_history.save()
+
+
 
     def get_topic_followers(self, event_dict):
         topic_as_django_obj = Topic.objects.get(id=event_dict['topic_id'])
         return [user.id for user in topic_as_django_obj.followed_by.all()]
+
+##########################
+        #required consumer methods
 
 
     def connect(self):
@@ -290,6 +301,7 @@ class ChatConsumer(WebsocketConsumer):
                 self.add_follow(event)
 
                 topic_as_django_obj = Topic.objects.get(id=event['topic_id'])
+                topic_as_django_obj.time_of_last_comment = event['time']
                 new_comment = Comment(
                     poster=comment_poster,
                     content=event['content'],

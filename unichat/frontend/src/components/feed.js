@@ -169,7 +169,9 @@ class Feed extends Component {
         anonymous_user_handle : "",
         currently_anonymous: true,
         postAreaOn:false,
-        new_topics:[],
+        new_topics:0, //for displaying inside feedreloadbutton. shows how many new things to be reloaded...
+        filtered_topics:[], //array with portion of topic_data that corresponds to which groups in the below toggled groups
+        toggled_groups: [], //array of group codes that the user has switched "on"
 
         //notification
 
@@ -267,6 +269,12 @@ class Feed extends Component {
 
     }
 
+    reportUser(report_dict) {
+        //required dict values  - username of reported user: , comment_id: OR topic_id: , and optionally
+        //additional comments: 
+        axiosInstance.post('/reportuser/', report_dict)
+        .then().catch(error=>{throw error})
+    }
 
     getTimeText(millisecond_timestamp){
         //timezone shoudl be three letter string
@@ -294,6 +302,17 @@ class Feed extends Component {
         return text_timestamp;
     }
 
+    filterTopics(toggled_groups_array) { //e.g. [PSYC1000, UTS, UNSW]
+        const output_array = [];
+        const fullTopicData = this.state.topic_data;
+        for (const topic in fullTopicData) {
+            if (toggled_groups_array.includes(topic['group_code'])) {
+                output_array.push(topic);
+            }
+        }
+        return output_array;
+    }
+
 
 
 /////////////////////
@@ -306,15 +325,27 @@ class Feed extends Component {
 
         if (new_topic['user_id'] == this.state.user_id) {
             const topic_data_array = this.state.topic_data;
-            const new_topic_dict = {'id' : new_topic['topic_id'],'created_time':new_topic['created_time']};
+            const new_topic_dict = {
+                'id' : new_topic['topic_id'],
+                'created_time':new_topic['created_time'],
+                'group' : new_topic['group_code']
+            };
             topic_data_array.push(new_topic_dict);
             this.setState({topic_data:topic_data_array});
 
         } else {
-            const topics_data_array = this.state.new_topics;
-            const new_topic_dict = {'id' : new_topic['topic_id'],'created_time':new_topic['created_time']};
-            topics_data_array.push(new_topic_dict);
-            this.setState({new_topics:topics_data_array})
+            // const new_topics_data_array = this.state.new_topics;
+            // const new_topic_dict = {
+            //     'id' : new_topic['topic_id'],
+            //     'created_time':new_topic['created_time'],
+            //     'group' : new_topic['group_code']
+            // };
+            // new_topics_data_array.push(new_topic_dict);
+            // this.setState({new_topics:topics_data_array})
+            const prev_new_topics = this.state.new_topics;
+            this.setState({new_topics:prev_new_topics+1});
+            console.log('topics to be updated: ', this.state.new_topics);
+
         }
     };
 

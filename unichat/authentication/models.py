@@ -11,6 +11,35 @@ class Group(models.Model): #should be class Group
 	def __str__(self):
 		return self.group_code
 
+class HistoryItem(models.Model):
+	topic = models.ForeignKey(Topic, related_name = 'historical_topic', on_delete = models.PROTECT)
+	time= models.BigIntegerField(),
+	action = models.CharField(max_length=120)
+
+	def as_dict(self):
+		text = None
+		if action == "topic_upvote" or action == "topic_downvote":
+			text = "You voted on a topic: "
+		elif action == "comment_upvote" or action == "comment_downvote":
+			text = "You voted on a comment in: "
+		elif action == "add_comment":
+			text = "You commented in: "
+
+		topic_text = str(self.topic.content)
+		if len(topic_text) > 29:
+			topic_text = topic_text[0:29]
+		topic_text = topic_text  + "..."
+		final_text = text + topic_text
+
+		new_dict = {
+		"text": final_text,
+		"time" : self.time,
+		"topic_id": self.topic.id
+		}
+
+		return new_dict
+
+
 class StudentUser(AbstractUser):
 	current_groups = models.ManyToManyField(Group, related_name = "student_user")
 	faculty = models.CharField(max_length=120)
@@ -18,6 +47,8 @@ class StudentUser(AbstractUser):
 	karma = models.PositiveSmallIntegerField(default=0)
 	topics_posted = models.ManyToManyField(Topic, blank=True)
 	comments_posted = models.ManyToManyField(Comment, blank=True)
+	interaction_history = models.ManyToManyField(HistoryItem, blank = True)
+
 
 	def __str__(self):
 		return self.username
@@ -26,13 +57,14 @@ class ParticipatingUser(models.Model):
 	user = models.ForeignKey(StudentUser, related_name = 'user', on_delete = models.PROTECT)
 	time = models.BigIntegerField()
 
+
 class Report(models.Model):
 	user_reporting = models.ForeignKey(StudentUser, related_name = 'user_reporting', on_delete = models.PROTECT)
 	reported_user = models.ForeignKey(StudentUser, related_name = 'reported_user', on_delete = models.PROTECT)
-	action_taken = models.CharField(blank=True, null=True) #for admin to record action
-	relevant_topic = models.ForeignKey(Topic, blank=True, related_name = 'topic', on_delete = models.PROTECT)
-	relevant_comment = models.ForeignKey(Comment, blank =True, related_name = 'comment', on_delete = models.PROTECT)
-	additional_comments = models.CharField(blank=True, null=True)
+	action_taken = models.CharField(max_length=500,blank=True, null=True) #for admin to record action
+	relevant_topic = models.ForeignKey(Topic, blank=True, related_name = 'topic_concerned', on_delete = models.PROTECT)
+	relevant_comment = models.ForeignKey(Comment, blank =True, related_name = 'comment_concerned', on_delete = models.PROTECT)
+	additional_comments = models.CharField(max_length=500,blank=True, null=True)
 
 
 class NotificationItem(models.Model):

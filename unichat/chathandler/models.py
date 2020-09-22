@@ -11,6 +11,7 @@ class Topic(models.Model):
 	posted_as_anonymous = models.BooleanField(default=True)
 	followed_by = models.ManyToManyField("authentication.StudentUser", related_name = "topics_followed")
 	history = models.ManyToManyField("authentication.NotificationItem", related_name = "history")
+	time_of_last_comment = models.BigIntegerField(default=0)
 
 	def as_dict(self):
 
@@ -24,7 +25,8 @@ class Topic(models.Model):
 		'upvotes' : self.upvotes,
 		'downvotes' : self.downvotes,
 		'comments' : [comment.as_dict() for comment in self.comments.all().order_by('created_time')],
-		'followed_by' : [str(user) for user in self.followed_by.all()]
+		'followed_by' : [str(user) for user in self.followed_by.all()],
+		'time_of_last_comment' : self.time_of_last_comment
 		#comments is thru related name specified on comment model next to foreignkey relationship
 		}
 

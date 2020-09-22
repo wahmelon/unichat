@@ -44,9 +44,12 @@ class GetUserGroups(APIView): #change to "get topic ids of user groups (or somet
 			for topic in group.topics.all()[:9]: #first 10 topics of each (BEFORE :9)
 
 				if topic: #not no topics
-					topic_id_and_when_created_dict = {}
-					topic_id_and_when_created_dict['id'] = topic.id
-					topic_id_and_when_created_dict['created_time'] = topic.created_time
+					topic_id_and_when_created_dict = {
+						'id': topic.id,
+						'created_time' : topic.created_time,
+						'group' : str(topic.audience),
+						'time_of_last_comment' : topic.time_of_last_comment
+					}
 					payload_list.append(topic_id_and_when_created_dict)
 					# topic_comment_list.append(topic.as_dict())
 			#topics has been set as related_name on foreign key params in Topic object referencing Group object #allowing this lookup
@@ -66,15 +69,18 @@ class GetMoreTopics(APIView): #change to "get topic ids of user groups (or somet
 			for topic in group.topics.all()[(page*10):((page*10)+9)]: #returns 10 items at a time BEFORE page*10,(page*10)+9
 
 				if topic: #not no topics
-					topic_id_and_when_created_dict = {}
-					topic_id_and_when_created_dict['id'] = topic.id
-					topic_id_and_when_created_dict['created_time'] = topic.created_time
+					topic_id_and_when_created_dict = {
+						'id': topic.id,
+						'created_time' : topic.created_time,
+						'group' : str(topic.audience),
+						'time_of_last_comment' : topic.time_of_last_comment
+					}
 					payload_list.append(topic_id_and_when_created_dict)
 					# topic_comment_list.append(topic.as_dict())
 			#topics has been set as related_name on foreign key params in Topic object referencing Group object #allowing this lookup
 		# print(topic_comment_list)
 		return Response(data={"topic_data": payload_list}, status=status.HTTP_200_OK)
-		
+
 class ReportUser(APIView):
 	def post(self, request):
 		user=UserFromToken(request)
